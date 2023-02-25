@@ -15,47 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="3DShapeViewer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ShpLibraryTest\shapefil.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="3DShapeViewer.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\shapefile-viewer-qt\shapelib\dbfopen.cpp">
+    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\dbfopen.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\shapefile-viewer-qt\shapelib\shptree.cpp">
+    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\shpopen.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\shapefile-viewer-qt\shapelib\shpopen.cpp">
+    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\shptree.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="3DShapeViewer.rc">
-      <Filter>리소스 파일</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="small.ico">
-      <Filter>리소스 파일</Filter>
-    </Image>
-    <Image Include="3DShapeViewer.ico">
-      <Filter>리소스 파일</Filter>
-    </Image>
+    <ClInclude Include="shapefil.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
