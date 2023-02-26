@@ -127,13 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\dbfopen.cpp" />
-    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\shpopen.cpp" />
-    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\shptree.cpp" />
+    <ClCompile Include="..\dbfopen.cpp" />
+    <ClCompile Include="..\shpopen.cpp" />
+    <ClCompile Include="..\shptree.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="shapefil.h" />
+    <ClInclude Include="..\shapefil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -18,18 +18,18 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\dbfopen.cpp">
+    <ClCompile Include="..\dbfopen.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\shpopen.cpp">
+    <ClCompile Include="..\shpopen.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\shapefile-viewer-qt\shapelib\shptree.cpp">
+    <ClCompile Include="..\shptree.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="shapefil.h">
+    <ClInclude Include="..\shapefil.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

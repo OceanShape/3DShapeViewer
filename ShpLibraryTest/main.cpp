@@ -1,4 +1,4 @@
-#include "shapefil.h"
+#include "..\\shapefil.h"
 #include <iostream>
 
 using namespace std;
