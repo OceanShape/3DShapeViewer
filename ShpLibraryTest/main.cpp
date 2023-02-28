@@ -9,9 +9,6 @@ int main()
 	const char* pszPath = "C:\\example\\TN_BULD_何魂堡开矫_楷力备.shp";
 	SHPHandle hSHP = SHPOpen(pszPath, "rb");
 
-	const char* pszDBFPath = "C:\\example\\TN_BULD_何魂堡开矫_楷力备.dbf";
-	DBFHandle hDBF = DBFOpen(pszDBFPath, "rb");
-
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
 	std::cout << "nShapeCount: " << nShapeCount << endl;
@@ -58,18 +55,6 @@ int main()
 
 	SHPObject* psShape = SHPReadObject(hSHP, maxIdx);
 	
-	/*std::cout << "nSHPType: " << psShape->nSHPType << std::endl;
-	std::cout << "nShapeId: " << psShape->nShapeId << std::endl;
-	std::cout << "nParts: " << psShape->nParts << std::endl;
-	std::cout << "nVertices: " << psShape->nVertices << std::endl;*/
-
-	//cout << psShape->nShapeId << endl;
-
-	const char* str = DBFReadStringAttribute(hDBF, maxIdx, 0);
-	cout << str << endl;
-
-	//DBFGetFieldIndex
-
 	for (int i = 0; i < psShape->nParts; i++) {
 		std::cout << "Part " << i << " (Start Vertex Index): " << psShape->panPartStart[i] << std::endl;
 	}std::cout << cnt << "/" << maxVert << endl;
