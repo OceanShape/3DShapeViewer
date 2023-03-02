@@ -147,6 +147,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
+    case WM_PAINT:
+        drawOpenGL();
+        break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -173,19 +176,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     initializeOpenGL();
 
     // Enter message loop
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
     MSG msg = {};
-    while (true)
+
+    while (GetMessage(&msg, nullptr, 0, 0))
     {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
         {
-            if (msg.message == WM_QUIT)
-                break;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        }
-        else
-        {
-            drawOpenGL();
         }
     }
 
