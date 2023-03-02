@@ -134,10 +134,10 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\shapefile-viewer-qt\shapelib\dbfopen.cpp" />
-    <ClCompile Include="..\shapefile-viewer-qt\shapelib\shpopen.cpp" />
-    <ClCompile Include="..\shapefile-viewer-qt\shapelib\shptree.cpp" />
     <ClCompile Include="3DShapeViewer.cpp" />
+    <ClCompile Include="dbfopen.cpp" />
+    <ClCompile Include="shpopen.cpp" />
+    <ClCompile Include="shptree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="3DShapeViewer.rc" />
