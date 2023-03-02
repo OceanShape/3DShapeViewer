@@ -5,204 +5,196 @@
 
 using namespace std;
 
-#define GLEW_STATIC
+#include <EGL/eglext.h>
+#include <windows.h>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
-#include <windows.h>
-#include <conio.h>
 
-// Forward declarations
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-bool InitWindow(HINSTANCE hInstance, int nCmdShow);
-bool InitOpenGL();
-void Render();
 
-HWND hWnd;
+EGLDisplay display;
+EGLContext context;
+EGLSurface surface;
 
-// Global variables
-EGLDisplay eglDisplay = nullptr;
-EGLContext eglContext = nullptr;
-EGLSurface eglSurface = nullptr;
-GLuint programObject = 0;
+GLuint programID;
+GLuint vertexShaderID;
+GLuint fragmentShaderID;
 
-void Render()
-{
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+const int scrWidth = 800;
+const int scrHeight = 600;
 
-    // Draw a triangle
-    GLfloat vertices[] = {
-        0.0f,  0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f
-    };
-    GLuint vertexBuffer;
-    glGenBuffers(1, &vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDisableVertexAttribArray(0);
+const char* vertexShaderSource =
+"#version 300 es\n"
+"layout(location = 0) in vec3 position;\n"
+"void main() {\n"
+"  gl_Position = vec4(position.x, position.y, position.z, 1.0);\n"
+"}\n";
 
-    // Swap buffers
-    eglSwapBuffers(eglDisplay, eglSurface);
-}
+// Fragment shader source code
+const char* fragmentShaderSource =
+"#version 300 es\n"
+"out vec4 color;\n"
+"void main() {\n"
+"  color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+"}\n";
+// "  out_Color = color;\n"
 
-// Function to destroy the OpenGL ES context
-void DestroyContext()
-{
-    eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(eglDisplay, eglContext);
-    eglDestroySurface(eglDisplay, eglSurface);
-    eglTerminate(eglDisplay);
-}
+// Vertex data
+GLfloat vertices[] = {
+    // positions         // colors
+     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
+    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-	case WM_CREATE:
-	{
-		InitOpenGL();
+};
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glEnable(GL_DEPTH_TEST);
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    WNDCLASSEX wc;
+    HWND hwnd;
+    MSG msg;
 
-		break;
-	}
-
-	case WM_SIZE:
-	{
-		glViewport(0, 0, LOWORD(lParam), HIWORD(lParam));
-		break;
-	}
-
-	case WM_PAINT:
-	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        Render();
-
-		eglSwapBuffers(eglDisplay, eglSurface);
-
-		ValidateRect(hWnd, nullptr);
-		break;
-	}
-
-	case WM_DESTROY:
-	{
-		eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-		eglDestroySurface(eglDisplay, eglSurface);
-		eglDestroyContext(eglDisplay, eglContext);
-		eglTerminate(eglDisplay);
-
-		PostQuitMessage(0);
-		break;
-	}
-
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-
-	return 0;
-}
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
-
-    AllocConsole();
-    OutputDebugStringW(L"Hello");
-
-    cout << "TEST" << endl;
-
-    // Initialize the window
-    if (!InitWindow(hInstance, nCmdShow)) {
-        return 1;
-    }
-
-    // Initialize OpenGL
-    if (!InitOpenGL()) {
-        return 1;
-    }
-
-    cout << "TEST" << endl;
-
-    // Main message loop
-    MSG msg = { 0 };
-    while (msg.message != WM_QUIT) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    cout << "TEST" << endl;
-
-    FreeConsole();
-
-    return static_cast<int>(msg.wParam);
-}
-
-bool InitWindow(HINSTANCE hInstance, int nCmdShow)
-{
-    const wchar_t CLASS_NAME[] = L"OpenGLWin32App";
-    WNDCLASS wc = { 0 };
+    // Register window class
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.style = 0;
     wc.lpfnWndProc = WndProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
     wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    RegisterClass(&wc);
+    wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = L"OpenGL";
+    wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
-    hWnd = CreateWindowW(
-        CLASS_NAME,
-        CLASS_NAME,
+    if (!RegisterClassEx(&wc)) {
+        MessageBox(NULL, L"Window Registration Failed!", L"Error!", MB_ICONEXCLAMATION | MB_OK);
+        return 0;
+    }
+
+    // Create window
+    hwnd = CreateWindowEx(
+        WS_EX_CLIENTEDGE,
+        L"OpenGL",
+        L"OpenGL ES 3.0",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
-        nullptr, nullptr, hInstance, nullptr);
-    if (!hWnd) {
-        return false;
+        CW_USEDEFAULT, CW_USEDEFAULT, scrWidth, scrHeight,
+        NULL, NULL, hInstance, NULL);
+
+    if (hwnd == NULL) {
+        MessageBox(NULL, L"Window Creation Failed!", L"Error!", MB_ICONEXCLAMATION | MB_OK);
+        return 0;
     }
 
-    ShowWindow(hWnd, nCmdShow);
-    UpdateWindow(hWnd);
+    // Show window
+    ShowWindow(hwnd, nCmdShow);
+    UpdateWindow(hwnd);
 
-    return true;
-}
+    // Initialize EGL
+    display = eglGetDisplay((EGLNativeDisplayType)GetDC(hwnd));
+    /*EGLint major, minor;
+    eglInitialize(display, &major, &minor);*/
+    eglInitialize(display, NULL, NULL);
+    eglBindAPI(EGL_OPENGL_ES_API);
 
-bool InitOpenGL()
-{
-    // Create an EGL display connection
-    eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    if (eglDisplay == EGL_NO_DISPLAY) {
-        return false;
-    }
-
-    // Initialize the EGL display connection
-    EGLint majorVersion, minorVersion;
-    if (!eglInitialize(eglDisplay, &majorVersion, &minorVersion)) {
-        return false;
-    }
-
-    // Choose an EGL configuration
-    EGLConfig eglConfig;
-    EGLint numConfigs;
-    const EGLint configAttribs[] = {
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+    // Create EGL context
+    EGLint configAttribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-        EGL_DEPTH_SIZE, 16,
-        EGL_STENCIL_SIZE, 0,
+        EGL_DEPTH_SIZE, 8,
+        EGL_STENCIL_SIZE, 8,
         EGL_NONE
     };
+    EGLConfig config;
+    EGLint numConfigs;
+    eglChooseConfig(display, configAttribs, &config, 1, &numConfigs);
 
-    eglChooseConfig(eglDisplay, configAttribs, &eglConfig, 1, &numConfigs);
-    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
-    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, NULL);
-    EGLBoolean result = eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+    EGLint contextAttribs[] = {
+    EGL_CONTEXT_CLIENT_VERSION, 3,
+    EGL_NONE
+    };
+    context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
 
-    return result;
+    // Create EGL window surface
+    surface = eglCreateWindowSurface(display, config, hwnd, NULL);
+
+    // Make EGL context current
+    eglMakeCurrent(display, surface, surface, context);
+
+
+    // Load shaders
+    vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShaderID, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShaderID);
+
+    fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShaderID, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShaderID);
+
+    // Create program object
+    programID = glCreateProgram();
+    glAttachShader(programID, vertexShaderID);
+    glAttachShader(programID, fragmentShaderID);
+    glLinkProgram(programID);
+
+    //////////////////////////////////////////// Draw triangle
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glUseProgram(programID);
+    //////////////////////////////////////////////////////////
+
+    // Set viewport
+    glViewport(0, 0, scrWidth, scrHeight);
+
+    // Message loop
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    // Cleanup
+    eglDestroyContext(display, context);
+    eglDestroySurface(display, surface);
+    eglTerminate(display);
+    return (int)msg.wParam;
+}
+
+void render() {
+    // Clear color buffer
+    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Swap buffers
+    eglSwapBuffers(display, surface);
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    switch (message) {
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    case WM_PAINT:
+        render();
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
 }
