@@ -1,7 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 
+#include "shapefil.h"
 #include "framework.h"
 #include "3DShapeViewer.h"
+#include <locale>
+#include <string>
+#include <codecvt>
+#include <iostream>
 
 using namespace std;
 
@@ -16,6 +21,7 @@ EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 EGLContext eglContext;
 HWND hWnd;
+HINSTANCE hInst;
 
 // Vertex shader source code
 const char* vertexShaderSource =
@@ -105,14 +111,7 @@ void initializeOpenGL()
 // Render OpenGL scene
 void drawOpenGL()
 {
-    // Clear color buffer
-    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    // Draw triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Swap buffers
-    eglSwapBuffers(eglDisplay, eglSurface);
 }
 
 // Clean up OpenGL context and window
@@ -139,16 +138,128 @@ void cleanupOpenGL()
     eglTerminate(eglDisplay);
 }
 
+SHPHandle hSHP;
+bool isShapeLoaded = false;
+TCHAR szFileName[MAX_PATH];
+
+void openShapefile() {
+    OPENFILENAME ofn;
+    TCHAR szFileName[MAX_PATH];
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFilter = L"Shapefiles (*.shp)\0*.shp\0All Files (*.*)\0*.*\0";
+    ofn.hwndOwner = NULL;
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"shp";
+
+    if (GetOpenFileName(&ofn))
+    {
+        hSHP = SHPOpen((char*)szFileName, "rb");
+        if (hSHP == NULL)
+        {
+            printf("Failed to open Shapefile.\n");
+        }
+        else
+        {
+            printf("Shapefile opened successfully.\n");
+            isShapeLoaded = true;
+            drawOpenGL();
+        }
+    }
+    else
+    {
+        printf("Failed to open file.\n");
+    }
+}
+
+void cleanupShapefile() {
+    if (isShapeLoaded) SHPClose(hSHP);
+}
+
+std::string ConvertWideCharToChar(const wchar_t* wideCharString)
+{
+    int bufferSize = WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, nullptr, 0, nullptr, nullptr);
+
+    std::string result(100, 0);
+    WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, &result[0], bufferSize, nullptr, nullptr);
+
+    return result;
+}
+
 // Window procedure
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // 메뉴 선택을 구문 분석합니다:
+        switch (wmId)
+        {
+        case IDM_OPEN:
+            OPENFILENAME ofn;
+
+			ZeroMemory(&ofn, sizeof(ofn));
+			ofn.lStructSize = sizeof(ofn);
+			ofn.lpstrFilter = L"Shapefiles (*.shp)\0*.shp\0All Files (*.*)\0*.*\0";
+			ofn.hwndOwner = NULL;
+			ofn.lpstrFile = szFileName;
+			ofn.nMaxFile = MAX_PATH;
+			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+			ofn.lpstrDefExt = L"shp";
+
+			if (GetOpenFileName(&ofn))
+			{
+				//hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
+				wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+				string str = converter.to_bytes(szFileName);
+
+				hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
+				if (hSHP != NULL)
+				{
+                    int maxIdx = 0;
+                    int maxVert = 0;
+                    int nShapeCount;
+                    SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+
+					for (size_t i = 0; i < nShapeCount; ++i) {
+						SHPObject* psShape = SHPReadObject(hSHP, i);
+
+						if (psShape->nVertices != 8) {
+							if (max(psShape->nVertices, maxVert) > maxVert) {
+								maxVert = psShape->nVertices;
+								maxIdx = i;
+							}
+						}
+
+						SHPDestroyObject(psShape);
+					}
+					isShapeLoaded = true;
+				}
+			}
+			break;
+		case IDM_EXIT:
+			cleanupShapefile();
+			DestroyWindow(hWnd);
+			break;
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+    }
+    break;
     case WM_DESTROY:
+        cleanupShapefile();
         PostQuitMessage(0);
         break;
     case WM_PAINT:
-        drawOpenGL();
+        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        if (isShapeLoaded) drawOpenGL();
+        eglSwapBuffers(eglDisplay, eglSurface);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -162,14 +273,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // Register window class
     WNDCLASSEX wcex = {};
     wcex.cbSize = sizeof(wcex);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc = WindowProc;
     wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY3DSHAPEVIEWER);
     wcex.lpszClassName = L"OpenGLWindowClass";
     RegisterClassEx(&wcex);
     // Create window
     hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"OpenGL ES 3.0 Window", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, WINDOW_WIDTH, WINDOW_HEIGHT,
         NULL, NULL, hInstance, NULL);
+    hInst = hInstance;
     ShowWindow(hWnd, nCmdShow);
 
     // Initialize OpenGL
