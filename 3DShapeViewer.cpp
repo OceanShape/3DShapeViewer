@@ -144,7 +144,6 @@ TCHAR szFileName[MAX_PATH];
 
 void openShapefile() {
     OPENFILENAME ofn;
-    TCHAR szFileName[MAX_PATH];
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
@@ -157,21 +156,33 @@ void openShapefile() {
 
     if (GetOpenFileName(&ofn))
     {
-        hSHP = SHPOpen((char*)szFileName, "rb");
-        if (hSHP == NULL)
+        //hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
+        wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+        string str = converter.to_bytes(szFileName);
+
+        hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
+        if (hSHP != NULL)
         {
-            printf("Failed to open Shapefile.\n");
-        }
-        else
-        {
-            printf("Shapefile opened successfully.\n");
+            int maxIdx = 0;
+            int maxVert = 0;
+            int nShapeCount;
+            SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+
+            for (size_t i = 0; i < nShapeCount; ++i) {
+                SHPObject* psShape = SHPReadObject(hSHP, i);
+
+                if (psShape->nVertices != 8) {
+                    if (max(psShape->nVertices, maxVert) > maxVert) {
+                        maxVert = psShape->nVertices;
+                        maxIdx = i;
+                    }
+                }
+
+                SHPDestroyObject(psShape);
+            }
+            cout << maxIdx << "," << maxVert << "," << nShapeCount << endl;
             isShapeLoaded = true;
-            drawOpenGL();
         }
-    }
-    else
-    {
-        printf("Failed to open file.\n");
     }
 }
 
@@ -194,6 +205,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
     switch (message)
     {
+    case WM_CREATE:
+        AllocConsole();
+        break;
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -201,46 +215,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         switch (wmId)
         {
         case IDM_OPEN:
-            OPENFILENAME ofn;
-
-			ZeroMemory(&ofn, sizeof(ofn));
-			ofn.lStructSize = sizeof(ofn);
-			ofn.lpstrFilter = L"Shapefiles (*.shp)\0*.shp\0All Files (*.*)\0*.*\0";
-			ofn.hwndOwner = NULL;
-			ofn.lpstrFile = szFileName;
-			ofn.nMaxFile = MAX_PATH;
-			ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-			ofn.lpstrDefExt = L"shp";
-
-			if (GetOpenFileName(&ofn))
-			{
-				//hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
-				wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-				string str = converter.to_bytes(szFileName);
-
-				hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
-				if (hSHP != NULL)
-				{
-                    int maxIdx = 0;
-                    int maxVert = 0;
-                    int nShapeCount;
-                    SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-
-					for (size_t i = 0; i < nShapeCount; ++i) {
-						SHPObject* psShape = SHPReadObject(hSHP, i);
-
-						if (psShape->nVertices != 8) {
-							if (max(psShape->nVertices, maxVert) > maxVert) {
-								maxVert = psShape->nVertices;
-								maxIdx = i;
-							}
-						}
-
-						SHPDestroyObject(psShape);
-					}
-					isShapeLoaded = true;
-				}
-			}
+            openShapefile();
 			break;
 		case IDM_EXIT:
 			cleanupShapefile();
