@@ -22,6 +22,7 @@ EGLSurface eglSurface;
 EGLContext eglContext;
 HWND hWnd;
 HINSTANCE hInst;
+HANDLE hConsole;
 
 // Vertex shader source code
 const char* vertexShaderSource =
@@ -108,12 +109,6 @@ void initializeOpenGL()
 
 }
 
-// Render OpenGL scene
-void drawOpenGL()
-{
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-}
-
 // Clean up OpenGL context and window
 void cleanupOpenGL()
 {
@@ -138,9 +133,37 @@ void cleanupOpenGL()
     eglTerminate(eglDisplay);
 }
 
+
 SHPHandle hSHP;
 bool isShapeLoaded = false;
 TCHAR szFileName[MAX_PATH];
+int targetIdx = 0;
+
+// Render OpenGL scene
+void drawOpenGL()
+{
+	SHPObject* psShape = SHPReadObject(hSHP, targetIdx);
+
+	//std::cout << "nSHPType: " << psShape->nSHPType << std::endl;
+	//std::cout << "nShapeId: " << psShape->nShapeId << std::endl;
+	//std::cout << "nParts: " << psShape->nParts << std::endl;
+	//std::cout << "nVertices: " << psShape->nVertices << std::endl;
+
+    double xList[9];
+    double yList[9];
+
+    if (psShape->nVertices < 9) {
+	    for (int i = 0; i < psShape->nVertices; i++) {
+            xList[i] = psShape->padfX[i];
+            yList[i] = psShape->padfY[i];
+	    }
+    }
+    double dfx[4];
+    dfx[0] = psShape->dfXMin; dfx[1] = psShape->dfXMax;
+    dfx[2] = psShape->dfYMin; dfx[3] = psShape->dfYMax;
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+}
 
 void openShapefile() {
     OPENFILENAME ofn;
@@ -171,16 +194,17 @@ void openShapefile() {
             for (size_t i = 0; i < nShapeCount; ++i) {
                 SHPObject* psShape = SHPReadObject(hSHP, i);
 
-                if (psShape->nVertices != 8) {
-                    if (max(psShape->nVertices, maxVert) > maxVert) {
+                if (psShape->nVertices == 8) {
+                    targetIdx = i;
+                    break;
+                    /*if (max(psShape->nVertices, maxVert) > maxVert) {
                         maxVert = psShape->nVertices;
                         maxIdx = i;
-                    }
+                    }*/
                 }
 
                 SHPDestroyObject(psShape);
             }
-            cout << maxIdx << "," << maxVert << "," << nShapeCount << endl;
             isShapeLoaded = true;
         }
     }
@@ -207,6 +231,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     {
     case WM_CREATE:
         AllocConsole();
+        hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         break;
     case WM_COMMAND:
     {
@@ -281,6 +306,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Clean up OpenGL
     cleanupOpenGL();
+
+    FreeConsole();
 
     return static_cast<int>(msg.wParam);
 }
