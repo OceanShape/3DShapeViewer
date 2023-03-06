@@ -8,14 +8,15 @@
 #include <codecvt>
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 
 using namespace std;
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
 // Window dimensions
-const int WINDOW_WIDTH = 640;
-const int WINDOW_HEIGHT = 480;
+const int WINDOW_WIDTH = 1600;
+const int WINDOW_HEIGHT = 900;
 
 // OpenGL context and window handle
 EGLDisplay eglDisplay;
@@ -29,8 +30,8 @@ const char* vertexShaderSource =
 "#version 300 es\n"
 "layout(location = 0) in vec4 a_position;\n"
 "void main() {\n"
-"  gl_Position = a_position;\n"
-"  gl_PointSize = 10.0;\n"
+"  gl_Position = vec4(a_position[0] - 1.0f, a_position[1] - 1.0f, 0.0f, 1.0f);\n"
+"  gl_PointSize = 3.0;\n"
 "}\n";
 
 // Fragment shader source code
@@ -50,7 +51,6 @@ vector<float> vertexData = {
 };
 
 vector<float> vertexData2; // z축 값 없음
-
 
 // Vertex buffer object and attribute location
 GLuint vbo;
@@ -137,7 +137,7 @@ float dfx[4];
 void drawOpenGL() 
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_POINTS, 0, vertexData.size() / 2);
+    glDrawArrays(GL_POINTS, 0, vertexData2.size() / 2);
 }
 
 void openShapefile() {
@@ -193,22 +193,24 @@ void openShapefile() {
 		xMax = max(xMax, x);
 		yMax = max(yMax, y);
 
-        if (i == 13222) {
-            x = 1141082.88f;
-            y = 1689578.12f;
-        }
+		float xDel = (xMax - xMin) / 2.0f;
+		float yDel = (yMax - yMin) / 2.0f;
+		//float rat = xRat / yRat;
 
-        vertexData2.push_back(x);
-        vertexData2.push_back(y);
+		x -= xMin;
+		x /= xDel;
+		y -= yMin;
+		y /= yDel;
+
+		vertexData2.push_back(x);
+		vertexData2.push_back(y);
 		//xAvr.push_back(x);
         //yAvr.push_back(y);
 
 		SHPDestroyObject(psShape);
 	}
 
-    float xRat = xMax - xMin;
-    float yRat = yMax - yMin;
-    float rat = xRat / yRat;
+
 
 	psShape = SHPReadObject(hSHP, targetIdx);
 
@@ -223,11 +225,15 @@ void openShapefile() {
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexData2.size() * sizeof(float), vertexData2.data(), GL_STATIC_DRAW);
 
     glGetAttribLocation(program, "a_position");
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    GLuint offsetLoc = glGetUniformLocation(program, "offset");
+    //glUniform1f()
+
 
 	isShapeLoaded = true;
 }
