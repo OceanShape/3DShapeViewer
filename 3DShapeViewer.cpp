@@ -43,17 +43,14 @@ const char* fragmentShaderSource =
 "}\n";
 
 // Vertex data
-const GLfloat vertexData[] = {
-    0.0f, 0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f
+vector<float> vertexData = {
+    0.5f, 0.5f,
+    0.0f, -0.5f,
+    -0.5f, 0.5f
 };
 
-vector<float> vertexData2 = {
-    0.5f, 0.5f, 0.0f,
-    0.0f, -0.5f, 0.0f,
-    -0.5f, 0.5f, 0.0f
-};
+vector<float> vertexData2; // z축 값 없음
+
 
 // Vertex buffer object and attribute location
 GLuint vbo;
@@ -102,14 +99,7 @@ void initializeOpenGL()
     glLinkProgram(program);
     glUseProgram(program);
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertexData2.size() * sizeof(float), vertexData2.data(), GL_STATIC_DRAW);
-
-    glGetAttribLocation(program, "a_position");
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 }
 
 // Clean up OpenGL context and window
@@ -141,11 +131,13 @@ SHPObject* psShape;
 bool isShapeLoaded = false;
 TCHAR szFileName[MAX_PATH];
 int targetIdx = 0;
+float dfx[4];
 
 // Render OpenGL scene
 void drawOpenGL() 
 {
-    glDrawArrays(GL_POINTS, 0, vertexData2.size() / 3);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawArrays(GL_POINTS, 0, vertexData.size() / 2);
 }
 
 void openShapefile() {
@@ -175,23 +167,23 @@ void openShapefile() {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
 
-	vector<double> xAvr;
-	vector<double> yAvr;
+    //vector<float> xAvr;
+    //vector<float> yAvr;
 
-	double xMin = DBL_MAX;
-	double xMax = DBL_MIN;
-	double yMin = DBL_MAX;
-	double yMax = DBL_MIN;
+	float xMin = FLT_MAX;
+    float xMax = FLT_MIN;
+    float yMin = FLT_MAX;
+    float yMax = FLT_MIN;
 
 	for (size_t i = 0; i < nShapeCount; ++i) {
 		SHPObject* psShape = SHPReadObject(hSHP, i);
 
-		double x = 0;
-		double y = 0;
+		float x = 0;
+        float y = 0;
 
 		for (int i = 0; i < psShape->nVertices; i++) {
-			x += psShape->padfX[i];
-			y += psShape->padfY[i];
+            x += (float)(psShape->padfX[i]);
+			y += (float)(psShape->padfY[i]);
 		}
 		x /= psShape->nVertices;
 		y /= psShape->nVertices;
@@ -201,15 +193,22 @@ void openShapefile() {
 		xMax = max(xMax, x);
 		yMax = max(yMax, y);
 
-		xAvr.push_back(x);
-		yAvr.push_back(y);
+        if (i == 13222) {
+            x = 1141082.88f;
+            y = 1689578.12f;
+        }
+
+        vertexData2.push_back(x);
+        vertexData2.push_back(y);
+		//xAvr.push_back(x);
+        //yAvr.push_back(y);
 
 		SHPDestroyObject(psShape);
 	}
 
-	double xRat = xMax - xMin;
-	double yRat = yMax - yMin;
-	double rat = xRat / yRat;
+    float xRat = xMax - xMin;
+    float yRat = yMax - yMin;
+    float rat = xRat / yRat;
 
 	psShape = SHPReadObject(hSHP, targetIdx);
 
@@ -218,9 +217,17 @@ void openShapefile() {
 	//std::cout << "nParts: " << psShape->nParts << std::endl;
 	//std::cout << "nVertices: " << psShape->nVertices << std::endl;
 
-	double dfx[4];
 	dfx[0] = psShape->dfXMin; dfx[1] = psShape->dfXMax;
 	dfx[2] = psShape->dfYMin; dfx[3] = psShape->dfYMax;
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_STATIC_DRAW);
+
+    glGetAttribLocation(program, "a_position");
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	isShapeLoaded = true;
 }
@@ -267,7 +274,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         PostQuitMessage(0);
         break;
     case WM_PAINT:
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         if (isShapeLoaded) drawOpenGL();
         eglSwapBuffers(eglDisplay, eglSurface);
