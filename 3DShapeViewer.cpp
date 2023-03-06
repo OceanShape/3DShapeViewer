@@ -44,7 +44,7 @@ const char* fragmentShaderSource =
 "precision mediump float;\n"
 "out vec4 fragColor;\n"
 "void main() {\n"
-"  fragColor = vec4(1.0, 1.0, 0.0, 1.0);\n"
+"  fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\n";
 
 // Vertex data
@@ -103,7 +103,7 @@ void initializeOpenGL()
     glLinkProgram(program);
     glUseProgram(program);
 
-    glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);;
 }
 
 // Clean up OpenGL context and window
