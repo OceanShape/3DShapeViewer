@@ -7,6 +7,7 @@
 #include <string>
 #include <codecvt>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -106,7 +107,6 @@ void initializeOpenGL()
 
     // Set vertex attribute pointer
     glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
 }
 
 // Clean up OpenGL context and window
@@ -135,6 +135,7 @@ void cleanupOpenGL()
 
 
 SHPHandle hSHP;
+SHPObject* psShape;
 bool isShapeLoaded = false;
 TCHAR szFileName[MAX_PATH];
 int targetIdx = 0;
@@ -142,26 +143,6 @@ int targetIdx = 0;
 // Render OpenGL scene
 void drawOpenGL()
 {
-	SHPObject* psShape = SHPReadObject(hSHP, targetIdx);
-
-	//std::cout << "nSHPType: " << psShape->nSHPType << std::endl;
-	//std::cout << "nShapeId: " << psShape->nShapeId << std::endl;
-	//std::cout << "nParts: " << psShape->nParts << std::endl;
-	//std::cout << "nVertices: " << psShape->nVertices << std::endl;
-
-    double xList[9];
-    double yList[9];
-
-    if (psShape->nVertices < 9) {
-	    for (int i = 0; i < psShape->nVertices; i++) {
-            xList[i] = psShape->padfX[i];
-            yList[i] = psShape->padfY[i];
-	    }
-    }
-    double dfx[4];
-    dfx[0] = psShape->dfXMin; dfx[1] = psShape->dfXMax;
-    dfx[2] = psShape->dfYMin; dfx[3] = psShape->dfYMax;
-
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
@@ -177,37 +158,69 @@ void openShapefile() {
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = L"shp";
 
-    if (GetOpenFileName(&ofn))
-    {
-        //hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
-        wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-        string str = converter.to_bytes(szFileName);
+	if (GetOpenFileName(&ofn) == NULL) return;
 
-        hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
-        if (hSHP != NULL)
-        {
-            int maxIdx = 0;
-            int maxVert = 0;
-            int nShapeCount;
-            SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+	//hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	string str = converter.to_bytes(szFileName);
 
-            for (size_t i = 0; i < nShapeCount; ++i) {
-                SHPObject* psShape = SHPReadObject(hSHP, i);
+	hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
 
-                if (psShape->nVertices == 8) {
-                    targetIdx = i;
-                    break;
-                    /*if (max(psShape->nVertices, maxVert) > maxVert) {
-                        maxVert = psShape->nVertices;
-                        maxIdx = i;
-                    }*/
-                }
+	if (hSHP == NULL) return;
 
-                SHPDestroyObject(psShape);
-            }
-            isShapeLoaded = true;
-        }
-    }
+	int maxIdx = 0;
+	int maxVert = 0;
+	int nShapeCount;
+	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+
+	vector<double> xAvr;
+	vector<double> yAvr;
+
+	double xMin = DBL_MAX;
+	double xMax = DBL_MIN;
+	double yMin = DBL_MAX;
+	double yMax = DBL_MIN;
+
+	for (size_t i = 0; i < nShapeCount; ++i) {
+		SHPObject* psShape = SHPReadObject(hSHP, i);
+
+		double x = 0;
+		double y = 0;
+
+		for (int i = 0; i < psShape->nVertices; i++) {
+			x += psShape->padfX[i];
+			y += psShape->padfY[i];
+		}
+		x /= psShape->nVertices;
+		y /= psShape->nVertices;
+
+		xMin = min(xMin, x);
+		yMin = min(yMin, y);
+		xMax = max(xMax, x);
+		yMax = max(yMax, y);
+
+		xAvr.push_back(x);
+		yAvr.push_back(y);
+
+		SHPDestroyObject(psShape);
+	}
+
+	double xRat = xMax - xMin;
+	double yRat = yMax - yMin;
+	double rat = xRat / yRat;
+
+	psShape = SHPReadObject(hSHP, targetIdx);
+
+	//std::cout << "nSHPType: " << psShape->nSHPType << std::endl;
+	//std::cout << "nShapeId: " << psShape->nShapeId << std::endl;
+	//std::cout << "nParts: " << psShape->nParts << std::endl;
+	//std::cout << "nVertices: " << psShape->nVertices << std::endl;
+
+	double dfx[4];
+	dfx[0] = psShape->dfXMin; dfx[1] = psShape->dfXMax;
+	dfx[2] = psShape->dfYMin; dfx[3] = psShape->dfYMax;
+
+	isShapeLoaded = true;
 }
 
 void cleanupShapefile() {
