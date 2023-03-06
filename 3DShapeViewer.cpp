@@ -15,8 +15,8 @@ using namespace std;
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
 // Window dimensions
-const int WINDOW_WIDTH = 1600;
-const int WINDOW_HEIGHT = 900;
+const int WINDOW_WIDTH = 1316;
+const int WINDOW_HEIGHT = 1000;
 
 // OpenGL context and window handle
 EGLDisplay eglDisplay;
@@ -29,9 +29,13 @@ HINSTANCE hInst;
 const char* vertexShaderSource =
 "#version 300 es\n"
 "layout(location = 0) in vec4 a_position;\n"
+"uniform vec2 min;\n"
+"uniform vec2 del;\n"
 "void main() {\n"
-"  gl_Position = vec4(a_position[0] - 1.0f, a_position[1] - 1.0f, 0.0f, 1.0f);\n"
-"  gl_PointSize = 3.0;\n"
+"  float x = (a_position[0] - min[0])/del[0] - 1.0f;\n"
+"  float y = (a_position[1] - min[1])/del[1] - 1.0f;\n"
+"  gl_Position = vec4(x, y, 0.0f, 1.0f);\n"
+"  gl_PointSize = 3.0f;\n"
 "}\n";
 
 // Fragment shader source code
@@ -193,24 +197,19 @@ void openShapefile() {
 		xMax = max(xMax, x);
 		yMax = max(yMax, y);
 
-		float xDel = (xMax - xMin) / 2.0f;
-		float yDel = (yMax - yMin) / 2.0f;
-		//float rat = xRat / yRat;
-
-		x -= xMin;
-		x /= xDel;
-		y -= yMin;
-		y /= yDel;
+        float xDel = (xMax - xMin) / 2.0f;
+        float yDel = (yMax - yMin) / 2.0f;
 
 		vertexData2.push_back(x);
 		vertexData2.push_back(y);
-		//xAvr.push_back(x);
-        //yAvr.push_back(y);
 
 		SHPDestroyObject(psShape);
 	}
 
+    float xDel = (xMax - xMin) / 2.0f;
+    float yDel = (yMax - yMin) / 2.0f;
 
+    //float rat = xDel / yDel;
 
 	psShape = SHPReadObject(hSHP, targetIdx);
 
@@ -231,9 +230,13 @@ void openShapefile() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-    GLuint offsetLoc = glGetUniformLocation(program, "offset");
-    //glUniform1f()
+    GLfloat min[] = { xMin, yMin };
+    GLuint offsetLoc = glGetUniformLocation(program, "min");
+    glUniform2fv(offsetLoc, 1, min);
 
+    GLfloat del[] = { xDel, yDel };
+    GLuint delLoc = glGetUniformLocation(program, "del");
+    glUniform2fv(delLoc, 1, del);
 
 	isShapeLoaded = true;
 }
