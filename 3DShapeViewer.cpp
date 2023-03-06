@@ -10,6 +10,9 @@
 #include <vector>
 #include <cstdlib>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 using namespace std;
 
@@ -32,10 +35,12 @@ const char* vertexShaderSource =
 "layout(location = 0) in vec4 a_position;\n"
 "uniform vec2 min;\n"
 "uniform vec2 del;\n"
+"uniform mat4 view;\n"
 "void main() {\n"
 "  float x = (a_position[0] - min[0])/del[0] - 1.0f;\n"
 "  float y = (a_position[1] - min[1])/del[1] - 1.0f;\n"
-"  gl_Position = vec4(x, y, 0.0f, 1.0f);\n"
+"  vec3 position = vec3(x, y, 0.0f);\n"
+"  gl_Position = view * vec4(position, 1.0f);\n"
 "  gl_PointSize = 3.0f;\n"
 "}\n";
 
@@ -129,12 +134,22 @@ SHPHandle hSHP;
 SHPObject* psShape;
 bool isShapeLoaded = false;
 TCHAR szFileName[MAX_PATH];
-int targetIdx = 0;
-float dfx[4];
+const float delta = 0.02f;
+float cameraX = 0.0f;
+float cameraY = 0.0f;
 
 // Render OpenGL scene
 void drawOpenGL() 
 {
+
+    glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, 1.0f);
+    glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, 0.0f);
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_POINTS, 0, vertexData.size() / 2);
 }
@@ -260,6 +275,23 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
     }
     break;
+    case WM_KEYDOWN:
+        switch (wParam)
+        {
+        case VK_LEFT:
+            cameraX -= delta;
+            break;
+        case VK_RIGHT:
+            cameraX += delta;
+            break;
+        case VK_UP:
+            cameraY += delta;
+            break;
+        case VK_DOWN:
+            cameraY -= delta;
+            break;
+        }
+        break;
     case WM_DESTROY:
         cleanupShapefile();
         PostQuitMessage(0);
