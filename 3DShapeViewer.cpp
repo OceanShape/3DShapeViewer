@@ -23,7 +23,6 @@ EGLSurface eglSurface;
 EGLContext eglContext;
 HWND hWnd;
 HINSTANCE hInst;
-HANDLE hConsole;
 
 // Vertex shader source code
 const char* vertexShaderSource =
@@ -31,6 +30,7 @@ const char* vertexShaderSource =
 "layout(location = 0) in vec4 a_position;\n"
 "void main() {\n"
 "  gl_Position = a_position;\n"
+"  gl_PointSize = 10.0;\n"
 "}\n";
 
 // Fragment shader source code
@@ -49,9 +49,15 @@ const GLfloat vertexData[] = {
     0.5f, -0.5f, 0.0f
 };
 
+vector<float> vertexData2 = {
+    0.5f, 0.5f, 0.0f,
+    0.0f, -0.5f, 0.0f,
+    -0.5f, 0.5f, 0.0f
+};
+
 // Vertex buffer object and attribute location
 GLuint vbo;
-GLint positionAttr;
+GLuint program;
 
 // Initialize OpenGL context and window
 void initializeOpenGL()
@@ -90,23 +96,20 @@ void initializeOpenGL()
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
-    GLuint program = glCreateProgram();
+    program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
     glUseProgram(program);
 
-    // Create and bind vertex buffer object
     glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexData2.size() * sizeof(float), vertexData2.data(), GL_STATIC_DRAW);
 
-    // Get position attribute location and enable vertex attribute array
-    positionAttr = glGetAttribLocation(program, "a_position");
-    glEnableVertexAttribArray(positionAttr);
-
-    // Set vertex attribute pointer
-    glVertexAttribPointer(positionAttr, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glGetAttribLocation(program, "a_position");
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 }
 
 // Clean up OpenGL context and window
@@ -133,7 +136,6 @@ void cleanupOpenGL()
     eglTerminate(eglDisplay);
 }
 
-
 SHPHandle hSHP;
 SHPObject* psShape;
 bool isShapeLoaded = false;
@@ -141,9 +143,9 @@ TCHAR szFileName[MAX_PATH];
 int targetIdx = 0;
 
 // Render OpenGL scene
-void drawOpenGL()
+void drawOpenGL() 
 {
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_POINTS, 0, vertexData2.size() / 3);
 }
 
 void openShapefile() {
@@ -242,10 +244,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
     switch (message)
     {
-    case WM_CREATE:
-        AllocConsole();
-        hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        break;
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -319,8 +317,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Clean up OpenGL
     cleanupOpenGL();
-
-    FreeConsole();
 
     return static_cast<int>(msg.wParam);
 }
