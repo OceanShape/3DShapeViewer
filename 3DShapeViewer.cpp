@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <fstream>
 
 
 using namespace std;
@@ -36,10 +37,14 @@ const char* vertexShaderSource =
 "uniform vec2 min;\n"
 "uniform vec2 del;\n"
 "uniform mat4 view;\n"
+"float modelToWorld(float pos, float min, float delta) {\n"
+"  return (pos - min)/delta - 1.0f;\n"
+"}\n"
 "void main() {\n"
-"  float x = (a_position[0] - min[0])/del[0] - 1.0f;\n"
-"  float y = (a_position[1] - min[1])/del[1] - 1.0f;\n"
-"  vec3 position = vec3(x, y, 0.0f);\n"
+"  float x = modelToWorld(a_position[0], min[0], del[0]);\n"
+"  float y = modelToWorld(a_position[1], min[1], del[1]);\n"
+"  float z = modelToWorld(a_position[0], min[0], del[0]);\n"
+"  vec3 position = vec3(z, y, 0.0f);\n"
 "  gl_Position = view * vec4(position, 1.0f);\n"
 "  gl_PointSize = 1.0f;\n"
 "}\n";
@@ -59,6 +64,21 @@ vector<float> vertexData; // z축 값 없음
 // Vertex buffer object and attribute location
 GLuint vbo;
 GLuint program;
+
+std::string readShader(const std::string& filepath) {
+    std::ifstream file(filepath);
+    if (!file.is_open()) {
+        return "";
+    }
+
+    std::string shader_code;
+    std::string line;
+    while (getline(file, line)) {
+        shader_code += line + "\n";
+    }
+
+    return shader_code;
+}
 
 // Initialize OpenGL context and window
 void initializeOpenGL()
@@ -91,9 +111,16 @@ void initializeOpenGL()
     eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 
     // Compile and link shaders
+    // vertex shader
+    std::string shaderCode = readShader("source.vert");
+    const char* shaderCodeCstr = shaderCode.c_str();
+
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
+
+    //const char* shaderCodeCstr = readShader("source.vert").c_str();
+
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
