@@ -62,5 +62,8 @@
     <None Include="source.vert">
       <Filter>소스 파일</Filter>
     </None>
+    <None Include="source.frag">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

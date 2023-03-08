@@ -30,34 +30,6 @@ EGLContext eglContext;
 HWND hWnd;
 HINSTANCE hInst;
 
-// Vertex shader source code
-const char* vertexShaderSource =
-"#version 300 es\n"
-"layout(location = 0) in vec4 a_position;\n"
-"uniform vec2 min;\n"
-"uniform vec2 del;\n"
-"uniform mat4 view;\n"
-"float modelToWorld(float pos, float min, float delta) {\n"
-"  return (pos - min)/delta - 1.0f;\n"
-"}\n"
-"void main() {\n"
-"  float x = modelToWorld(a_position[0], min[0], del[0]);\n"
-"  float y = modelToWorld(a_position[1], min[1], del[1]);\n"
-"  float z = modelToWorld(a_position[0], min[0], del[0]);\n"
-"  vec3 position = vec3(z, y, 0.0f);\n"
-"  gl_Position = view * vec4(position, 1.0f);\n"
-"  gl_PointSize = 1.0f;\n"
-"}\n";
-
-// Fragment shader source code
-const char* fragmentShaderSource =
-"#version 300 es\n"
-"precision mediump float;\n"
-"out vec4 fragColor;\n"
-"void main() {\n"
-"  fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\n";
-
 // Vertex data
 vector<float> vertexData; // z축 값 없음
 
@@ -116,13 +88,14 @@ void initializeOpenGL()
     const char* shaderCodeCstr = shaderCode.c_str();
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, &shaderCodeCstr, NULL);
     glCompileShader(vertexShader);
 
-    //const char* shaderCodeCstr = readShader("source.vert").c_str();
+    shaderCode = readShader("source.frag");
+    shaderCodeCstr = shaderCode.c_str();
 
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, &shaderCodeCstr, NULL);
     glCompileShader(fragmentShader);
     program = glCreateProgram();
     glAttachShader(program, vertexShader);
@@ -245,11 +218,11 @@ bool openShapefile() {
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     GLfloat min[] = { xMin, yMin };
-    GLuint offsetLoc = glGetUniformLocation(program, "min");
+    GLuint offsetLoc = glGetUniformLocation(program, "minimum");
     glUniform2fv(offsetLoc, 1, min);
 
     GLfloat del[] = { xDel, yDel };
-    GLuint delLoc = glGetUniformLocation(program, "del");
+    GLuint delLoc = glGetUniformLocation(program, "delta");
     glUniform2fv(delLoc, 1, del);
 
 	isShapeLoaded = true;
