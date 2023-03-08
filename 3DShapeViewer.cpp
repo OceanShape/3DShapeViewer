@@ -41,7 +41,7 @@ const char* vertexShaderSource =
 "  float y = (a_position[1] - min[1])/del[1] - 1.0f;\n"
 "  vec3 position = vec3(x, y, 0.0f);\n"
 "  gl_Position = view * vec4(position, 1.0f);\n"
-"  gl_PointSize = 3.0f;\n"
+"  gl_PointSize = 1.0f;\n"
 "}\n";
 
 // Fragment shader source code
@@ -161,26 +161,18 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
     for (size_t i = 0; i < nShapeCount; ++i) {
         SHPObject* psShape = SHPReadObject(hSHP, i);
 
-        float x = 0;
-        float y = 0;
-
         for (int i = 0; i < psShape->nVertices; i++) {
-            x += (float)(psShape->padfX[i]);
-            y += (float)(psShape->padfY[i]);
+            float x = (float)(psShape->padfX[i]);
+            float y = (float)(psShape->padfY[i]);
+
+            xMin = min(xMin, x);
+            yMin = min(yMin, y);
+            xMax = max(xMax, x);
+            yMax = max(yMax, y);
+
+            vertexData.push_back(x);
+            vertexData.push_back(y);
         }
-        x /= psShape->nVertices;
-        y /= psShape->nVertices;
-
-        xMin = min(xMin, x);
-        yMin = min(yMin, y);
-        xMax = max(xMax, x);
-        yMax = max(yMax, y);
-
-        float xDel = (xMax - xMin) / 2.0f;
-        float yDel = (yMax - yMin) / 2.0f;
-
-        vertexData.push_back(x);
-        vertexData.push_back(y);
 
         SHPDestroyObject(psShape);
     }
