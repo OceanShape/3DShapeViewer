@@ -1,41 +1,124 @@
-#define _CRT_SECURE_NO_WARNINGS
-
-#include "shapefil.h"
-#include "framework.h"
 #include "3DShapeViewer.h"
-#include <locale>
-#include <string>
-#include <codecvt>
-#include <iostream>
-#include <vector>
-#include <cstdlib>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <fstream>
+
 
 
 using namespace std;
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
-// Window dimensions
 const int WINDOW_WIDTH = 1316;
 const int WINDOW_HEIGHT = 1000;
 
-// OpenGL context and window handle
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 EGLContext eglContext;
 HWND hWnd;
 HINSTANCE hInst;
+TCHAR szFileName[MAX_PATH];
 
-// Vertex data
-vector<float> vertexData; // z축 값 없음
-
-// Vertex buffer object and attribute location
 GLuint vbo;
 GLuint program;
+
+SHPHandle hSHP;
+SHPObject* psShape;
+bool isShapeLoaded = false;
+
+float cameraX = 0.0f;
+float cameraY = 0.0f;
+const float delta = 0.02f;
+
+vector<float> vertexData;
+
+
+
+void initialize()
+{
+    EGLint numConfigs;
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLConfig eglConfig;
+    EGLint attribs[] = {
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+    EGL_DEPTH_SIZE, 24,
+    EGL_STENCIL_SIZE, 8,
+    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR,
+    EGL_NONE
+    };
+    eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglInitialize(eglDisplay, &majorVersion, &minorVersion);
+    eglChooseConfig(eglDisplay, attribs, &eglConfig, 1, &numConfigs);
+    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
+    EGLint contextAttribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 3,
+        EGL_NONE
+    };
+    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+    eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+
+
+    std::string shaderCode = readShader("source.vert");
+    const char* shaderCodeCstr = shaderCode.c_str();
+
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &shaderCodeCstr, NULL);
+    glCompileShader(vertexShader);
+
+    shaderCode = readShader("source.frag");
+    shaderCodeCstr = shaderCode.c_str();
+
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &shaderCodeCstr, NULL);
+    glCompileShader(fragmentShader);
+
+
+    program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+    glUseProgram(program);
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+}
+
+void render() 
+{
+    glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, 1.0f);
+    glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, 0.0f);
+    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawArrays(GL_POINTS, 0, vertexData.size() / 2);
+}
+
+void cleanUp()
+{
+    glDeleteBuffers(1, &vbo);
+
+    GLuint vertexShader;
+    glGetAttachedShaders(program, 1, NULL, &vertexShader);
+    GLuint fragmentShader;
+    glGetAttachedShaders(program, 1, NULL, &fragmentShader);
+    glDetachShader(program, vertexShader);
+    glDetachShader(program, fragmentShader);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    glDeleteProgram(program);
+
+    eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroyContext(eglDisplay, eglContext);
+    eglDestroySurface(eglDisplay, eglSurface);
+    eglTerminate(eglDisplay);
+}
+
+
 
 std::string readShader(const std::string& filepath) {
     std::ifstream file(filepath);
@@ -50,132 +133,6 @@ std::string readShader(const std::string& filepath) {
     }
 
     return shader_code;
-}
-
-// Initialize OpenGL context and window
-void initializeOpenGL()
-{
-    // Initialize EGL
-    EGLint numConfigs;
-    EGLint majorVersion;
-    EGLint minorVersion;
-    EGLConfig eglConfig;
-    EGLint attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_DEPTH_SIZE, 24,
-    EGL_STENCIL_SIZE, 8,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR, // OpenGL ES 3.0 컨텍스트 요청
-    EGL_NONE
-    };
-    eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-    eglInitialize(eglDisplay, &majorVersion, &minorVersion);
-    eglChooseConfig(eglDisplay, attribs, &eglConfig, 1, &numConfigs);
-    eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
-    EGLint contextAttribs[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 3,
-        EGL_NONE
-    };
-    eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-    eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
-
-    // Compile and link shaders
-    // vertex shader
-    std::string shaderCode = readShader("source.vert");
-    const char* shaderCodeCstr = shaderCode.c_str();
-
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &shaderCodeCstr, NULL);
-    glCompileShader(vertexShader);
-
-    shaderCode = readShader("source.frag");
-    shaderCodeCstr = shaderCode.c_str();
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &shaderCodeCstr, NULL);
-    glCompileShader(fragmentShader);
-    program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-    glUseProgram(program);
-
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-}
-
-// Clean up OpenGL context and window
-void cleanupOpenGL()
-{
-    // Delete vertex buffer object
-    glDeleteBuffers(1, &vbo);
-    // Delete program and shaders
-    GLint program;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &program);
-    GLuint vertexShader;
-    glGetAttachedShaders(program, 1, NULL, &vertexShader);
-    GLuint fragmentShader;
-    glGetAttachedShaders(program, 1, NULL, &fragmentShader);
-    glDetachShader(program, vertexShader);
-    glDetachShader(program, fragmentShader);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteProgram(program);
-    // Terminate EGL
-    eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroyContext(eglDisplay, eglContext);
-    eglDestroySurface(eglDisplay, eglSurface);
-    eglTerminate(eglDisplay);
-}
-
-SHPHandle hSHP;
-SHPObject* psShape;
-bool isShapeLoaded = false;
-TCHAR szFileName[MAX_PATH];
-const float delta = 0.02f;
-float cameraX = 0.0f;
-float cameraY = 0.0f;
-
-// Render OpenGL scene
-void drawOpenGL() 
-{
-
-    glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, 1.0f);
-    glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, 0.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-    glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
-
-    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_POINTS, 0, vertexData.size() / 2);
-}
-
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
-    int nShapeCount;
-    SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-
-    for (size_t i = 0; i < nShapeCount; ++i) {
-        SHPObject* psShape = SHPReadObject(hSHP, i);
-
-        for (int i = 0; i < psShape->nVertices; i++) {
-            float x = (float)(psShape->padfX[i]);
-            float y = (float)(psShape->padfY[i]);
-
-            xMin = min(xMin, x);
-            yMin = min(yMin, y);
-            xMax = max(xMax, x);
-            yMax = max(yMax, y);
-
-            vertexData.push_back(x);
-            vertexData.push_back(y);
-        }
-
-        SHPDestroyObject(psShape);
-    }
 }
 
 bool openShapefile() {
@@ -230,7 +187,31 @@ bool openShapefile() {
     return true;
 }
 
-void cleanupShapefile() {
+void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
+    int nShapeCount;
+    SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+
+    for (size_t i = 0; i < nShapeCount; ++i) {
+        SHPObject* psShape = SHPReadObject(hSHP, i);
+
+        for (int i = 0; i < psShape->nVertices; i++) {
+            float x = (float)(psShape->padfX[i]);
+            float y = (float)(psShape->padfY[i]);
+
+            xMin = min(xMin, x);
+            yMin = min(yMin, y);
+            xMax = max(xMax, x);
+            yMax = max(yMax, y);
+
+            vertexData.push_back(x);
+            vertexData.push_back(y);
+        }
+
+        SHPDestroyObject(psShape);
+    }
+}
+
+void closeShapefile() {
     if (isShapeLoaded) SHPClose(hSHP);
 }
 
@@ -244,7 +225,8 @@ std::string ConvertWideCharToChar(const wchar_t* wideCharString)
     return result;
 }
 
-// Window procedure
+
+
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -252,14 +234,13 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
-        // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
         case IDM_OPEN:
             openShapefile();
 			break;
 		case IDM_EXIT:
-			cleanupShapefile();
+            closeShapefile();
 			DestroyWindow(hWnd);
 			break;
 		default:
@@ -285,12 +266,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
         }
         break;
     case WM_DESTROY:
-        cleanupShapefile();
+        closeShapefile();
         PostQuitMessage(0);
         break;
     case WM_PAINT:
         glClear(GL_COLOR_BUFFER_BIT);
-        if (isShapeLoaded) drawOpenGL();
+        if (isShapeLoaded) render();
         eglSwapBuffers(eglDisplay, eglSurface);
         break;
     default:
@@ -299,10 +280,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return 0;
 }
 
-// Entry point
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    // Register window class
     WNDCLASSEX wcex = {};
     wcex.cbSize = sizeof(wcex);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -313,17 +292,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY3DSHAPEVIEWER);
     wcex.lpszClassName = L"OpenGLWindowClass";
     RegisterClassEx(&wcex);
-    // Create window
+
     hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"OpenGL ES 3.0 Window", WS_OVERLAPPEDWINDOW,
         300, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
         NULL, NULL, hInstance, NULL);
     hInst = hInstance;
     ShowWindow(hWnd, nCmdShow);
 
-    // Initialize OpenGL
-    initializeOpenGL();
+    initialize();
 
-    // Enter message loop
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
     MSG msg = {};
 
@@ -336,8 +313,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         }
     }
 
-    // Clean up OpenGL
-    cleanupOpenGL();
+    cleanUp();
 
     return static_cast<int>(msg.wParam);
 }
