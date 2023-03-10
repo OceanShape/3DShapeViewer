@@ -57,7 +57,7 @@ bool compileShader(GLuint shader, const char* source)
 
 
 
-void initialize()
+bool initialize()
 {
 	EGLint numConfigs;
 	EGLint majorVersion;
@@ -90,14 +90,17 @@ void initialize()
 	const char* shaderCstr = shaderSource.c_str();
 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	compileShader(vertexShader, shaderCstr);
+	if (!compileShader(vertexShader, shaderCstr)) {
+		return false;
+	}
 
 	shaderSource = readShader("source.frag");
 	shaderCstr = shaderSource.c_str();
 
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	compileShader(fragmentShader, shaderCstr);
-
+	if (!compileShader(fragmentShader, shaderCstr)) {
+		return false;
+	}
 
 	program = glCreateProgram();
 	glAttachShader(program, vertexShader);
@@ -106,6 +109,8 @@ void initialize()
 	glUseProgram(program);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+	return true;
 }
 
 void render()
@@ -327,7 +332,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	freopen("CONOUT$", "w", stderr);
 	freopen("CONOUT$", "w", stdout);
 
-	initialize();
+	if (!initialize()) {
+		return -1;
+	}
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
 	MSG msg = {};
