@@ -13,7 +13,6 @@ EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 EGLContext eglContext;
 HWND hWnd;
-HANDLE hConsole;
 HINSTANCE hInst;
 TCHAR szFileName[MAX_PATH];
 
@@ -31,11 +30,6 @@ const float delta = 0.02f;
 vector<float> vertexData;
 
 
-////////////////////////
-
-void printConsoleMsg(const wchar_t* const string) {
-	WriteConsoleW(hConsole, string, wcslen(string), NULL, NULL);
-}
 
 bool checkShaderCompileStatus(GLuint shader)
 {
@@ -45,42 +39,22 @@ bool checkShaderCompileStatus(GLuint shader)
 	{
 		GLint infoLogLength;
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-		std::vector<char> infoLog(infoLogLength);
+		vector<char> infoLog(infoLogLength);
 		glGetShaderInfoLog(shader, infoLogLength, nullptr, infoLog.data());
-		std::cerr << "Shader compile error: " << infoLog.data() << std::endl;
+		cerr << "Shader compile error: " << infoLog.data() << endl;
 		return false;
 	}
+	cout << "Shader compile complite" << endl;
 	return true;
 }
 
-// 쉐이더 오류 메시지 가져오기 함수
-std::string getShaderInfoLog(GLuint shader)
-{
-	GLint infoLogLength;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-	std::vector<char> infoLog(infoLogLength);
-	glGetShaderInfoLog(shader, infoLogLength, nullptr, infoLog.data());
-	return std::string(infoLog.data(), infoLogLength);
-}
-
-// 쉐이더 컴파일 함수
 bool compileShader(GLuint shader, const char* source)
 {
 	glShaderSource(shader, 1, &source, nullptr);
 	glCompileShader(shader);
-	if (!checkShaderCompileStatus(shader))
-	{
-		printConsoleMsg(L"Shader compile error: " + getShaderInfoLog(shader).c_str())
-		std::cerr <<  << std::endl;
-
-		
-		return false;
-	}
-	return true;
+	return checkShaderCompileStatus(shader);
 }
 
-
-////////////////////////
 
 
 void initialize()
@@ -112,20 +86,17 @@ void initialize()
 	eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 
 
-	std::string shaderCode = readShader("source.vert");
-	const char* shaderCodeCstr = shaderCode.c_str();
+	string shaderSource = readShader("source.vert");
+	const char* shaderCstr = shaderSource.c_str();
 
 	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	compileShader(vertexShader, shaderCodeCstr);
+	compileShader(vertexShader, shaderCstr);
 
-	/*glShaderSource(vertexShader, 1, &shaderCodeCstr, NULL);
-	glCompileShader(vertexShader);*/
-
-	shaderCode = readShader("source.frag");
-	shaderCodeCstr = shaderCode.c_str();
+	shaderSource = readShader("source.frag");
+	shaderCstr = shaderSource.c_str();
 
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	compileShader(fragmentShader, shaderCodeCstr);
+	compileShader(fragmentShader, shaderCstr);
 
 
 	program = glCreateProgram();
@@ -173,14 +144,14 @@ void cleanUp()
 
 
 
-std::string readShader(const std::string& filepath) {
-	std::ifstream file(filepath);
+string readShader(const string& filepath) {
+	ifstream file(filepath);
 	if (!file.is_open()) {
 		return "";
 	}
 
-	std::string shader_code;
-	std::string line;
+	string shader_code;
+	string line;
 	while (getline(file, line)) {
 		shader_code += line + "\n";
 	}
@@ -268,11 +239,11 @@ void closeShapefile() {
 	if (isShapeLoaded) SHPClose(hSHP);
 }
 
-std::string ConvertWideCharToChar(const wchar_t* wideCharString)
+string ConvertWideCharToChar(const wchar_t* wideCharString)
 {
 	int bufferSize = WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, nullptr, 0, nullptr, nullptr);
 
-	std::string result(100, 0);
+	string result(100, 0);
 	WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, &result[0], bufferSize, nullptr, nullptr);
 
 	return result;
@@ -353,7 +324,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(hWnd, nCmdShow);
 
 	AllocConsole();
-	hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	freopen("CONOUT$", "w", stderr);
+	freopen("CONOUT$", "w", stdout);
 
 	initialize();
 

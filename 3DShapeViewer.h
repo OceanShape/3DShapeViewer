@@ -25,6 +25,9 @@
 
 using namespace std;
 
+bool checkShaderCompileStatus(GLuint shader);
+bool compileShader(GLuint shader, const char* source);
+
 void initialize();
 void render();
 void cleanUp();
