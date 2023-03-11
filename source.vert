@@ -4,13 +4,13 @@ uniform vec2 minimum;
 uniform vec2 delta;
 uniform mat4 view;
 
-float modelToWorld(float pos, float m, float d) {
-  return (pos - m) / d - 1.0f;
+float modelToWorld(int idx) {
+  return (a_position[idx] - minimum[idx]) / delta[idx] - 1.0f;
 }
 
 void main() {
-  float x = modelToWorld(a_position[0], minimum[0], delta[0]);
-  float y = modelToWorld(a_position[1], minimum[1], delta[1]);
+  float x = modelToWorld(0);
+  float y = modelToWorld(1);
   vec3 position = vec3(x, y, 0.0f);
   gl_Position = view * vec4(position, 1.0f);
   gl_PointSize = 1.0f;
