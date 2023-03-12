@@ -1,6 +1,7 @@
 #include "3DShapeViewer.h"
 
 #include <stdarg.h>
+#include <CommCtrl.h>
 
 using namespace std;
 
@@ -315,8 +316,36 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
+LRESULT CALLBACK ProgressWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_CREATE:
+		return 0;
+	case WM_PAINT:
+		cout << "printed" << endl;
+		return 0;
+	case WM_COMMAND:
+		return 0;
+	case WM_CLOSE:
+		DestroyWindow(hWnd);
+		return 0;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	AllocConsole();
+	freopen("CONOUT$", "w", stderr);
+	freopen("CONOUT$", "w", stdout);
+
+
 	WNDCLASSEX wcex = {};
 	wcex.cbSize = sizeof(wcex);
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -334,9 +363,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	hInst = hInstance;
 	ShowWindow(hWnd, nCmdShow);
 
-	AllocConsole();
-	freopen("CONOUT$", "w", stderr);
-	freopen("CONOUT$", "w", stdout);
+
+	WNDCLASS wcProgress = { 0 };
+	wcProgress.lpfnWndProc = ProgressWndProc;
+	wcProgress.hInstance = hInstance;
+	wcProgress.lpszClassName = TEXT("ProgressWndClass");
+
+	RegisterClass(&wcProgress);
+
+	HWND hWndProgress = CreateWindowEx(0, 
+		L"ProgressWndClass", L"Progress Window", WS_OVERLAPPEDWINDOW,
+		200, 200, 320, 240, NULL, NULL, hInstance, NULL);
+	ShowWindow(hWndProgress, nCmdShow);
+
+
 
 	if (!initialize()) {
 		return -1;
