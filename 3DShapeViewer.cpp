@@ -27,7 +27,8 @@ float cameraX = 0.0f;
 float cameraY = 0.0f;
 const float delta = 0.02f;
 
-vector<float> vertexData;
+vector<float> vertices;
+vector<int> objectVertices;
 
 
 
@@ -124,7 +125,10 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	glDrawArrays(GL_POINTS, 0, vertexData.size() / 2);
+	for (int i = 0, startIndex = 0; i < objectVertices.size(); ++i) {
+		glDrawArrays(GL_LINE_STRIP, startIndex, objectVertices[i]);
+		startIndex += objectVertices[i];
+	}
 }
 
 void cleanUp()
@@ -197,7 +201,7 @@ bool openShapefile() {
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), vertexData.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
 	glGetAttribLocation(program, "a_position");
 	glEnableVertexAttribArray(0);
@@ -220,8 +224,10 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
 
+
 	for (size_t i = 0; i < nShapeCount; ++i) {
 		SHPObject* psShape = SHPReadObject(hSHP, i);
+		objectVertices.push_back(psShape->nVertices);
 
 		for (int i = 0; i < psShape->nVertices; i++) {
 			float x = (float)(psShape->padfX[i]);
@@ -232,8 +238,8 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 			xMax = max(xMax, x);
 			yMax = max(yMax, y);
 
-			vertexData.push_back(x);
-			vertexData.push_back(y);
+			vertices.push_back(x);
+			vertices.push_back(y);
 		}
 
 		SHPDestroyObject(psShape);
