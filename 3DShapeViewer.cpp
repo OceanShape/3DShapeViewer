@@ -226,9 +226,11 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
 
 	HWND hWndProgress = CreateWindowEx(0,
-		L"ProgressWndClass", L"Progress Window", WS_OVERLAPPEDWINDOW,
-		200, 200, 320, 240, NULL, NULL, hInst, NULL);
+		L"ProgressWndClass", L"Progress Window", WS_CHILD | WS_VISIBLE,
+		200, 200, 320, 240, hWnd, (HMENU)401, hInst, NULL);
+	cout << GetLastError() << endl;
 	ShowWindow(hWndProgress, SW_SHOWDEFAULT);
+	
 
 	for (size_t i = 0; i < nShapeCount; ++i) {
 		SHPObject* psShape = SHPReadObject(hSHP, i);
@@ -246,6 +248,7 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 			vertices.push_back(x);
 			vertices.push_back(y);
 		}
+		::SendMessage(hWndProgress, PBM_SETPOS, (WPARAM)(INT)40, 0);
 
 		SHPDestroyObject(psShape);
 	}
@@ -367,6 +370,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	{
 		wcProgress.cbSize = sizeof(wcProgress);
+		wcProgress.style = WS_CHILD | WS_VISIBLE;
+		wcProgress.lpfnWndProc = DefWindowProc;
 		wcProgress.lpfnWndProc = ProgressWndProc;
 		wcProgress.hInstance = hInstance;
 		wcProgress.lpszClassName = L"ProgressWndClass";
