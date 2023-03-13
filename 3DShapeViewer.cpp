@@ -221,42 +221,6 @@ bool openShapefile() {
 	return true;
 }
 
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
-	int nShapeCount;
-	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-
-	HWND hWndProgress = CreateWindowEx(0,
-		L"ProgressWndClass", L"Progress Window", WS_CHILD | WS_VISIBLE,
-		200, 200, 320, 240, hWnd, (HMENU)401, hInst, NULL);
-	cout << GetLastError() << endl;
-	ShowWindow(hWndProgress, SW_SHOWDEFAULT);
-	
-
-	for (size_t i = 0; i < nShapeCount; ++i) {
-		SHPObject* psShape = SHPReadObject(hSHP, i);
-		objectVertices.push_back(psShape->nVertices);
-
-		for (int i = 0; i < psShape->nVertices; i++) {
-			float x = (float)(psShape->padfX[i]);
-			float y = (float)(psShape->padfY[i]);
-
-			xMin = min(xMin, x);
-			yMin = min(yMin, y);
-			xMax = max(xMax, x);
-			yMax = max(yMax, y);
-
-			vertices.push_back(x);
-			vertices.push_back(y);
-		}
-		::SendMessage(hWndProgress, PBM_SETPOS, (WPARAM)(INT)40, 0);
-
-		SHPDestroyObject(psShape);
-	}
-
-	Sleep(1000);
-
-	DestroyWindow(hWndProgress);
-}
 
 void closeShapefile() {
 	if (isShapeLoaded) SHPClose(hSHP);
@@ -350,14 +314,71 @@ LRESULT CALLBACK ProgressWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	return 0;
 }
 
+ATOM progressAtom;
+
+void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
+	int nShapeCount;
+	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+	
+		//L"ProgressWndClass";
+	HWND hWndProgress = CreateWindowEx(0,
+		(LPCWSTR)progressAtom, L"Progress Window", WS_CHILD | WS_VISIBLE,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWnd, NULL, hInst, NULL);
+	if (hWndProgress == NULL) {
+		wchar_t* p_error_message;
+		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+			GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+			(LPTSTR)&p_error_message, 0, NULL);
+
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+		std::wstring wstring = p_error_message;
+		string str = converter.to_bytes(wstring);
+		cout << str << endl;
+		LocalFree(p_error_message);
+	}
+	//cout << GetLastError() << endl;
+	ShowWindow(hWndProgress, SW_SHOWDEFAULT);
+	
+
+	for (size_t i = 0; i < nShapeCount; ++i) {
+		SHPObject* psShape = SHPReadObject(hSHP, i);
+		objectVertices.push_back(psShape->nVertices);
+
+		for (int i = 0; i < psShape->nVertices; i++) {
+			float x = (float)(psShape->padfX[i]);
+			float y = (float)(psShape->padfY[i]);
+
+			xMin = min(xMin, x);
+			yMin = min(yMin, y);
+			xMax = max(xMax, x);
+			yMax = max(yMax, y);
+
+			vertices.push_back(x);
+			vertices.push_back(y);
+		}
+		::SendMessage(hWndProgress, PBM_SETPOS, (WPARAM)(INT)40, 0);
+
+		SHPDestroyObject(psShape);
+	}
+
+	Sleep(1000);
+
+	DestroyWindow(hWndProgress);
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	AllocConsole();
 	freopen("CONOUT$", "w", stderr);
 	freopen("CONOUT$", "w", stdout);
 
+	INITCOMMONCONTROLSEX icex = { sizeof(INITCOMMONCONTROLSEX) };
+	icex.dwICC = ICC_PROGRESS_CLASS;
+	InitCommonControlsEx(&icex);
 
-	WNDCLASSEX wcex = {}, wcProgress = {};
+	WNDCLASSEX wcex = {};
+	WNDCLASSEX wcProgress = {};
 	{
 		wcex.cbSize = sizeof(wcex);
 		wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -370,14 +391,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	{
 		wcProgress.cbSize = sizeof(wcProgress);
-		wcProgress.style = WS_CHILD | WS_VISIBLE;
+		wcProgress.style = CS_HREDRAW | CS_VREDRAW;// 여기는 WS_CHILD | WS_VISIBLE 옵션이 없음
 		wcProgress.lpfnWndProc = DefWindowProc;
-		wcProgress.lpfnWndProc = ProgressWndProc;
+		//wcProgress.lpfnWndProc = ProgressWndProc;
 		wcProgress.hInstance = hInstance;
 		wcProgress.lpszClassName = L"ProgressWndClass";
 	}
 	RegisterClassEx(&wcex);
 	RegisterClassEx(&wcProgress);
+	//if (test == 0) {
+	//	cout << "TT";
+	//	wchar_t* p_error_message;
+	//	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	//		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+	//		GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+	//		(LPTSTR)&p_error_message, 0, NULL);
+
+	//	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	//	std::wstring wstring = p_error_message;
+	//	string str = converter.to_bytes(wstring);
+	//	cout << str << endl;
+	//	LocalFree(p_error_message);
+	//}
 
 
 
