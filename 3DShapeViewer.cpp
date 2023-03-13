@@ -225,6 +225,10 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
 
+	HWND hWndProgress = CreateWindowEx(0,
+		L"ProgressWndClass", L"Progress Window", WS_OVERLAPPEDWINDOW,
+		200, 200, 320, 240, NULL, NULL, hInst, NULL);
+	ShowWindow(hWndProgress, SW_SHOWDEFAULT);
 
 	for (size_t i = 0; i < nShapeCount; ++i) {
 		SHPObject* psShape = SHPReadObject(hSHP, i);
@@ -245,6 +249,10 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 
 		SHPDestroyObject(psShape);
 	}
+
+	Sleep(1000);
+
+	DestroyWindow(hWndProgress);
 }
 
 void closeShapefile() {
@@ -331,7 +339,7 @@ LRESULT CALLBACK ProgressWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		DestroyWindow(hWnd);
 		return 0;
 	case WM_DESTROY:
-		PostQuitMessage(0);
+		//PostQuitMessage(0);
 		return 0;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -346,36 +354,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	freopen("CONOUT$", "w", stdout);
 
 
-	WNDCLASSEX wcex = {};
-	wcex.cbSize = sizeof(wcex);
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WindowProc;
-	wcex.hInstance = hInstance;
-	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
-	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY3DSHAPEVIEWER);
-	wcex.lpszClassName = L"OpenGLWindowClass";
+	WNDCLASSEX wcex = {}, wcProgress = {};
+	{
+		wcex.cbSize = sizeof(wcex);
+		wcex.style = CS_HREDRAW | CS_VREDRAW;
+		wcex.lpfnWndProc = WindowProc;
+		wcex.hInstance = hInstance;
+		wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
+		wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY3DSHAPEVIEWER);
+		wcex.lpszClassName = L"OpenGLWindowClass";
+	}
+	{
+		wcProgress.cbSize = sizeof(wcProgress);
+		wcProgress.lpfnWndProc = ProgressWndProc;
+		wcProgress.hInstance = hInstance;
+		wcProgress.lpszClassName = L"ProgressWndClass";
+	}
 	RegisterClassEx(&wcex);
+	RegisterClassEx(&wcProgress);
+
+
 
 	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"OpenGL ES 3.0 Window", WS_OVERLAPPEDWINDOW,
 		300, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
 		NULL, NULL, hInstance, NULL);
+
 	hInst = hInstance;
+
 	ShowWindow(hWnd, nCmdShow);
-
-
-	WNDCLASS wcProgress = { 0 };
-	wcProgress.lpfnWndProc = ProgressWndProc;
-	wcProgress.hInstance = hInstance;
-	wcProgress.lpszClassName = TEXT("ProgressWndClass");
-
-	RegisterClass(&wcProgress);
-
-	HWND hWndProgress = CreateWindowEx(0, 
-		L"ProgressWndClass", L"Progress Window", WS_OVERLAPPEDWINDOW,
-		200, 200, 320, 240, NULL, NULL, hInstance, NULL);
-	ShowWindow(hWndProgress, nCmdShow);
-
 
 
 	if (!initialize()) {
@@ -384,6 +391,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
 	MSG msg = {};
+
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
