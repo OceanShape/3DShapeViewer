@@ -46,7 +46,7 @@ bool checkShaderCompileStatus(GLuint shader)
 		cerr << "Shader compile error: " << infoLog.data() << endl;
 		return false;
 	}
-	cout << "Shader compile complite" << endl;
+	std::cout << "Shader compile complite" << endl;
 	return true;
 }
 
@@ -291,39 +291,21 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-LRESULT CALLBACK ProgressWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch (message)
-	{
-	case WM_CREATE:
-		return 0;
-	case WM_PAINT:
-		cout << "printed" << endl;
-		return 0;
-	case WM_COMMAND:
-		return 0;
-	case WM_CLOSE:
-		DestroyWindow(hWnd);
-		return 0;
-	case WM_DESTROY:
-		//PostQuitMessage(0);
-		return 0;
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-	return 0;
-}
-
-ATOM progressAtom;
-
 void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-	
-		//L"ProgressWndClass";
+
+	RECT rt;
+	GetClientRect(hWnd, &rt);
+	int progressWidth = 440;
+	int progressHeight = 30;
+
 	HWND hWndProgress = CreateWindowEx(0,
-		(LPCWSTR)progressAtom, L"Progress Window", WS_CHILD | WS_VISIBLE,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, hWnd, NULL, hInst, NULL);
+		PROGRESS_CLASS, L"PROGRESS", WS_VISIBLE | WS_CHILD,
+		(rt.right - progressWidth) / 2,
+		(rt.bottom - progressHeight) / 2,
+		progressWidth,
+		progressHeight, hWnd, (HMENU)401, hInst, NULL);
 	if (hWndProgress == NULL) {
 		wchar_t* p_error_message;
 		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
@@ -334,20 +316,19 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 		std::wstring wstring = p_error_message;
 		string str = converter.to_bytes(wstring);
-		cout << str << endl;
+		std::cout << GetLastError() << ": " << str << endl;
 		LocalFree(p_error_message);
 	}
-	//cout << GetLastError() << endl;
-	ShowWindow(hWndProgress, SW_SHOWDEFAULT);
-	
+
+	::SendMessage(hWndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, 20));
 
 	for (size_t i = 0; i < nShapeCount; ++i) {
 		SHPObject* psShape = SHPReadObject(hSHP, i);
 		objectVertices.push_back(psShape->nVertices);
 
-		for (int i = 0; i < psShape->nVertices; i++) {
-			float x = (float)(psShape->padfX[i]);
-			float y = (float)(psShape->padfY[i]);
+		for (int v = 0; v < psShape->nVertices; v++) {
+			float x = (float)(psShape->padfX[v]);
+			float y = (float)(psShape->padfY[v]);
 
 			xMin = min(xMin, x);
 			yMin = min(yMin, y);
@@ -357,12 +338,9 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 			vertices.push_back(x);
 			vertices.push_back(y);
 		}
-		::SendMessage(hWndProgress, PBM_SETPOS, (WPARAM)(INT)40, 0);
-
+		::SendMessage(hWndProgress, PBM_SETPOS, (int)(i * 10 / nShapeCount), 0);
 		SHPDestroyObject(psShape);
 	}
-
-	Sleep(1000);
 
 	DestroyWindow(hWndProgress);
 }
@@ -378,7 +356,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	InitCommonControlsEx(&icex);
 
 	WNDCLASSEX wcex = {};
-	WNDCLASSEX wcProgress = {};
 	{
 		wcex.cbSize = sizeof(wcex);
 		wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -389,34 +366,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_MY3DSHAPEVIEWER);
 		wcex.lpszClassName = L"OpenGLWindowClass";
 	}
-	{
-		wcProgress.cbSize = sizeof(wcProgress);
-		wcProgress.style = CS_HREDRAW | CS_VREDRAW;// 여기는 WS_CHILD | WS_VISIBLE 옵션이 없음
-		wcProgress.lpfnWndProc = DefWindowProc;
-		//wcProgress.lpfnWndProc = ProgressWndProc;
-		wcProgress.hInstance = hInstance;
-		wcProgress.lpszClassName = L"ProgressWndClass";
-	}
 	RegisterClassEx(&wcex);
-	RegisterClassEx(&wcProgress);
-	//if (test == 0) {
-	//	cout << "TT";
-	//	wchar_t* p_error_message;
-	//	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-	//		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
-	//		GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-	//		(LPTSTR)&p_error_message, 0, NULL);
 
-	//	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	//	std::wstring wstring = p_error_message;
-	//	string str = converter.to_bytes(wstring);
-	//	cout << str << endl;
-	//	LocalFree(p_error_message);
-	//}
-
-
-
-	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"OpenGL ES 3.0 Window", WS_OVERLAPPEDWINDOW,
+	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
 		300, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
 		NULL, NULL, hInstance, NULL);
 
