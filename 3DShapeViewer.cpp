@@ -291,9 +291,22 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
+#include <bitset>
+
 void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+	cout << hSHP->nFileSize << endl;
+	for (size_t i = 0; i < 2; ++i) {
+		printf("%0.16f\n", hSHP->adBoundsMin[i]);
+	}
+	for (size_t i = 0; i < 2; ++i) {
+		printf("%0.16f\n", hSHP->adBoundsMax[i]);
+	}
+	cout << bitset<64>(hSHP->adBoundsMin[0]) << endl;
+	cout << bitset<64>(hSHP->adBoundsMin[1]) << endl;
+	cout << bitset<64>(hSHP->adBoundsMax[0]) << endl;
+	cout << bitset<64>(hSHP->adBoundsMax[1]) << endl;
 
 	RECT rt;
 	GetClientRect(hWnd, &rt);
