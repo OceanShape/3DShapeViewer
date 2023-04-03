@@ -326,9 +326,21 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 		SHPObject* psShape = SHPReadObject(hSHP, i);
 		objectVertices.push_back(psShape->nVertices);
 
+		if (i == 0) {
+			cout << psShape->nShapeId << endl;
+			cout << psShape->nVertices << endl;
+			cout << psShape->nParts << endl;
+			printf("%0.16f, %0.16f\n", psShape->dfXMin, psShape->dfYMin);
+			printf("%0.16f, %0.16f\n", psShape->dfXMax, psShape->dfYMax);
+		}
+
 		for (int v = 0; v < psShape->nVertices; v++) {
 			float x = (float)(psShape->padfX[v]);
 			float y = (float)(psShape->padfY[v]);
+
+			if (i == 0) {
+				printf("%0.16f, %0.16f\n", x, y);
+			}
 
 			xMin = min(xMin, x);
 			yMin = min(yMin, y);
