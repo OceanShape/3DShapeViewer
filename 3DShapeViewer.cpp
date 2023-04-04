@@ -20,9 +20,9 @@ TCHAR szFileName[MAX_PATH];
 GLuint vbo;
 GLuint program;
 
-SHPHandle hSHP;
-SHPObject* psShape;
+FILE* SHPFile;
 bool isShapeLoaded = false;
+int32_t recordCount = 0;
 
 float cameraX = 0.0f;
 float cameraY = 0.0f;
@@ -32,8 +32,6 @@ vector<float> vertices;
 vector<int> objectVertices;
 
 typedef unsigned char uchar;
-
-int32_t recordCount = 0;
 
 
 bool checkShaderCompileStatus(GLuint shader)
@@ -176,7 +174,7 @@ string readShader(const string& filepath) {
 
 
 void closeShapefile() {
-	if (isShapeLoaded) SHPClose(hSHP);
+	if (isShapeLoaded) fclose(SHPFile);
 }
 
 string ConvertWideCharToChar(const wchar_t* wideCharString)
@@ -283,9 +281,6 @@ void memSwap(void* const data, size_t size) {
 }
 
 void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
-	int nShapeCount;
-	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	int progressWidth = 440;
@@ -316,7 +311,7 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 
 	SHPHeader shpHeaderData;
 
-	FILE* fp = hSHP->fpSHP;
+	FILE* fp = SHPFile;
 
 	fseek(fp, 0L, SEEK_END);
 	long fileSize = ftell(fp);
@@ -404,8 +399,6 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		recordCount++;
 	}
 
-	cout << recordCount << endl;
-
 	delete[] points;
 
 	DestroyWindow(hWndProgress);
@@ -425,11 +418,10 @@ bool openShapefile() {
 
 	if (GetOpenFileName(&ofn) == false) return false;
 
-	//hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
 	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-	hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
+	SHPFile = fopen(converter.to_bytes(szFileName).c_str(), "rb");
 
-	if (hSHP == nullptr) return false;
+	if (SHPFile == nullptr) return false;
 
 	float xMin = FLT_MAX;
 	float xMax = FLT_MIN;
@@ -461,61 +453,6 @@ bool openShapefile() {
 	isShapeLoaded = true;
 
 	return true;
-}
-
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
-	int nShapeCount;
-	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-
-	RECT rt;
-	GetClientRect(hWnd, &rt);
-	int progressWidth = 440;
-	int progressHeight = 30;
-
-	HWND hWndProgress = CreateWindowEx(0,
-		PROGRESS_CLASS, L"PROGRESS", WS_VISIBLE | WS_CHILD,
-		(rt.right - progressWidth) / 2,
-		(rt.bottom - progressHeight) / 2,
-		progressWidth,
-		progressHeight, hWnd, (HMENU)401, hInst, NULL);
-	if (hWndProgress == NULL) {
-		wchar_t* p_error_message;
-		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
-			GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-			(LPTSTR)&p_error_message, 0, NULL);
-
-		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-		std::wstring wstring = p_error_message;
-		string str = converter.to_bytes(wstring);
-		std::cout << GetLastError() << ": " << str << endl;
-		LocalFree(p_error_message);
-	}
-
-	::SendMessage(hWndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, 20));
-
-	//nShapeCount
-	for (size_t i = 0; i < 3; ++i) {
-		SHPObject* psShape = SHPReadObject(hSHP, i);
-		objectVertices.push_back(psShape->nVertices);
-		
-		for (int v = 0; v < psShape->nVertices; v++) {
-			float x = (float)(psShape->padfX[v]);
-			float y = (float)(psShape->padfY[v]);
-
-			xMin = std::min(xMin, x);
-			yMin = std::min(yMin, y);
-			xMax = std::max(xMax, x);
-			yMax = std::max(yMax, y);
-
-			vertices.push_back(x);
-			vertices.push_back(y);
-		}
-		::SendMessage(hWndProgress, PBM_SETPOS, (int)(i * 10 / nShapeCount), 0);
-		SHPDestroyObject(psShape);
-	}
-
-	DestroyWindow(hWndProgress);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
