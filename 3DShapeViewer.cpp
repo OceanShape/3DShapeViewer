@@ -31,6 +31,8 @@ const float delta = 0.02f;
 vector<float> vertices;
 vector<int> objectVertices;
 
+typedef unsigned char uchar;
+
 
 
 bool checkShaderCompileStatus(GLuint shader)
@@ -169,57 +171,7 @@ string readShader(const string& filepath) {
 	return shader_code;
 }
 
-bool openShapefile() {
-	OPENFILENAME ofn;
 
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.lpstrFilter = L"Shapefiles (*.shp)\0*.shp\0All Files (*.*)\0*.*\0";
-	ofn.hwndOwner = NULL;
-	ofn.lpstrFile = szFileName;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = L"shp";
-
-	if (GetOpenFileName(&ofn) == false) return false;
-
-	//hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
-	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-	hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
-
-	if (hSHP == nullptr) return false;
-
-	float xMin = FLT_MAX;
-	float xMax = FLT_MIN;
-	float yMin = FLT_MAX;
-	float yMax = FLT_MIN;
-
-	readShapefile(xMin, xMax, yMin, yMax);
-
-	float xDel = (xMax - xMin) / 2.0f;
-	float yDel = (yMax - yMin) / 2.0f;
-
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
-
-	glGetAttribLocation(program, "a_position");
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-	GLfloat min[] = { xMin, yMin };
-	GLuint offsetLoc = glGetUniformLocation(program, "minimum");
-	glUniform2fv(offsetLoc, 1, min);
-
-	GLfloat del[] = { xDel, yDel };
-	GLuint delLoc = glGetUniformLocation(program, "delta");
-	glUniform2fv(delLoc, 1, del);
-
-	isShapeLoaded = true;
-
-	return true;
-}
 
 
 void closeShapefile() {
@@ -291,22 +243,48 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-#include <bitset>
+struct SHPHeader {
+	int32_t fileCode;
+	int32_t fileLen;
+	int32_t version;
+	int32_t SHPType;
 
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
+	double Xmin;
+	double Ymin;
+	double Xmax;
+	double Ymax;
+	double Zmin;
+	double Zmax;
+	double Mmin;
+	double Mmax;
+};
+
+struct SHPPoint {
+	double x;
+	double y;
+};
+
+struct SHPPolygon {
+	double box[4];
+	shared_ptr<vector<int32_t>> parts;
+	shared_ptr<vector<SHPPoint>> points;
+};
+
+void memSwap(void* const data, size_t size) {
+	uint8_t* start = (uint8_t*)data;
+	uint8_t* end = (uint8_t*)data + size - 1;
+	while (start < end) {
+		uint8_t tmp = *start;
+		*start = *end;
+		*end = tmp;
+		start++, end--;
+	}
+}
+
+
+void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
-	cout << hSHP->nFileSize << endl;
-	for (size_t i = 0; i < 2; ++i) {
-		printf("%0.16f\n", hSHP->adBoundsMin[i]);
-	}
-	for (size_t i = 0; i < 2; ++i) {
-		printf("%0.16f\n", hSHP->adBoundsMax[i]);
-	}
-	cout << bitset<64>(hSHP->adBoundsMin[0]) << endl;
-	cout << bitset<64>(hSHP->adBoundsMin[1]) << endl;
-	cout << bitset<64>(hSHP->adBoundsMax[0]) << endl;
-	cout << bitset<64>(hSHP->adBoundsMax[1]) << endl;
 
 	RECT rt;
 	GetClientRect(hWnd, &rt);
@@ -335,30 +313,197 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
 
 	::SendMessage(hWndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, 20));
 
-	for (size_t i = 0; i < nShapeCount; ++i) {
-		SHPObject* psShape = SHPReadObject(hSHP, i);
-		objectVertices.push_back(psShape->nVertices);
 
-		if (i == 0) {
-			cout << psShape->nShapeId << endl;
-			cout << psShape->nVertices << endl;
-			cout << psShape->nParts << endl;
-			printf("%0.16f, %0.16f\n", psShape->dfXMin, psShape->dfYMin);
-			printf("%0.16f, %0.16f\n", psShape->dfXMax, psShape->dfYMax);
+	SHPHeader shpHeaderData;
+
+	FILE* fp = hSHP->fpSHP;
+
+	fseek(fp, 0L, SEEK_END);
+	long fileSize = ftell(fp);
+	rewind(fp);
+
+	uchar* data = new uchar[fileSize];
+	memset(data, 0, fileSize);
+	fread(data, sizeof(uchar), fileSize, fp);
+
+	uchar* offset = data;
+
+	// File Code
+	std::memcpy(&shpHeaderData.fileCode, offset, 4); offset += 4;
+	memSwap(&shpHeaderData.fileCode, 4);
+
+	// Unused
+	offset += 20;
+
+	// File Length
+	std::memcpy(&shpHeaderData.fileLen, offset, 4);  offset += 4;
+	memSwap(&shpHeaderData.fileLen, 4);
+
+	// version
+	std::memcpy(&shpHeaderData.version, offset, 4);  offset += 4;
+
+	// Shape Type
+	std::memcpy(&shpHeaderData.SHPType, offset, 4);  offset += 4;
+
+	// Bounding Box
+	std::memcpy(&shpHeaderData.Xmin, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Ymin, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Xmax, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Ymax, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Zmin, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Zmax, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Mmin, offset, 8); offset += 8;
+	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
+
+	//20135
+	for (size_t i = 0; i < 20134; ++i) {
+		int32_t recordNum;
+		int32_t contentLength;
+
+		int32_t shapeType;
+		double box[4];
+		int32_t numParts;
+		int32_t numPoints;
+		int32_t parts;
+		SHPPoint points[8];
+		double pointTest[2000];
+		
+
+		std::memcpy(&recordNum, offset, 4);  offset += 4;
+		memSwap(&recordNum, 4);
+
+		std::memcpy(&contentLength, offset, 4);  offset += 4;
+		memSwap(&contentLength, 4);
+
+		std::memcpy(&shapeType, offset, 4);  offset += 4;
+
+		std::memcpy(box, offset, sizeof(double) * 4);  offset += sizeof(double) * 4;
+
+		std::memcpy(&numParts, offset, 4);  offset += 4;
+		std::memcpy(&numPoints, offset, 4);  offset += 4;
+
+		std::memcpy(&parts, offset, sizeof(int32_t) * numParts);  offset += sizeof(int32_t) * numParts;
+
+		std::memcpy(pointTest, offset, sizeof(double) * 2 * numPoints);  
+		
+		offset += sizeof(double) * 2 * numPoints;
+
+		objectVertices.push_back(numPoints);
+
+		for (int p = 0; p < numPoints; p++) {
+			float x = pointTest[p * 2];
+			float y = pointTest[p * 2 + 1];
+
+			xMin = std::min(xMin, x);
+			yMin = std::min(yMin, y);
+			xMax = std::max(xMax, x);
+			yMax = std::max(yMax, y);
+
+			vertices.push_back(x);
+			vertices.push_back(y);
 		}
 
+	}
+
+	DestroyWindow(hWndProgress);
+}
+
+bool openShapefile() {
+	OPENFILENAME ofn;
+
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.lpstrFilter = L"Shapefiles (*.shp)\0*.shp\0All Files (*.*)\0*.*\0";
+	ofn.hwndOwner = NULL;
+	ofn.lpstrFile = szFileName;
+	ofn.nMaxFile = MAX_PATH;
+	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+	ofn.lpstrDefExt = L"shp";
+
+	if (GetOpenFileName(&ofn) == false) return false;
+
+	//hSHP = SHPOpen(ConvertWideCharToChar(ofn.lpstrFile).c_str(), "rb");
+	wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+	hSHP = SHPOpen(converter.to_bytes(szFileName).c_str(), "rb");
+
+	if (hSHP == nullptr) return false;
+
+	float xMin = FLT_MAX;
+	float xMax = FLT_MIN;
+	float yMin = FLT_MAX;
+	float yMax = FLT_MIN;
+
+	readShapefileCustom(xMin, xMax, yMin, yMax);
+
+	float xDel = (xMax - xMin) / 2.0f;
+	float yDel = (yMax - yMin) / 2.0f;
+
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+	glGetAttribLocation(program, "a_position");
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	GLfloat min[] = { xMin, yMin };
+	GLuint offsetLoc = glGetUniformLocation(program, "minimum");
+	glUniform2fv(offsetLoc, 1, min);
+
+	GLfloat del[] = { xDel, yDel };
+	GLuint delLoc = glGetUniformLocation(program, "delta");
+	glUniform2fv(delLoc, 1, del);
+
+	isShapeLoaded = true;
+
+	return true;
+}
+
+void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax) {
+	int nShapeCount;
+	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
+
+	RECT rt;
+	GetClientRect(hWnd, &rt);
+	int progressWidth = 440;
+	int progressHeight = 30;
+
+	HWND hWndProgress = CreateWindowEx(0,
+		PROGRESS_CLASS, L"PROGRESS", WS_VISIBLE | WS_CHILD,
+		(rt.right - progressWidth) / 2,
+		(rt.bottom - progressHeight) / 2,
+		progressWidth,
+		progressHeight, hWnd, (HMENU)401, hInst, NULL);
+	if (hWndProgress == NULL) {
+		wchar_t* p_error_message;
+		FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL,
+			GetLastError(), MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+			(LPTSTR)&p_error_message, 0, NULL);
+
+		std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+		std::wstring wstring = p_error_message;
+		string str = converter.to_bytes(wstring);
+		std::cout << GetLastError() << ": " << str << endl;
+		LocalFree(p_error_message);
+	}
+
+	::SendMessage(hWndProgress, PBM_SETRANGE, 0, MAKELPARAM(0, 20));
+
+	//nShapeCount
+	for (size_t i = 0; i < 3; ++i) {
+		SHPObject* psShape = SHPReadObject(hSHP, i);
+		objectVertices.push_back(psShape->nVertices);
+		
 		for (int v = 0; v < psShape->nVertices; v++) {
 			float x = (float)(psShape->padfX[v]);
 			float y = (float)(psShape->padfY[v]);
 
-			if (i == 0) {
-				printf("%0.16f, %0.16f\n", x, y);
-			}
-
-			xMin = min(xMin, x);
-			yMin = min(yMin, y);
-			xMax = max(xMax, x);
-			yMax = max(yMax, y);
+			xMin = std::min(xMin, x);
+			yMin = std::min(yMin, y);
+			xMax = std::max(xMax, x);
+			yMax = std::max(yMax, y);
 
 			vertices.push_back(x);
 			vertices.push_back(y);
