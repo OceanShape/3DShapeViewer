@@ -33,6 +33,7 @@ vector<int> objectVertices;
 
 typedef unsigned char uchar;
 
+int32_t recordCount = 0;
 
 
 bool checkShaderCompileStatus(GLuint shader)
@@ -281,7 +282,6 @@ void memSwap(void* const data, size_t size) {
 	}
 }
 
-
 void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	int nShapeCount;
 	SHPGetInfo(hSHP, &nShapeCount, NULL, NULL, NULL);
@@ -356,7 +356,8 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 
 	SHPPoint* points = new SHPPoint[1000];
-	for (size_t i = 0; i < 20134; ++i) {
+
+	while (offset < data + fileSize) {
 		int32_t recordNum;
 		int32_t contentLength;
 
@@ -399,7 +400,11 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 			vertices.push_back(x);
 			vertices.push_back(y);
 		}
+
+		recordCount++;
 	}
+
+	cout << recordCount << endl;
 
 	delete[] points;
 
