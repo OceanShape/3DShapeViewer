@@ -154,7 +154,6 @@ void cleanUp()
 }
 
 
-
 string readShader(const string& filepath) {
 	ifstream file(filepath);
 	if (!file.is_open()) {
@@ -171,10 +170,12 @@ string readShader(const string& filepath) {
 }
 
 
-
-
 void closeShapefile() {
-	if (isShapeLoaded) fclose(SHPFile);
+	if (isShapeLoaded) {
+		vertices.clear();
+		objectVertices.clear();
+		fclose(SHPFile);
+	}
 }
 
 string ConvertWideCharToChar(const wchar_t* wideCharString)
@@ -454,6 +455,11 @@ bool openShapefile() {
 	SHPFile = fopen(converter.to_bytes(szFileName).c_str(), "rb");
 
 	if (SHPFile == nullptr) return false;
+
+	if (isShapeLoaded) {
+		vertices.clear();
+		objectVertices.clear();
+	}
 
 	float xMin = FLT_MAX;
 	float xMax = FLT_MIN;
