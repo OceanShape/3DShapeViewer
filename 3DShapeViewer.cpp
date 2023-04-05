@@ -400,6 +400,7 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	}
 
 	delete[] points;
+	delete[] data;
 
 	DestroyWindow(hWndProgress);
 }
