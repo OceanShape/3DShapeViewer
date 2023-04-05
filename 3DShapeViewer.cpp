@@ -467,6 +467,7 @@ bool openShapefile() {
 	if (isShapeLoaded) {
 		vertices.clear();
 		objectVertices.clear();
+		recordCount = 0;
 	}
 
 	float xMin = FLT_MAX;
