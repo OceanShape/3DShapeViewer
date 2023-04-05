@@ -1,7 +1,7 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "shapefil.h"
+// #include "shapefil.h"
 #include "framework.h"
 #include "resource.h"
 
@@ -35,6 +35,6 @@ void cleanUp();
 
 string readShader(const string& filepath);
 bool openShapefile();
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax);
+void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zMin, float& zMax);
 void closeShapefile();
 string ConvertWideCharToChar(const wchar_t* wideCharString);

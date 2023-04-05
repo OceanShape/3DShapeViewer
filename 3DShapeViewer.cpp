@@ -280,7 +280,7 @@ void memSwap(void* const data, size_t size) {
 	}
 }
 
-void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
+void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zMin, float& zMax) {
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	int progressWidth = 440;
@@ -351,12 +351,8 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 
 	SHPPoint* points = new SHPPoint[1000];
-	double* Zpoints = nullptr;
+	double* Zpoints = (shpHeaderData.SHPType == 13) ? new double[1000] : nullptr; // 13: PolyLineZ(ArcZ)
 	int32_t* parts = new int32_t[1000];
-
-	if (shpHeaderData.SHPType == 13) { // 13: PolyLineZ(ArcZ)
-		Zpoints = new double[1000];
-	}
 
 	while (offset < data + fileSize) {
 		int32_t recordNum;
@@ -396,20 +392,24 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		for (int p = 0; p < numPoints; p++) {
 			float x = points[p].x;
 			float y = points[p].y;
+			float z = (shpHeaderData.SHPType == 13) ? Zpoints[p] : 0.0f;
 
 			xMin = std::min(xMin, x);
 			yMin = std::min(yMin, y);
 			xMax = std::max(xMax, x);
 			yMax = std::max(yMax, y);
+			zMin = std::min(zMin, z);
+			zMax = std::max(zMax, z);
 
 			vertices.push_back(x);
 			vertices.push_back(y);
+			vertices.push_back(z);
 		}
 
 		recordCount++;
 	}
 
-	std::cout << "total record count: " << recordCount << endl;
+	std::cout << "Total record count: " << recordCount << endl;
 
 	delete[] Zpoints;
 	delete[] parts;
@@ -442,11 +442,14 @@ bool openShapefile() {
 	float xMax = FLT_MIN;
 	float yMin = FLT_MAX;
 	float yMax = FLT_MIN;
+	float zMin = FLT_MAX;
+	float zMax = FLT_MIN;
 
-	readShapefileCustom(xMin, xMax, yMin, yMax);
+	readShapefile(xMin, xMax, yMin, yMax, zMin, zMax);
 
 	float xDel = (xMax - xMin) / 2.0f;
 	float yDel = (yMax - yMin) / 2.0f;
+	float zDel = (zMax - zMin) / 2.0f;
 
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -455,15 +458,15 @@ bool openShapefile() {
 
 	glGetAttribLocation(program, "a_position");
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	GLfloat min[] = { xMin, yMin };
+	GLfloat min[] = { xMin, yMin, zMin };
 	GLuint offsetLoc = glGetUniformLocation(program, "minimum");
-	glUniform2fv(offsetLoc, 1, min);
+	glUniform3fv(offsetLoc, 1, min);
 
-	GLfloat del[] = { xDel, yDel };
+	GLfloat del[] = { xDel, yDel, zDel };
 	GLuint delLoc = glGetUniformLocation(program, "delta");
-	glUniform2fv(delLoc, 1, del);
+	glUniform3fv(delLoc, 1, del);
 
 	isShapeLoaded = true;
 
