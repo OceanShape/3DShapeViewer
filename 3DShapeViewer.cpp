@@ -351,6 +351,7 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 
 	SHPPoint* points = new SHPPoint[1000];
+	int32_t* parts = new int32_t[1000];
 
 	while (offset < data + fileSize) {
 		int32_t recordNum;
@@ -360,7 +361,6 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		double box[4];
 		int32_t numParts;
 		int32_t numPoints;
-		int32_t parts;
 
 		std::memcpy(&recordNum, offset, 4);  offset += 4;
 		memSwap(&recordNum, 4);
@@ -375,11 +375,9 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		std::memcpy(&numParts, offset, 4);  offset += 4;
 		std::memcpy(&numPoints, offset, 4);  offset += 4;
 
-		std::memcpy(&parts, offset, sizeof(int32_t) * numParts);  offset += sizeof(int32_t) * numParts;
+		std::memcpy(parts, offset, sizeof(int32_t) * numParts);	offset += sizeof(int32_t) * numParts;
 
-		std::memcpy(points, offset, sizeof(SHPPoint) * numPoints);
-
-		offset += sizeof(double) * 2 * numPoints;
+		std::memcpy(points, offset, sizeof(SHPPoint) * numPoints);	offset += sizeof(SHPPoint) * numPoints;
 
 		objectVertices.push_back(numPoints);
 
@@ -399,6 +397,7 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		recordCount++;
 	}
 
+	delete[] parts;
 	delete[] points;
 	delete[] data;
 
