@@ -355,6 +355,8 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 	int32_t* parts = new int32_t[1000];
 
 	while (offset < data + fileSize) {
+		uchar* startOffset = offset;
+
 		int32_t recordNum;
 		int32_t contentLength;
 
@@ -385,6 +387,16 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 		if (shpHeaderData.SHPType == 13) {
 			std::memcpy(Zrange, offset, sizeof(double) * 2);    offset += sizeof(double) * 2;
 			std::memcpy(Zpoints, offset, sizeof(double) * numPoints);	offset += sizeof(double) * numPoints;
+		}
+
+		// M point(ignore)
+		if (offset - startOffset < contentLength * 2) {
+			//double Mrange[2];
+			//float Mpoints[1000];
+			//std::memcpy(Mrange, offset, sizeof(double) * 2);
+			offset += sizeof(double) * 2;
+			//std::memcpy(Mpoints, offset, sizeof(double) * numPoints);
+			offset += sizeof(double) * numPoints;
 		}
 
 		objectVertices.push_back(numPoints);
