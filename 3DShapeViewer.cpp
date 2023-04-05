@@ -351,7 +351,12 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 
 	SHPPoint* points = new SHPPoint[1000];
+	double* Zpoints = nullptr;
 	int32_t* parts = new int32_t[1000];
+
+	if (shpHeaderData.SHPType == 13) { // 13: PolyLineZ(ArcZ)
+		Zpoints = new double[1000];
+	}
 
 	while (offset < data + fileSize) {
 		int32_t recordNum;
@@ -361,6 +366,8 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		double box[4];
 		int32_t numParts;
 		int32_t numPoints;
+		double Zrange[2];   // min, max
+
 
 		std::memcpy(&recordNum, offset, 4);  offset += 4;
 		memSwap(&recordNum, 4);
@@ -378,6 +385,11 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		std::memcpy(parts, offset, sizeof(int32_t) * numParts);	offset += sizeof(int32_t) * numParts;
 
 		std::memcpy(points, offset, sizeof(SHPPoint) * numPoints);	offset += sizeof(SHPPoint) * numPoints;
+
+		if (shpHeaderData.SHPType == 13) {
+			std::memcpy(Zrange, offset, sizeof(double) * 2);    offset += sizeof(double) * 2;
+			std::memcpy(Zpoints, offset, sizeof(double) * numPoints);	offset += sizeof(double) * numPoints;
+		}
 
 		objectVertices.push_back(numPoints);
 
@@ -397,6 +409,9 @@ void readShapefileCustom(float& xMin, float& xMax, float& yMin, float& yMax) {
 		recordCount++;
 	}
 
+	std::cout << "total record count: " << recordCount << endl;
+
+	delete[] Zpoints;
 	delete[] parts;
 	delete[] points;
 	delete[] data;
