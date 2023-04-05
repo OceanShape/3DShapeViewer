@@ -351,6 +351,14 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 	std::memcpy(&shpHeaderData.Mmin, offset, 8); offset += 8;
 	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 
+
+	// Check Shape Type
+	if (shpHeaderData.SHPType % 10 != 3 && shpHeaderData.SHPType % 10 != 5) {
+		cout << "Unsupported data type" << endl;
+		return;
+	}
+
+
 	SHPPoint* points = new SHPPoint[1000];
 	double* Zpoints = new double[1000]; // 13: PolyLineZ(ArcZ)
 	int32_t* parts = new int32_t[1000];
