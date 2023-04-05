@@ -351,11 +351,13 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 
 	SHPPoint* points = new SHPPoint[1000];
-	double* Zpoints = (shpHeaderData.SHPType == 13) ? new double[1000] : nullptr; // 13: PolyLineZ(ArcZ)
+	double* Zpoints = new double[1000]; // 13: PolyLineZ(ArcZ)
 	int32_t* parts = new int32_t[1000];
 
 	while (offset < data + fileSize) {
 		uchar* startOffset = offset;
+
+		bool hasZvalue = false;
 
 		int32_t recordNum;
 		int32_t contentLength;
@@ -384,7 +386,10 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 
 		std::memcpy(points, offset, sizeof(SHPPoint) * numPoints);	offset += sizeof(SHPPoint) * numPoints;
 
-		if (shpHeaderData.SHPType == 13) {
+		// Z point
+		if (offset - startOffset < contentLength * 2) {
+			hasZvalue = true;
+
 			std::memcpy(Zrange, offset, sizeof(double) * 2);    offset += sizeof(double) * 2;
 			std::memcpy(Zpoints, offset, sizeof(double) * numPoints);	offset += sizeof(double) * numPoints;
 		}
@@ -404,7 +409,7 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 		for (int p = 0; p < numPoints; p++) {
 			float x = points[p].x;
 			float y = points[p].y;
-			float z = (shpHeaderData.SHPType == 13) ? Zpoints[p] : 0.0f;
+			float z = (hasZvalue) ? Zpoints[p] : 0.0f;
 
 			xMin = std::min(xMin, x);
 			yMin = std::min(yMin, y);
