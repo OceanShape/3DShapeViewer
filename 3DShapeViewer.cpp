@@ -179,17 +179,6 @@ void closeShapefile() {
 	}
 }
 
-string ConvertWideCharToChar(const wchar_t* wideCharString)
-{
-	int bufferSize = WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, nullptr, 0, nullptr, nullptr);
-
-	string result(100, 0);
-	WideCharToMultiByte(CP_UTF8, 0, wideCharString, -1, &result[0], bufferSize, nullptr, nullptr);
-
-	return result;
-}
-
-
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -442,6 +431,8 @@ bool openShapefile() {
 		vertices.clear();
 		objectVertices.clear();
 		recordCount = 0;
+		cameraX = 0.0f;
+		cameraY = 0.0f;
 	}
 
 	float xMin = FLT_MAX;
