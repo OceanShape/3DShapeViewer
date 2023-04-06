@@ -1,4 +1,5 @@
 #include "3DShapeViewer.h"
+#include "shapedata.h"
 
 #include <stdarg.h>
 #include <CommCtrl.h>
@@ -242,33 +243,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	}
 	return 0;
 }
-
-struct SHPHeader {
-	int32_t fileCode;
-	int32_t fileLen;
-	int32_t version;
-	int32_t SHPType;
-
-	double Xmin;
-	double Ymin;
-	double Xmax;
-	double Ymax;
-	double Zmin;
-	double Zmax;
-	double Mmin;
-	double Mmax;
-};
-
-struct SHPPoint {
-	double x;
-	double y;
-};
-
-struct SHPPolygon {
-	double box[4];
-	shared_ptr<vector<int32_t>> parts;
-	shared_ptr<vector<SHPPoint>> points;
-};
 
 void memSwap(void* const data, size_t size) {
 	uint8_t* start = (uint8_t*)data;
