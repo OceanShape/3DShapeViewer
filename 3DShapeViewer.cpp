@@ -8,12 +8,20 @@ using namespace std;
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
-const int WINDOW_WIDTH = 1316;
-const int WINDOW_HEIGHT = 1000;
+const int WINDOW_POS_X = 300;
+const int WINDOW_POS_Y = 0;
+const int WINDOW_WIDTH = 1201;
+const int WINDOW_HEIGHT = 959;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 EGLContext eglContext;
+EGLConfig eglConfig;
+EGLint contextAttribs[] = {
+	EGL_CONTEXT_CLIENT_VERSION, 3,
+	EGL_NONE
+};
+
 HWND hWnd;
 HINSTANCE hInst;
 TCHAR szFileName[MAX_PATH];
@@ -66,7 +74,6 @@ bool initialize()
 	EGLint numConfigs;
 	EGLint majorVersion;
 	EGLint minorVersion;
-	EGLConfig eglConfig;
 	EGLint attribs[] = {
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 	EGL_RED_SIZE, 8,
@@ -82,10 +89,6 @@ bool initialize()
 	eglInitialize(eglDisplay, &majorVersion, &minorVersion);
 	eglChooseConfig(eglDisplay, attribs, &eglConfig, 1, &numConfigs);
 	eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
-	EGLint contextAttribs[] = {
-		EGL_CONTEXT_CLIENT_VERSION, 3,
-		EGL_NONE
-	};
 	eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
 	eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 
@@ -448,6 +451,29 @@ bool openShapefile() {
 	float yDel = (yMax - yMin) / 2.0f;
 	float zDel = (zMax - zMin) / 2.0f;
 
+	float aspectRatio = xDel / yDel;
+
+	LONG_PTR dwStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
+
+	RECT rc;
+	GetClientRect(hWnd, &rc);
+	int x = rc.left;
+	int y = rc.top;
+
+	dwStyle |= WS_SIZEBOX;
+	dwStyle &= ~WS_MAXIMIZEBOX;
+	dwStyle &= ~WS_MINIMIZEBOX;
+
+	SetWindowLongPtr(hWnd, GWL_STYLE, dwStyle);
+	SetWindowPos(hWnd, HWND_TOP, WINDOW_POS_X, WINDOW_POS_Y, 900 * aspectRatio + 16, 900 + 59, SWP_NOMOVE);
+	
+	//eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	////eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
+	//eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
+	//eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+	//eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+	//glViewport(WINDOW_POS_X, WINDOW_POS_Y, 900, 900 * aspectRatio);
+	
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -494,7 +520,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RegisterClassEx(&wcex);
 
 	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
-		300, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+		WINDOW_POS_X, WINDOW_POS_Y, WINDOW_WIDTH, WINDOW_HEIGHT,
 		NULL, NULL, hInstance, NULL);
 
 	hInst = hInstance;
