@@ -8,10 +8,10 @@ using namespace std;
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
-const int WINDOW_POS_X = 300;
+const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
-const int WINDOW_WIDTH = 1201;
-const int WINDOW_HEIGHT = 959;
+const int WINDOW_WIDTH = 1013;
+const int WINDOW_HEIGHT = 1059;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -32,6 +32,7 @@ GLuint program;
 FILE* SHPFile;
 bool isShapeLoaded = false;
 int32_t recordCount = 0;
+float aspectRatio = 1.0f;
 
 float cameraX = 0.0f;
 float cameraY = 0.0f;
@@ -451,28 +452,7 @@ bool openShapefile() {
 	float yDel = (yMax - yMin) / 2.0f;
 	float zDel = (zMax - zMin) / 2.0f;
 
-	float aspectRatio = xDel / yDel;
-
-	LONG_PTR dwStyle = GetWindowLongPtr(hWnd, GWL_STYLE);
-
-	RECT rc;
-	GetClientRect(hWnd, &rc);
-	int x = rc.left;
-	int y = rc.top;
-
-	dwStyle |= WS_SIZEBOX;
-	dwStyle &= ~WS_MAXIMIZEBOX;
-	dwStyle &= ~WS_MINIMIZEBOX;
-
-	SetWindowLongPtr(hWnd, GWL_STYLE, dwStyle);
-	SetWindowPos(hWnd, HWND_TOP, WINDOW_POS_X, WINDOW_POS_Y, 900 * aspectRatio + 16, 900 + 59, SWP_NOMOVE);
-	
-	//eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-	////eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
-	//eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
-	//eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-	//eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
-	//glViewport(WINDOW_POS_X, WINDOW_POS_Y, 900, 900 * aspectRatio);
+	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
 	
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -484,12 +464,10 @@ bool openShapefile() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	GLfloat min[] = { xMin, yMin, zMin };
-	GLuint offsetLoc = glGetUniformLocation(program, "minimum");
-	glUniform3fv(offsetLoc, 1, min);
+	glUniform3fv(glGetUniformLocation(program, "minimum"), 1, min);
 
 	GLfloat del[] = { xDel, yDel, zDel };
-	GLuint delLoc = glGetUniformLocation(program, "delta");
-	glUniform3fv(delLoc, 1, del);
+	glUniform3fv(glGetUniformLocation(program, "delta"), 1, del);
 
 	isShapeLoaded = true;
 
