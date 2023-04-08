@@ -39,7 +39,7 @@ float cameraY = 0.0f;
 const float delta = 0.02f;
 
 vector<float> vertices;
-vector<int> objectVertices;
+vector<int> objectVertexCount;
 
 typedef unsigned char uchar;
 
@@ -132,9 +132,9 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	for (int i = 0, startIndex = 0; i < objectVertices.size(); ++i) {
-		glDrawArrays(GL_LINE_STRIP, startIndex, objectVertices[i]);
-		startIndex += objectVertices[i];
+	for (int i = 0, startIndex = 0; i < objectVertexCount.size(); ++i) {
+		glDrawArrays(GL_LINE_STRIP, startIndex, objectVertexCount[i]);
+		startIndex += objectVertexCount[i];
 	}
 }
 
@@ -178,7 +178,7 @@ string readShader(const string& filepath) {
 void closeShapefile() {
 	if (isShapeLoaded) {
 		vertices.clear();
-		objectVertices.clear();
+		objectVertexCount.clear();
 		fclose(SHPFile);
 	}
 }
@@ -380,7 +380,7 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 			offset += sizeof(double) * numPoints;
 		}
 
-		objectVertices.push_back(numPoints);
+		objectVertexCount.push_back(numPoints);
 
 		for (int p = 0; p < numPoints; p++) {
 			float x = points[p].x;
@@ -433,7 +433,7 @@ bool openShapefile() {
 
 	if (isShapeLoaded) {
 		vertices.clear();
-		objectVertices.clear();
+		objectVertexCount.clear();
 		recordCount = 0;
 		cameraX = 0.0f;
 		cameraY = 0.0f;
