@@ -1,5 +1,6 @@
 #include "3DShapeViewer.h"
 #include "shapedata.h"
+#include "shapefile.h"
 
 #include <stdarg.h>
 #include <CommCtrl.h>
@@ -463,24 +464,23 @@ bool openShapefile() {
 	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
 
 
-	glGenVertexArrays(2, vao);
-	glGenBuffers(2, vbo);
-
 	auto yTop = (yMin + yMax) / 2 + (xMax - xMin) / 2;
-	auto yBot = (yMin + yMax) / 2 + (xMin - xMax) / 2;
+	auto yBot = (yMin + yMax) / 2 - (xMax - xMin) / 2;
 
 	vector<float> test = { xMin, yTop, .0f, xMax, yTop, .0f, xMax, yBot, .0f, xMin, yBot, .0f, xMin, yTop, .0f };
-	//renderingObjectVertices.insert(renderingObjectVertices.end(), test.begin(), test.end());
+	borderLineVertices.insert(borderLineVertices.end(), test.begin(), test.end());
+
+
+	glGenVertexArrays(2, vao);
+	glGenBuffers(2, vbo);
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, renderingObjectVertices.size() * sizeof(float), renderingObjectVertices.data(), GL_STATIC_DRAW);
-	//objectVertexCounts.push_back(5);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
 	
-	borderLineVertices.insert(borderLineVertices.end(), test.begin(), test.end());
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, borderLineVertices.size() * sizeof(float), borderLineVertices.data(), GL_STATIC_DRAW);
