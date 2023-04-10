@@ -10,8 +10,8 @@ EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
 const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
-const int WINDOW_WIDTH = 1013;
-const int WINDOW_HEIGHT = 1059;
+const int WINDOW_WIDTH = 913;
+const int WINDOW_HEIGHT = 959;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -26,7 +26,8 @@ HWND hWnd;
 HINSTANCE hInst;
 TCHAR szFileName[MAX_PATH];
 
-GLuint vbo;
+GLuint vao[2];
+GLuint vbo[2];
 GLuint program;
 
 FILE* SHPFile;
@@ -38,8 +39,9 @@ float cameraX = 0.0f;
 float cameraY = 0.0f;
 const float delta = 0.02f;
 
-vector<float> vertices;
-vector<int> objectVertexCount;
+vector<float> renderingObjectVertices;
+vector<int> objectVertexCounts;
+vector<float> borderLineVertices;
 
 typedef unsigned char uchar;
 
@@ -132,15 +134,21 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	for (int i = 0, startIndex = 0; i < objectVertexCount.size(); ++i) {
-		glDrawArrays(GL_LINE_STRIP, startIndex, objectVertexCount[i]);
-		startIndex += objectVertexCount[i];
+
+	glBindVertexArray(vao[0]);
+	for (int i = 0, startIndex = 0; i < objectVertexCounts.size(); ++i) {
+		glDrawArrays(GL_LINE_STRIP, startIndex, objectVertexCounts[i]);
+		startIndex += objectVertexCounts[i];
 	}
+
+	glBindVertexArray(vao[1]);
+	glDrawArrays(GL_LINE_STRIP, 0, 4);
 }
 
 void cleanUp()
 {
-	glDeleteBuffers(1, &vbo);
+	glDeleteVertexArrays(2, vao);
+	glDeleteBuffers(2, vbo);
 
 	GLuint vertexShader;
 	glGetAttachedShaders(program, 1, NULL, &vertexShader);
@@ -177,8 +185,8 @@ string readShader(const string& filepath) {
 
 void closeShapefile() {
 	if (isShapeLoaded) {
-		vertices.clear();
-		objectVertexCount.clear();
+		renderingObjectVertices.clear();
+		objectVertexCounts.clear();
 		fclose(SHPFile);
 	}
 }
@@ -380,7 +388,7 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 			offset += sizeof(double) * numPoints;
 		}
 
-		objectVertexCount.push_back(numPoints);
+		objectVertexCounts.push_back(numPoints);
 
 		for (int p = 0; p < numPoints; p++) {
 			float x = points[p].x;
@@ -394,9 +402,9 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 			zMin = std::min(zMin, z);
 			zMax = std::max(zMax, z);
 
-			vertices.push_back(x);
-			vertices.push_back(y);
-			vertices.push_back(z);
+			renderingObjectVertices.push_back(x);
+			renderingObjectVertices.push_back(y);
+			renderingObjectVertices.push_back(z);
 		}
 
 		recordCount++;
@@ -432,8 +440,8 @@ bool openShapefile() {
 	if (SHPFile == nullptr) return false;
 
 	if (isShapeLoaded) {
-		vertices.clear();
-		objectVertexCount.clear();
+		renderingObjectVertices.clear();
+		objectVertexCounts.clear();
 		recordCount = 0;
 		cameraX = 0.0f;
 		cameraY = 0.0f;
@@ -453,15 +461,38 @@ bool openShapefile() {
 	float zDel = (zMax - zMin) / 2.0f;
 
 	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
-	
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
-	glGetAttribLocation(program, "a_position");
-	glEnableVertexAttribArray(0);
+
+	glGenVertexArrays(2, vao);
+	glGenBuffers(2, vbo);
+
+	auto a = (yMin + yMax) / 2 + (xMax - xMin) / 2;
+	auto b = (yMin + yMax) / 2 + (xMin - xMax) / 2;
+
+	cout << xMin << endl;
+	cout << xMax << endl;
+	cout << yMin << endl;
+	cout << yMax << endl;
+	vector<float> test = { xMin, a, .0f, xMax, a, .0f, xMax, b, .0f, xMin, b, .0f, xMin, a, .0f };
+	renderingObjectVertices.insert(renderingObjectVertices.end(), test.begin(), test.end());
+
+	glBindVertexArray(vao[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, renderingObjectVertices.size() * sizeof(float), renderingObjectVertices.data(), GL_STATIC_DRAW);
+	objectVertexCounts.push_back(5);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	
+	//vector<float> test = { xMin, -xMin, .0f, xMin, xMin, .0f, xMax, xMax, .0f, xMax, -xMax, .0f };
+	/*vector<float> test = { -0.5f, -0.5f, .0f, -0.5f, 0.5f, .0f, 0.5f, 0.5f, .0f };
+	borderLineVertices.insert(borderLineVertices.end(), test.begin(), test.end());*/
+	glBindVertexArray(vao[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, borderLineVertices.size() * sizeof(float), borderLineVertices.data(), GL_STATIC_DRAW);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	//glEnableVertexAttribArray(1);
+
 
 	GLfloat min[] = { xMin, yMin, zMin };
 	glUniform3fv(glGetUniformLocation(program, "minimum"), 1, min);
