@@ -142,7 +142,7 @@ void render()
 	}
 
 	glBindVertexArray(vao[1]);
-	glDrawArrays(GL_LINE_STRIP, 0, 4);
+	glDrawArrays(GL_LINE_STRIP, 0, 5);
 }
 
 void cleanUp()
@@ -470,24 +470,22 @@ bool openShapefile() {
 	auto yBot = (yMin + yMax) / 2 + (xMin - xMax) / 2;
 
 	vector<float> test = { xMin, yTop, .0f, xMax, yTop, .0f, xMax, yBot, .0f, xMin, yBot, .0f, xMin, yTop, .0f };
-	renderingObjectVertices.insert(renderingObjectVertices.end(), test.begin(), test.end());
+	//renderingObjectVertices.insert(renderingObjectVertices.end(), test.begin(), test.end());
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, renderingObjectVertices.size() * sizeof(float), renderingObjectVertices.data(), GL_STATIC_DRAW);
-	objectVertexCounts.push_back(5);
+	//objectVertexCounts.push_back(5);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
 	
-	//vector<float> test = { xMin, -xMin, .0f, xMin, xMin, .0f, xMax, xMax, .0f, xMax, -xMax, .0f };
-	/*vector<float> test = { -0.5f, -0.5f, .0f, -0.5f, 0.5f, .0f, 0.5f, 0.5f, .0f };
-	borderLineVertices.insert(borderLineVertices.end(), test.begin(), test.end());*/
+	borderLineVertices.insert(borderLineVertices.end(), test.begin(), test.end());
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, borderLineVertices.size() * sizeof(float), borderLineVertices.data(), GL_STATIC_DRAW);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//glEnableVertexAttribArray(1);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
 
 
 	GLfloat min[] = { xMin, yMin, zMin };
