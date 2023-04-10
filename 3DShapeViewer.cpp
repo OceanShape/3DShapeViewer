@@ -466,14 +466,10 @@ bool openShapefile() {
 	glGenVertexArrays(2, vao);
 	glGenBuffers(2, vbo);
 
-	auto a = (yMin + yMax) / 2 + (xMax - xMin) / 2;
-	auto b = (yMin + yMax) / 2 + (xMin - xMax) / 2;
+	auto yTop = (yMin + yMax) / 2 + (xMax - xMin) / 2;
+	auto yBot = (yMin + yMax) / 2 + (xMin - xMax) / 2;
 
-	cout << xMin << endl;
-	cout << xMax << endl;
-	cout << yMin << endl;
-	cout << yMax << endl;
-	vector<float> test = { xMin, a, .0f, xMax, a, .0f, xMax, b, .0f, xMin, b, .0f, xMin, a, .0f };
+	vector<float> test = { xMin, yTop, .0f, xMax, yTop, .0f, xMax, yBot, .0f, xMin, yBot, .0f, xMin, yTop, .0f };
 	renderingObjectVertices.insert(renderingObjectVertices.end(), test.begin(), test.end());
 
 	glBindVertexArray(vao[0]);
