@@ -1,9 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <memory>
-
-#include "shapedata.h"
-
+#include "quadtree.h"
 using namespace std;
 
 struct QuadtreeNode {
@@ -56,7 +51,7 @@ struct QuadtreeNode {
 		}
 	}
 
-	void render(int level) {
+	void addBorderPoints(int level) {
 		bool allNodeNull;
 		for (auto n : nodes) {
 
@@ -76,22 +71,7 @@ struct ObjectData {
 		//root->store(allObjectVertices);
 	}
 
-	void render(int level) {
+	void addVertexAndPoint(int level) {
 		//root->render();
 	}
 };
-
-
-
-
-int main() {
-	std::vector<int> source{ 1, 2, 3, 4, 5 };
-	std::vector<int> dest{ 9, 8, 7, 6 };
-
-	
-	for (auto i : dest) {
-		cout << i << " ";
-	}
-
-	return 0;
-}
