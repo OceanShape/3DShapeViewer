@@ -343,6 +343,8 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 		return;
 	}
 
+
+
 	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, shpHeaderData.Ymin, shpHeaderData.Ymax);
 
 
@@ -392,11 +394,7 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 
 		// M point(ignore)
 		if (offset - startOffset < contentLength * 2) {
-			//double Mrange[2];
-			//float Mpoints[1000];
-			//std::memcpy(Mrange, offset, sizeof(double) * 2);
 			offset += sizeof(double) * 2;
-			//std::memcpy(Mpoints, offset, sizeof(double) * numPoints);
 			offset += sizeof(double) * numPoints;
 		}
 
@@ -406,13 +404,6 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 			float x = points[p].x;
 			float y = points[p].y;
 			float z = (hasZvalue) ? Zpoints[p] : 0.0f;
-
-			xMin = std::min(xMin, x);
-			yMin = std::min(yMin, y);
-			xMax = std::max(xMax, x);
-			yMax = std::max(yMax, y);
-			zMin = std::min(zMin, z);
-			zMax = std::max(zMax, z);                  
 
 			objectVertices.push_back(x);
 			objectVertices.push_back(y);
@@ -460,12 +451,6 @@ bool openShapefile() {
 		cameraY = 0.0f;
 	}
 
-	float xMin = FLT_MAX;
-	float xMax = FLT_MIN;
-	float yMin = FLT_MAX;
-	float yMax = FLT_MIN;
-	float zMin = FLT_MAX;
-	float zMax = FLT_MIN;
 
 	readShapefile(xMin, xMax, yMin, yMax, zMin, zMax);
 
@@ -473,11 +458,19 @@ bool openShapefile() {
 	float yDel = (yMax - yMin) / 2.0f;
 	float zDel = (zMax - zMin) / 2.0f;
 
-	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
 
 
 	float yTop = (yMin + yMax) / 2 + xDel;
 	float yBot = (yMin + yMax) / 2 - xDel;
+
+
+	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
+
+	GLfloat min[] = { xMin, yMin, zMin };
+	glUniform3fv(glGetUniformLocation(program, "minimum"), 1, min);
+
+	GLfloat del[] = { xDel, yDel, zDel };
+	glUniform3fv(glGetUniformLocation(program, "delta"), 1, del);
 
 
 	glGenVertexArrays(2, vao);
@@ -493,12 +486,6 @@ bool openShapefile() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-
-	GLfloat min[] = { xMin, yMin, zMin };
-	glUniform3fv(glGetUniformLocation(program, "minimum"), 1, min);
-
-	GLfloat del[] = { xDel, yDel, zDel };
-	glUniform3fv(glGetUniformLocation(program, "delta"), 1, del);
 
 	isShapeLoaded = true;
 
