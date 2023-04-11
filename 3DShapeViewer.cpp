@@ -42,7 +42,7 @@ const float delta = 0.02f;
 
 vector<float> renderingObjectVertices;
 vector<int> objectVertexCounts;
-vector<float> borderLineVertices;
+vector<float> borderPoints;
 
 typedef unsigned char uchar;
 
@@ -113,6 +113,8 @@ bool initialize()
 		return false;
 	}
 
+	
+
 	program = glCreateProgram();
 	glAttachShader(program, vertexShader);
 	glAttachShader(program, fragmentShader);
@@ -143,7 +145,9 @@ void render()
 	}
 
 	glBindVertexArray(vao[1]);
-	glDrawArrays(GL_LINE_STRIP, 0, 5);
+	for (int i = 0; i < borderPoints.size(); ++i) {
+		glDrawArrays(GL_LINE_STRIP, i * 5, 5);
+	}
 }
 
 void cleanUp()
@@ -468,7 +472,7 @@ bool openShapefile() {
 	auto yBot = (yMin + yMax) / 2 - (xMax - xMin) / 2;
 
 	vector<float> test = { xMin, yTop, .0f, xMax, yTop, .0f, xMax, yBot, .0f, xMin, yBot, .0f, xMin, yTop, .0f };
-	borderLineVertices.insert(borderLineVertices.end(), test.begin(), test.end());
+	borderPoints.insert(borderPoints.end(), test.begin(), test.end());
 
 
 	glGenVertexArrays(2, vao);
@@ -483,7 +487,7 @@ bool openShapefile() {
 	
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, borderLineVertices.size() * sizeof(float), borderLineVertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, borderPoints.size() * sizeof(float), borderPoints.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
