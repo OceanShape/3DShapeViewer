@@ -1,11 +1,7 @@
 #include "3DShapeViewer.h"
-#include "shapedata.h"
 #include "shapefile.h"
-
-#include <stdarg.h>
-#include <CommCtrl.h>
-
-using namespace std;
+#include "shapedata.h"
+#include "quadtree.h"
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
@@ -40,9 +36,7 @@ float cameraX = 0.0f;
 float cameraY = 0.0f;
 const float delta = 0.02f;
 
-vector<float> renderingObjectVertices;
-vector<int> objectVertexCounts;
-vector<float> borderPoints;
+shared_ptr<ObjectData> objectData;
 
 typedef unsigned char uchar;
 
@@ -138,14 +132,24 @@ void render()
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	vector<float> allObjectVertices;
+	vector<float> allObjectVertexCount;
+	vector<float> allBorderPoints;
+
+	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints);
+
 	glBindVertexArray(vao[0]);
-	for (int i = 0, startIndex = 0; i < objectVertexCounts.size(); ++i) {
-		glDrawArrays(GL_LINE_STRIP, startIndex, objectVertexCounts[i]);
-		startIndex += objectVertexCounts[i];
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
+	for (int i = 0, startIndex = 0; i < allObjectVertexCount.size(); ++i) {
+		glDrawArrays(GL_LINE_STRIP, startIndex, allObjectVertexCount[i]);
+		startIndex += allObjectVertexCount[i];
 	}
 
 	glBindVertexArray(vao[1]);
-	for (int i = 0; i < borderPoints.size(); ++i) {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
+	for (int i = 0; i < allBorderPoints.size() / (3 * 5); ++i) {
 		glDrawArrays(GL_LINE_STRIP, i * 5, 5);
 	}
 }
@@ -190,8 +194,7 @@ string readShader(const string& filepath) {
 
 void closeShapefile() {
 	if (isShapeLoaded) {
-		renderingObjectVertices.clear();
-		objectVertexCounts.clear();
+		objectData.reset();
 		fclose(SHPFile);
 	}
 }
@@ -304,39 +307,43 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 
 	uchar* offset = data;
 
-	// File Code
-	std::memcpy(&shpHeaderData.fileCode, offset, 4); offset += 4;
-	memSwap(&shpHeaderData.fileCode, 4);
+	// Reading header
+	{
+		// File Code
+		std::memcpy(&shpHeaderData.fileCode, offset, 4); offset += 4;
+		memSwap(&shpHeaderData.fileCode, 4);
 
-	// Unused
-	offset += 20;
+		// Unused
+		offset += 20;
 
-	// File Length
-	std::memcpy(&shpHeaderData.fileLen, offset, 4);  offset += 4;
-	memSwap(&shpHeaderData.fileLen, 4);
+		// File Length
+		std::memcpy(&shpHeaderData.fileLen, offset, 4);  offset += 4;
+		memSwap(&shpHeaderData.fileLen, 4);
 
-	// version
-	std::memcpy(&shpHeaderData.version, offset, 4);  offset += 4;
+		// version
+		std::memcpy(&shpHeaderData.version, offset, 4);  offset += 4;
 
-	// Shape Type
-	std::memcpy(&shpHeaderData.SHPType, offset, 4);  offset += 4;
+		// Shape Type
+		std::memcpy(&shpHeaderData.SHPType, offset, 4);  offset += 4;
 
-	// Bounding Box
-	std::memcpy(&shpHeaderData.Xmin, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Ymin, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Xmax, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Ymax, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Zmin, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Zmax, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Mmin, offset, 8); offset += 8;
-	std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
-
+		// Bounding Box
+		std::memcpy(&shpHeaderData.Xmin, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Ymin, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Xmax, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Ymax, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Zmin, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Zmax, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Mmin, offset, 8); offset += 8;
+		std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
+	}
 
 	// Check Shape Type
 	if (shpHeaderData.SHPType % 10 != 3 && shpHeaderData.SHPType % 10 != 5) {
 		cout << "Unsupported data type" << endl;
 		return;
 	}
+
+	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, shpHeaderData.Ymin, shpHeaderData.Ymax);
 
 
 	SHPPoint* points = new SHPPoint[1000];
@@ -393,7 +400,7 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 			offset += sizeof(double) * numPoints;
 		}
 
-		objectVertexCounts.push_back(numPoints);
+		vector<float> objectVertices;
 
 		for (int p = 0; p < numPoints; p++) {
 			float x = points[p].x;
@@ -405,12 +412,14 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 			xMax = std::max(xMax, x);
 			yMax = std::max(yMax, y);
 			zMin = std::min(zMin, z);
-			zMax = std::max(zMax, z);
+			zMax = std::max(zMax, z);                  
 
-			renderingObjectVertices.push_back(x);
-			renderingObjectVertices.push_back(y);
-			renderingObjectVertices.push_back(z);
+			objectVertices.push_back(x);
+			objectVertices.push_back(y);
+			objectVertices.push_back(z);
 		}
+
+		objectData->storeObject(objectVertices);
 
 		recordCount++;
 	}
@@ -445,8 +454,7 @@ bool openShapefile() {
 	if (SHPFile == nullptr) return false;
 
 	if (isShapeLoaded) {
-		renderingObjectVertices.clear();
-		objectVertexCounts.clear();
+		objectData.reset();
 		recordCount = 0;
 		cameraX = 0.0f;
 		cameraY = 0.0f;
@@ -468,11 +476,8 @@ bool openShapefile() {
 	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
 
 
-	auto yTop = (yMin + yMax) / 2 + (xMax - xMin) / 2;
-	auto yBot = (yMin + yMax) / 2 - (xMax - xMin) / 2;
-
-	vector<float> test = { xMin, yTop, .0f, xMax, yTop, .0f, xMax, yBot, .0f, xMin, yBot, .0f, xMin, yTop, .0f };
-	borderPoints.insert(borderPoints.end(), test.begin(), test.end());
+	float yTop = (yMin + yMax) / 2 + xDel;
+	float yBot = (yMin + yMax) / 2 - xDel;
 
 
 	glGenVertexArrays(2, vao);
@@ -480,14 +485,11 @@ bool openShapefile() {
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, renderingObjectVertices.size() * sizeof(float), renderingObjectVertices.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, borderPoints.size() * sizeof(float), borderPoints.data(), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 

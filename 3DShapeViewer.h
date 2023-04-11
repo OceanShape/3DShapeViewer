@@ -21,8 +21,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 #include <cstdint>
-
-
+#include <stdarg.h>
+#include <CommCtrl.h>
 
 using namespace std;
 
@@ -35,6 +35,6 @@ void cleanUp();
 
 string readShader(const string& filepath);
 bool openShapefile();
+
 void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zMin, float& zMax);
 void closeShapefile();
-string ConvertWideCharToChar(const wchar_t* wideCharString);

@@ -121,6 +121,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -133,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="3DShapeViewer.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="quadtree.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="shapedata.h" />
     <ClInclude Include="shapefile.h" />
@@ -142,6 +144,7 @@
   <ItemGroup>
     <ClCompile Include="3DShapeViewer.cpp" />
     <ClCompile Include="dbfopen.cpp" />
+    <ClCompile Include="quadtree.cpp" />
     <ClCompile Include="shapefile.cpp" />
     <ClCompile Include="shpopen.cpp" />
     <ClCompile Include="shptree.cpp" />
