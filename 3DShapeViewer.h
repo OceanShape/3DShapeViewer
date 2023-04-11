@@ -36,5 +36,5 @@ void cleanUp();
 string readShader(const string& filepath);
 bool openShapefile();
 
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zMin, float& zMax);
+bool readShapefile(float min[], float del[]);
 void closeShapefile();

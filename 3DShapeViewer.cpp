@@ -264,7 +264,7 @@ void memSwap(void* const data, size_t size) {
 	}
 }
 
-void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zMin, float& zMax) {
+bool readShapefile(float min[], float del[]) {
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	int progressWidth = 440;
@@ -337,16 +337,33 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 		std::memcpy(&shpHeaderData.Mmax, offset, 8); offset += 8;
 	}
 
+
 	// Check Shape Type
 	if (shpHeaderData.SHPType % 10 != 3 && shpHeaderData.SHPType % 10 != 5) {
 		cout << "Unsupported data type" << endl;
-		return;
+		return false;
 	}
 
+	float xMin = shpHeaderData.Xmin;
+	float yMin = shpHeaderData.Ymin;
+	float xMax = shpHeaderData.Xmax;
+	float yMax = shpHeaderData.Ymax;
+	float zMin = shpHeaderData.Zmin;
+	float zMax = shpHeaderData.Zmax;
+
+	min[0] = xMin;
+	min[1] = yMin;
+	min[2] = zMin;
+
+	del[0] = (xMax - xMin) / 2.0f;
+	del[1] = (yMax - yMin) / 2.0f;
+	del[2] = (zMax - zMin) / 2.0f;
+
+	float yTop = (yMin + yMax) / 2 + del[0];
+	float yBot = (yMin + yMax) / 2 - del[0];
 
 
-	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, shpHeaderData.Ymin, shpHeaderData.Ymax);
-
+	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop);
 
 	SHPPoint* points = new SHPPoint[1000];
 	double* Zpoints = new double[1000]; // 13: PolyLineZ(ArcZ)
@@ -423,6 +440,8 @@ void readShapefile(float& xMin, float& xMax, float& yMin, float& yMax, float& zM
 	delete[] data;
 
 	DestroyWindow(hWndProgress);
+
+	return true;
 }
 
 bool openShapefile() {
@@ -451,25 +470,15 @@ bool openShapefile() {
 		cameraY = 0.0f;
 	}
 
+	GLfloat min[3], del[3];
+	if (readShapefile(min, del) == false) {
+		return false;
+	}
 
-	readShapefile(xMin, xMax, yMin, yMax, zMin, zMax);
+	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), del[0] / del[1]);
 
-	float xDel = (xMax - xMin) / 2.0f;
-	float yDel = (yMax - yMin) / 2.0f;
-	float zDel = (zMax - zMin) / 2.0f;
-
-
-
-	float yTop = (yMin + yMax) / 2 + xDel;
-	float yBot = (yMin + yMax) / 2 - xDel;
-
-
-	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), xDel / yDel);
-
-	GLfloat min[] = { xMin, yMin, zMin };
 	glUniform3fv(glGetUniformLocation(program, "minimum"), 1, min);
 
-	GLfloat del[] = { xDel, yDel, zDel };
 	glUniform3fv(glGetUniformLocation(program, "delta"), 1, del);
 
 
