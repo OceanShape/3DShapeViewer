@@ -31,46 +31,54 @@ struct QuadtreeNode {
 		return Ymin <= _Ymin && Ymin <= _Ymax && _Ymin <= Ymid && _Ymax <= Ymid;
 	}
 
-	void store(const vector<float>& _objectVertices) {
-		objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
-		objectVertexCounts.push_back(_objectVertices.size() / 3);
-		return;
+	void store(const vector<float>& _objectVertices, float _min[], float _max[], int level) {
+		if (level == 7) {
+			objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
+			objectVertexCounts.push_back(_objectVertices.size() / 3);
+			return;
+		}
 
-		// add min max detection code for one object
-
-		/*if (isLeft(_Xmin, _Xmax) && isUp(_Ymin, _Ymax)) {
-			nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax);
-			nodes[0]->store(objectVertices, _Xmin, _Xmax, _Ymin, _Ymax);
+		if (isLeft(_min[0], _max[0]) && isUp(_min[1], _max[1])) {
+			if (nodes[0] == nullptr) {
+				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax);
+			}
+			nodes[0]->store(_objectVertices, _min, _max, level + 1);
 		}
-		else if (isRight(_Xmin, _Xmax) && isUp(_Ymin, _Ymax)) {
-			nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax);
-			nodes[1]->store(objectVertices, _Xmin, _Xmax, _Ymin, _Ymax);
+		else if (isRight(_min[0], _max[0]) && isUp(_min[1], _max[1])) {
+			if (nodes[1] == nullptr) {
+				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax);
+			}
+			nodes[1]->store(_objectVertices, _min, _max, level + 1);
 		}
-		else if (isLeft(_Xmin, _Xmax) && isDown(_Ymin, _Ymax)) {
-			nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid);
-			nodes[2]->store(objectVertices, _Xmin, _Xmax, _Ymin, _Ymax);
+		else if (isLeft(_min[0], _max[0]) && isDown(_min[1], _max[1])) {
+			if (nodes[2] == nullptr) {
+				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid);
+			}
+			nodes[2]->store(_objectVertices, _min, _max, level + 1);
 		}
-		else if (isRight(_Xmin, _Xmax) && isDown(_Ymin, _Ymax)) {
-			nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid);
-			nodes[3]->store(objectVertices, _Xmin, _Xmax, _Ymin, _Ymax);
+		else if (isRight(_min[0], _max[0]) && isDown(_min[1], _max[1])) {
+			if (nodes[3] == nullptr) {
+				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid);
+			}
+			nodes[3]->store(_objectVertices, _min, _max, level + 1);
 		}
 		else {
-			allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
-			objectVertexCounts.push_back(objectVertices.size());
-		}*/
+			objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
+			objectVertexCounts.push_back(_objectVertices.size() / 3);
+		}
 	}
 
 	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints) {
-		//bool allNodeNull;
-		//for (auto n : nodes) {
+		for (auto n : nodes) {
+			if (n != nullptr) {
+				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints);
+			}
+		}
 
-		//}
 		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
 		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
-		vector<float> test = { Xmin, Ymin, .0f, Xmin, Ymax, .0f, Xmax, Ymax, .0f, Xmax, Ymin, .0f, Xmin, Ymin, .0f };
-		allBorderPoints.insert(allBorderPoints.end(), test.begin(), test.end());
-		/*cout << allObjectVertices.size() << endl;
-		cout << allObjectVertexCount.size() << endl;*/
+		vector<float> border = { Xmin, Ymin, .0f, Xmin, Ymax, .0f, Xmax, Ymax, .0f, Xmax, Ymin, .0f, Xmin, Ymin, .0f };
+		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 } typedef qtNode;
 
@@ -82,8 +90,20 @@ struct ObjectData {
 		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax);
 	}
 
-	void storeObject(const vector<float>& objectVertices) {
-		root->store(objectVertices);
+	void storeObject(const vector<float>& objectVertices, bool trigger) {
+
+		float _min[3] = { FLT_MAX, FLT_MAX, FLT_MAX };
+		float _max[3] = { FLT_MIN, FLT_MIN, FLT_MIN };
+		for (size_t i = 0; i < objectVertices.size() / 3; ++i) {
+			_min[0] = std::min(_min[0], objectVertices[i * 3]);
+			_max[0] = std::max(_max[0], objectVertices[i * 3]);
+			_min[1] = std::min(_min[1], objectVertices[i * 3 + 1]);
+			_max[1] = std::max(_max[1], objectVertices[i * 3 + 1]);
+			_min[2] = std::min(_min[2], objectVertices[i * 3 + 2]);
+			_max[2] = std::max(_max[2], objectVertices[i * 3 + 2]);
+		}
+
+		root->store(objectVertices, _min, _max, 0);
 	}
 
 	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints) {

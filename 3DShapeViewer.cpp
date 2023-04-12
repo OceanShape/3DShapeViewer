@@ -427,7 +427,12 @@ bool readShapefile(float min[], float del[]) {
 			objectVertices.push_back(z);
 		}
 
-		objectData->storeObject(objectVertices);
+		bool trigger = false;
+		if (recordCount == 20126) {
+			trigger = true;
+		}
+
+		objectData->storeObject(objectVertices, trigger);
 
 		recordCount++;
 	}
