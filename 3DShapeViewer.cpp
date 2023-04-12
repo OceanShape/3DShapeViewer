@@ -9,6 +9,7 @@ const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
 const int WINDOW_WIDTH = 913;
 const int WINDOW_HEIGHT = 959;
+const int MAX_LEVEL = 7;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -37,6 +38,8 @@ float cameraY = 0.0f;
 const float delta = 0.02f;
 
 shared_ptr<ObjectData> objectData;
+
+int selectLevel = 0;
 
 typedef unsigned char uchar;
 
@@ -136,7 +139,7 @@ void render()
 	vector<float> allObjectVertexCount;
 	vector<float> allBorderPoints;
 
-	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints);
+	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel);
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -222,20 +225,24 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	}
 	break;
 	case WM_KEYDOWN:
-		switch (wParam)
-		{
-		case VK_LEFT:
+		if (wParam == VK_LEFT) {
 			cameraX -= delta;
-			break;
-		case VK_RIGHT:
+		}
+		else if (wParam == VK_RIGHT) {
 			cameraX += delta;
-			break;
-		case VK_UP:
+		}
+		else if (wParam == VK_UP) {
 			cameraY += delta;
-			break;
-		case VK_DOWN:
+		}
+		else if (wParam == VK_DOWN) {
 			cameraY -= delta;
-			break;
+		}
+		else if ('0' <= wParam && wParam <= '9') {
+			int num = wParam - '0';
+			if (num > MAX_LEVEL) {
+				num = MAX_LEVEL;
+			}
+			selectLevel = num;
 		}
 		break;
 	case WM_DESTROY:
@@ -297,13 +304,13 @@ bool readShapefile(float min[], float del[]) {
 
 	FILE* fp = SHPFile;
 
-	fseek(fp, 0L, SEEK_END);
+	std::fseek(fp, 0L, SEEK_END);
 	long fileSize = ftell(fp);
-	rewind(fp);
+	std::rewind(fp);
 
 	uchar* data = new uchar[fileSize];
-	memset(data, 0, fileSize);
-	fread(data, sizeof(uchar), fileSize, fp);
+	std::memset(data, 0, fileSize);
+	std::fread(data, sizeof(uchar), fileSize, fp);
 
 	uchar* offset = data;
 
@@ -363,7 +370,7 @@ bool readShapefile(float min[], float del[]) {
 	float yBot = (yMin + yMax) / 2 - del[0];
 
 
-	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop);
+	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, MAX_LEVEL);
 
 	SHPPoint* points = new SHPPoint[1000];
 	double* Zpoints = new double[1000]; // 13: PolyLineZ(ArcZ)
@@ -452,7 +459,7 @@ bool readShapefile(float min[], float del[]) {
 bool openShapefile() {
 	OPENFILENAME ofn;
 
-	ZeroMemory(&ofn, sizeof(ofn));
+	std::ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
 	ofn.lpstrFilter = L"Shapefiles (*.shp)\0*.shp\0All Files (*.*)\0*.*\0";
 	ofn.hwndOwner = NULL;
