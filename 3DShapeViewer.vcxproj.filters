@@ -56,9 +56,6 @@
     <ClCompile Include="shapefile.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="quadtree.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="3DShapeViewer.rc">
