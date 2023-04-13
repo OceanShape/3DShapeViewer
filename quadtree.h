@@ -33,7 +33,7 @@ struct QuadtreeNode {
 	}
 
 	void store(const vector<float>& _objectVertices, float _min[], float _max[], int level) {
-		if (level == 7) {
+		if (level == maxLevel) {
 			objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
 			objectVertexCounts.push_back(_objectVertices.size() / 3);
 			return;
@@ -69,19 +69,24 @@ struct QuadtreeNode {
 		}
 	}
 
-	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int level, int selectLevel) {
-		for (auto n : nodes) {
-			if (n != nullptr) {
-				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, level + 1, selectLevel);
-			}
-		}
-
+	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int level, int selectLevel, int& count) {
 		if (level > selectLevel) {
 			return;
 		}
+
+		for (auto n : nodes) {
+			if (n != nullptr) {
+				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, level + 1, selectLevel, count);
+			}
+		}
+
+		//count += objectVertexCounts.size();
+
 		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
 		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
+		// 원래 점까지 돌아와야 함
 		vector<float> border = { Xmin, Ymin, .0f, Xmin, Ymax, .0f, Xmax, Ymax, .0f, Xmax, Ymin, .0f, Xmin, Ymin, .0f };
+		//count++;
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 } typedef qtNode;
@@ -106,12 +111,15 @@ struct ObjectData {
 			_min[2] = std::min(_min[2], objectVertices[i * 3 + 2]);
 			_max[2] = std::max(_max[2], objectVertices[i * 3 + 2]);
 		}
+		//cout << _min[0] << "/" << _min[1] << endl;
+		//cout << _max[0] << "/" << _max[1] << endl;
+		//cout << endl;
 
 		root->store(objectVertices, _min, _max, 0);
 	}
 
-	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int selectLevel) {
-		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, selectLevel);
+	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int selectLevel, int& count) {
+		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, selectLevel, count);
 	}
 };
 

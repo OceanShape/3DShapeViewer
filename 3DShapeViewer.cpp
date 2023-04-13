@@ -9,7 +9,7 @@ const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
 const int WINDOW_WIDTH = 913;
 const int WINDOW_HEIGHT = 959;
-const int MAX_LEVEL = 7;
+const int MAX_LEVEL = 0;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -139,7 +139,56 @@ void render()
 	vector<float> allObjectVertexCount;
 	vector<float> allBorderPoints;
 
-	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel);
+	int tester = 0;
+	static bool trigger = true;
+
+	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel, tester);
+
+	if (trigger) {
+		//cout << "test: " << tester << endl;
+		cout << allBorderPoints[0] << "/" << allBorderPoints[3 * 1] << "/" << allBorderPoints[3 * 2] << "/" << allBorderPoints[3 * 3] << endl;
+		cout << allBorderPoints[1] << "/" << allBorderPoints[3 * 1 + 1] << "/" << allBorderPoints[3 * 2 + 1] << "/" << allBorderPoints[3 * 3 + 1] << endl;
+		cout << "---" << endl;
+		trigger = false;
+	}
+
+	// 192314
+	// 571857
+
+	// 196843
+	// 565765
+
+	// 192282
+	// 564539
+
+	//allObjectVertices.push_back(192314);
+	//allObjectVertices.push_back(571857);
+	//allObjectVertices.push_back(0);
+	//allObjectVertices.push_back(196843);
+	//allObjectVertices.push_back(565765);
+	//allObjectVertices.push_back(0);
+	//allObjectVertices.push_back(192282);
+	//allObjectVertices.push_back(564539);
+	//allObjectVertices.push_back(0);
+
+	//allObjectVertexCount.push_back(3);
+
+
+	//allObjectVertices[allObjectVertices.size() - 6];
+	//allObjectVertices[allObjectVertices.size() - 5];
+	//allObjectVertices[allObjectVertices.size() - 3];
+	//allObjectVertices[allObjectVertices.size() - 2];
+
+	//allObjectVertices.push_back(x2);
+	//allObjectVertices.push_back(y2);
+	//allObjectVertices.push_back(.0f);
+	//allObjectVertices.push_back(x1);
+	//allObjectVertices.push_back(y1);
+	//allObjectVertices.push_back(.0f);
+	//allObjectVertexCount.push_back(2);
+	allObjectVertices.push_back(171750);
+	allObjectVertices.push_back(allObjectVertices[allObjectVertices.size() - 5]);
+
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -149,12 +198,30 @@ void render()
 		startIndex += allObjectVertexCount[i];
 	}
 
+
+
+	vector<float> borderTest;
+	borderTest.push_back(171750);
+	borderTest.push_back(allObjectVertices[allObjectVertices.size() - 5]);
+	borderTest.push_back(0);
+	borderTest.push_back(allObjectVertices[allObjectVertices.size() - 3]);
+	borderTest.push_back(allObjectVertices[allObjectVertices.size() - 2]);
+	borderTest.push_back(0);
+
+
+
+
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
-	for (int i = 0; i < allBorderPoints.size() / (3 * 5); ++i) {
-		glDrawArrays(GL_LINE_STRIP, i * 5, 5);
-	}
+	glBufferData(GL_ARRAY_BUFFER, borderTest.size() * sizeof(float), borderTest.data(), GL_STATIC_DRAW);
+	glDrawArrays(GL_LINE_STRIP, 0, 2);
+	//for (int i = 0; i < borderTest.size() / (3 * 5); ++i) {
+	//	glDrawArrays(GL_LINE_STRIP, i * 5, 5);
+	//}
+	//glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
+	//for (int i = 0; i < allBorderPoints.size() / (3 * 5); ++i) {
+	//	glDrawArrays(GL_LINE_STRIP, i * 5, 5);
+	//}
 }
 
 void cleanUp()
@@ -370,7 +437,12 @@ bool readShapefile(float min[], float del[]) {
 	float yBot = (yMin + yMax) / 2 - del[0];
 
 
-	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, MAX_LEVEL);
+	/*cout << "xMin/xMax: " << xMin << "/" << xMax << " => " << xMax - xMin << endl;
+	cout << "yTop/yBot: " << yTop << "/" << yBot << " => " << yTop - yBot << endl;*/
+
+
+	//objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, MAX_LEVEL);
+	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yMin, yMax, MAX_LEVEL);
 
 	SHPPoint* points = new SHPPoint[1000];
 	double* Zpoints = new double[1000]; // 13: PolyLineZ(ArcZ)
@@ -435,9 +507,6 @@ bool readShapefile(float min[], float del[]) {
 		}
 
 		bool trigger = false;
-		if (recordCount == 20126) {
-			trigger = true;
-		}
 
 		objectData->storeObject(objectVertices, trigger);
 
@@ -481,11 +550,14 @@ bool openShapefile() {
 		cameraX = 0.0f;
 		cameraY = 0.0f;
 	}
-
+	
 	GLfloat min[3], del[3];
 	if (readShapefile(min, del) == false) {
 		return false;
 	}
+
+	cout << min[0] << "/" << min[1] << endl;
+	cout << del[0] << "/" << del[1] << endl;
 
 	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), del[0] / del[1]);
 
