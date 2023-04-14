@@ -35,7 +35,9 @@ float aspectRatio = 1.0f;
 
 float cameraX = 0.0f;
 float cameraY = 0.0f;
+float cameraZ = 1.0f;
 const float delta = 0.02f;
+const float deltaZ = 0.001f;
 
 shared_ptr<ObjectData> objectData;
 
@@ -125,10 +127,11 @@ bool initialize()
 
 void render()
 {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glEnable(GL_DEPTH_TEST);
+	/*glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
+	glClear(GL_COLOR_BUFFER_BIT);
 
-	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, 1.0f);
+	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
 	glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, 0.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -154,6 +157,7 @@ void render()
 		trigger = false;
 	}
 
+	cout << "cameraZ: " << cameraZ << endl;
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -251,6 +255,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		else if (wParam == VK_DOWN) {
 			cameraY -= delta;
+		}
+		else if (wParam == 'W' || wParam == 'w') {
+			cameraZ += delta;
+		}
+		else if (wParam == 'S' || wParam == 's') {
+			cameraZ -= delta;
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';
