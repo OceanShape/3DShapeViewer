@@ -74,18 +74,22 @@ struct QuadtreeNode {
 			return;
 		}
 
-
 		for (auto n : nodes) {
 			if (n != nullptr) {
 				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, level + 1, selectLevel, count);
 			}
 		}
 		//count += objectVertexCounts.size();
+		//count++;
+
+		//for (int i = 0; i < objectVertices.size() / 3; ++i) {
+		//	float t = 0.51;
+		//	objectVertices[i * 3 + 2] = 31.379 * t + 32.663 * (1 - t)
+		//}
 
 		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
 		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
 		vector<float> border = { Xmin, Ymin, Zmin, Xmin, Ymax, Zmin, Xmax, Ymax, Zmin, Xmax, Ymin, Zmin, Xmin, Ymin, Zmin };
-		count++;
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 } typedef qtNode;

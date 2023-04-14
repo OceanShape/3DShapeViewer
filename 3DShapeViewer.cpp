@@ -39,7 +39,7 @@ const float delta = 0.02f;
 
 shared_ptr<ObjectData> objectData;
 
-int selectLevel = 0;
+int selectLevel = 7;
 
 typedef unsigned char uchar;
 
@@ -125,6 +125,9 @@ bool initialize()
 
 void render()
 {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glEnable(GL_DEPTH_TEST);
+
 	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, 1.0f);
 	glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, 0.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -133,20 +136,18 @@ void render()
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	vector<float> allObjectVertices;
 	vector<float> allObjectVertexCount;
 	vector<float> allBorderPoints;
 
-	int tester = 0;
+	static int tester = 0;
 	static bool trigger = true;
 	
 	
 	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel, tester);
 
 	if (trigger) {
-		cout << "test: " << tester << endl;
 		//cout << allBorderPoints[0] << "/" << allBorderPoints[3 * 1] << "/" << allBorderPoints[3 * 2] << "/" << allBorderPoints[3 * 3] << endl;
 		//cout << allBorderPoints[1] << "/" << allBorderPoints[3 * 1 + 1] << "/" << allBorderPoints[3 * 2 + 1] << "/" << allBorderPoints[3 * 3 + 1] << endl;
 		//cout << "---" << endl;
@@ -447,9 +448,6 @@ bool readShapefile(float min[], float del[]) {
 			float x = points[p].x;
 			float y = points[p].y;
 			float z = (hasZvalue) ? Zpoints[p] : 0.0f;
-
-			sZmin = std::min(sZmin, z);
-			sZmax = std::max(sZmax, z);
 
 			objectVertices.push_back(x);
 			objectVertices.push_back(y);
