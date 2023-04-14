@@ -11,12 +11,12 @@ struct QuadtreeNode {
 	vector<int> objectVertices;
 	vector<int> objectVertexCounts;
 
-	float Xmin, Xmax, Ymin, Ymax;
+	float Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
 	float Xmid, Ymid;
 	int maxLevel = 0;
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 
-	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2), maxLevel(_maxLevel) {
+	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const float& _Zmin, const float& _Zmax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Zmin(_Zmin), Zmax(_Zmax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2), maxLevel(_maxLevel) {
 	}
 
 	bool isLeft(const float& _Xmin, const float& _Xmax) {
@@ -41,25 +41,25 @@ struct QuadtreeNode {
 
 		if (isLeft(_min[0], _max[0]) && isUp(_min[1], _max[1])) {
 			if (nodes[0] == nullptr) {
-				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, maxLevel);
+				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, Zmin, Zmax, maxLevel);
 			}
 			nodes[0]->store(_objectVertices, _min, _max, level + 1);
 		}
 		else if (isRight(_min[0], _max[0]) && isUp(_min[1], _max[1])) {
 			if (nodes[1] == nullptr) {
-				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax, maxLevel);
+				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax, Zmin, Zmax, maxLevel);
 			}
 			nodes[1]->store(_objectVertices, _min, _max, level + 1);
 		}
 		else if (isLeft(_min[0], _max[0]) && isDown(_min[1], _max[1])) {
 			if (nodes[2] == nullptr) {
-				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid, maxLevel);
+				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid, Zmin, Zmax, maxLevel);
 			}
 			nodes[2]->store(_objectVertices, _min, _max, level + 1);
 		}
 		else if (isRight(_min[0], _max[0]) && isDown(_min[1], _max[1])) {
 			if (nodes[3] == nullptr) {
-				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid, maxLevel);
+				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid, Zmin, Zmax, maxLevel);
 			}
 			nodes[3]->store(_objectVertices, _min, _max, level + 1);
 		}
@@ -74,19 +74,18 @@ struct QuadtreeNode {
 			return;
 		}
 
+
 		for (auto n : nodes) {
 			if (n != nullptr) {
 				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, level + 1, selectLevel, count);
 			}
 		}
-
 		//count += objectVertexCounts.size();
 
 		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
 		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
-		// 원래 점까지 돌아와야 함
-		vector<float> border = { Xmin, Ymin, .0f, Xmin, Ymax, .0f, Xmax, Ymax, .0f, Xmax, Ymin, .0f, Xmin, Ymin, .0f };
-		//count++;
+		vector<float> border = { Xmin, Ymin, Zmin, Xmin, Ymax, Zmin, Xmax, Ymax, Zmin, Xmax, Ymin, Zmin, Xmin, Ymin, Zmin };
+		count++;
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 } typedef qtNode;
@@ -95,8 +94,8 @@ struct ObjectData {
 
 	shared_ptr<qtNode> root;
 
-	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax, int maxLevel) {
-		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, maxLevel);
+	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax, float Zmin, float Zmax, int maxLevel) {
+		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax, maxLevel);
 	}
 
 	void storeObject(const vector<float>& objectVertices, bool trigger) {
@@ -111,9 +110,6 @@ struct ObjectData {
 			_min[2] = std::min(_min[2], objectVertices[i * 3 + 2]);
 			_max[2] = std::max(_max[2], objectVertices[i * 3 + 2]);
 		}
-		//cout << _min[0] << "/" << _min[1] << endl;
-		//cout << _max[0] << "/" << _max[1] << endl;
-		//cout << endl;
 
 		root->store(objectVertices, _min, _max, 0);
 	}
