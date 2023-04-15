@@ -132,7 +132,7 @@ void render()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
-	glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, 0.0f);
+	glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, cameraZ - 1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
