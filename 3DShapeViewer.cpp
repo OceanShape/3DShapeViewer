@@ -120,6 +120,7 @@ bool initialize()
 	glLinkProgram(program);
 	glUseProgram(program);
 
+	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
 	return true;
@@ -127,17 +128,26 @@ bool initialize()
 
 void render()
 {
-	/*glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//glClear(GL_COLOR_BUFFER_BIT);
 
+
+	// model
+
+	// view
 	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
 	glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, cameraZ - 1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	glm::mat4 viewMatrix = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+	glm::mat4 view = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
 
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+
+	// projection
+	glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+	//glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
 
 
 	vector<float> allObjectVertices;
@@ -296,7 +306,7 @@ void memSwap(void* const data, size_t size) {
 	}
 }
 
-bool readShapefile(float min[], float del[]) {
+bool readShapefile(float min[], float max[], float del[]) {
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	int progressWidth = 440;
@@ -386,6 +396,7 @@ bool readShapefile(float min[], float del[]) {
 	min[0] = xMin;
 	min[1] = yMin;
 	min[2] = zMin;
+	max[2] = zMax;
 
 	del[0] = (xMax - xMin) / 2.0f;
 	del[1] = (yMax - yMin) / 2.0f;
@@ -509,10 +520,13 @@ bool openShapefile() {
 		cameraY = 0.0f;
 	}
 	
-	GLfloat min[3], del[3];
-	if (readShapefile(min, del) == false) {
+	GLfloat min[3], max[3], del[3];
+	if (readShapefile(min, max, del) == false) {
 		return false;
 	}
+	printf("del: %.10f\n", del[2]);
+	printf("z position: 0/%f\n", (max[2] - min[2]) / del[2]);
+	
 
 	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), del[0] / del[1]);
 
