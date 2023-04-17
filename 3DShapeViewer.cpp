@@ -33,6 +33,7 @@ bool isShapeLoaded = false;
 int32_t recordCount = 0;
 float aspectRatio = 1.0f;
 
+float fov = 45.0f;
 float cameraX = 0.0f;
 float cameraY = 0.0f;
 float cameraZ = 3.0f;
@@ -164,7 +165,7 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 	// projection
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 10.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 
@@ -274,7 +275,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	break;
 	case WM_MOUSEWHEEL:
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
-		//cameraZ -= wDel * 0.1f;
+		fov -= wDel * .1f;
+		fov = (fov > 89.0f) ? 89.0f : (fov < 1.0f) ? 1.0f : fov;
+		cout << "fov: " << fov << endl;
 		break;
 	case WM_KEYDOWN:
 		if (wParam == 'E' || wParam == 'e') {
@@ -296,19 +299,19 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			cameraY -= delta;
 		}
 		else if (wParam == 'J' || wParam == 'j') {
-			yaw -= rotDel;
+			yaw = (yaw < -175.0f) ? -175.0f : yaw - rotDel;
 			updateCameraVec();
 		}
 		else if (wParam == 'L' || wParam == 'l') {
-			yaw += rotDel;
+			yaw = (yaw > 5.0f) ? 5.0f: yaw + rotDel;
 			updateCameraVec();
 		}
 		else if (wParam == 'I' || wParam == 'i') {
-			pitch += rotDel;
+			pitch = (pitch > 85.0f) ? 85.0f : pitch + rotDel;
 			updateCameraVec();
 		}
 		else if (wParam == 'K' || wParam == 'k') {
-			pitch -= rotDel;
+			pitch = (pitch < -85.0f) ? -85.0f : pitch - rotDel;
 			updateCameraVec();
 		}
 		else if ('0' <= wParam && wParam <= '9') {
