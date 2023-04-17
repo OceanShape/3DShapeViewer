@@ -9,7 +9,7 @@ const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
 const int WINDOW_WIDTH = 913;
 const int WINDOW_HEIGHT = 959;
-const int MAX_LEVEL = 7;
+const int MAX_LEVEL = 10;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -38,6 +38,13 @@ float cameraY = 0.0f;
 float cameraZ = 3.0f;
 const float delta = 0.02f;
 const float deltaZ = 0.001f;
+
+float rotX = 0.0f;
+float rotY = 0.0f;
+float rotZ = 0.0f;
+const float rotDelX = 0.01f;
+const float rotDelY = 0.01f;
+const float rotDelZ = 0.01f;
 
 shared_ptr<ObjectData> objectData;
 

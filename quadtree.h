@@ -33,7 +33,7 @@ struct QuadtreeNode {
 	}
 
 	void store(const vector<float>& _objectVertices, float _min[], float _max[], int level) {
-		if (level == maxLevel) {
+		if (level == maxLevel || Xmax - Xmin < 120) {
 			objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
 			objectVertexCounts.push_back(_objectVertices.size() / 3);
 			return;
