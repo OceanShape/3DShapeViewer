@@ -36,8 +36,12 @@ float aspectRatio = 1.0f;
 float cameraX = 0.0f;
 float cameraY = 0.0f;
 float cameraZ = 3.0f;
+float moveX = 0.0f;
+float moveY = 0.0f;
+float moveZ = 3.0f;
 const float delta = 0.02f;
-const float deltaZ = 0.001f;
+const float deltaZ = 0.1f;
+
 
 float rotX = 0.0f;
 float rotY = 0.0f;
@@ -46,9 +50,21 @@ const float rotDelX = 0.01f;
 const float rotDelY = 0.01f;
 const float rotDelZ = 0.01f;
 
+float yaw = -90.0f;
+float pitch = 0.0f;
+float rowDel = 0.1f;
+
+bool mouseClicked = false;
+float lastX = 450.0f;
+float lastY = 450.0f;
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
 shared_ptr<ObjectData> objectData;
 
-int selectLevel = 7;
+int selectLevel = 10;
 
 typedef unsigned char uchar;
 
@@ -145,11 +161,21 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	// view
-	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
-	glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, cameraZ - 1.0f);
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	//glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
+	//glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, cameraZ - 1.0f);
+	//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	glm::mat4 view = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+	//glm::mat4 view = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
+	
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	glm::vec3 cameraFront = glm::normalize(direction);
+
+
+	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
+	glm::mat4 view = glm::lookAt(position, position + cameraFront, cameraUp);
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
@@ -176,7 +202,7 @@ void render()
 		trigger = false;
 	}
 
-	cout << "cameraZ: " << cameraZ << endl;
+	//std::cout << "cameraZ: " << cameraZ << endl;
 
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -265,26 +291,27 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	break;
 	case WM_MOUSEWHEEL:
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
-		cameraZ -= wDel * 0.1f;
+		//cameraZ -= wDel * 0.1f;
+		rotZ -= wDel * 0.1f;
 		break;
 	case WM_KEYDOWN:
-		if (wParam == VK_LEFT) {
+		if (wParam == 'E' || wParam == 'e') {
+			cameraZ -= deltaZ;
+		}
+		else if (wParam == 'Q' || wParam == 'q') {
+			cameraZ += deltaZ;
+		}
+		else if (wParam == 'A' || wParam == 'a') {
 			cameraX -= delta;
 		}
-		else if (wParam == VK_RIGHT) {
+		else if (wParam == 'D' || wParam == 'd') {
 			cameraX += delta;
 		}
-		else if (wParam == VK_UP) {
+		else if (wParam == 'W' || wParam == 'w') {
 			cameraY += delta;
 		}
-		else if (wParam == VK_DOWN) {
-			cameraY -= delta;
-		}
-		else if (wParam == 'W' || wParam == 'w') {
-			cameraZ -= delta;
-		}
 		else if (wParam == 'S' || wParam == 's') {
-			cameraZ += delta;
+			cameraY -= delta;
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';
@@ -293,6 +320,14 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			}
 			selectLevel = num;
 		}
+		break;
+	case WM_MOUSEMOVE:
+		if (mouseClicked) {
+			450
+		}
+		break;
+	case WM_LBUTTONDOWN:
+		mouseClicked = true;
 		break;
 	case WM_DESTROY:
 		closeShapefile();
@@ -396,7 +431,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 	// Check Shape Type
 	if (shpHeaderData.SHPType % 10 != 3 && shpHeaderData.SHPType % 10 != 5) {
-		cout << "Unsupported data type" << endl;
+		std::cout << "Unsupported data type" << endl;
 		return false;
 	}
 
@@ -419,7 +454,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 	float yTop = (yMin + yMax) / 2 + del[0];
 	float yBot = (yMin + yMax) / 2 - del[0];
 
-	cout << "header Z min/max: " << zMin << "/" << zMax << endl;
+	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
 	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, zMin, zMax, MAX_LEVEL);
 
