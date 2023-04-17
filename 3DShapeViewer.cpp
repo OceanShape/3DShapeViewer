@@ -35,7 +35,7 @@ float aspectRatio = 1.0f;
 
 float cameraX = 0.0f;
 float cameraY = 0.0f;
-float cameraZ = 1.0f;
+float cameraZ = 3.0f;
 const float delta = 0.02f;
 const float deltaZ = 0.001f;
 
@@ -236,6 +236,7 @@ void closeShapefile() {
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	int wDel;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -255,6 +256,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	}
 	break;
+	case WM_MOUSEWHEEL:
+		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		cameraZ -= wDel * 0.1f;
+		break;
 	case WM_KEYDOWN:
 		if (wParam == VK_LEFT) {
 			cameraX -= delta;
