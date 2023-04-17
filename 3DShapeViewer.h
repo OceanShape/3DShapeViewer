@@ -32,6 +32,7 @@ bool compileShader(GLuint shader, const char* source);
 bool initialize();
 void render();
 void cleanUp();
+void updateCameraVec();
 
 string readShader(const string& filepath);
 bool openShapefile();

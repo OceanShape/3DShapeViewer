@@ -43,16 +43,9 @@ const float delta = 0.02f;
 const float deltaZ = 0.1f;
 
 
-float rotX = 0.0f;
-float rotY = 0.0f;
-float rotZ = 0.0f;
-const float rotDelX = 0.01f;
-const float rotDelY = 0.01f;
-const float rotDelZ = 0.01f;
-
 float yaw = -90.0f;
 float pitch = 0.0f;
-float rowDel = 0.1f;
+float rotDel = 1.0f;
 
 bool mouseClicked = false;
 float lastX = 450.0f;
@@ -61,13 +54,12 @@ float lastY = 450.0f;
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraRight = glm::vec3(1.0f, .0f, .0f);
 
 shared_ptr<ObjectData> objectData;
-
 int selectLevel = 10;
 
 typedef unsigned char uchar;
-
 
 bool checkShaderCompileStatus(GLuint shader)
 {
@@ -92,8 +84,6 @@ bool compileShader(GLuint shader, const char* source)
 	glCompileShader(shader);
 	return checkShaderCompileStatus(shader);
 }
-
-
 
 bool initialize()
 {
@@ -149,11 +139,19 @@ bool initialize()
 	return true;
 }
 
+void updateCameraVec() {
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(direction);
+	cameraRight = glm::normalize(glm::cross(cameraFront, glm::vec3(.0f, 1.0f, .0f)));
+	cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
+}
+
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glClear(GL_COLOR_BUFFER_BIT);
-
 
 	// model
 	glm::mat4 model = glm::mat4(1.0f);
@@ -161,28 +159,13 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	// view
-	//glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
-	//glm::vec3 cameraTarget = glm::vec3(cameraX, cameraY, cameraZ - 1.0f);
-	//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-	//glm::mat4 view = glm::lookAt(cameraPosition, cameraTarget, cameraUp);
-	
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	glm::vec3 cameraFront = glm::normalize(direction);
-
-
 	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
 	glm::mat4 view = glm::lookAt(position, position + cameraFront, cameraUp);
-
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 	// projection
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 10.0f);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
 
 
 	vector<float> allObjectVertices;
@@ -292,7 +275,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_MOUSEWHEEL:
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		//cameraZ -= wDel * 0.1f;
-		rotZ -= wDel * 0.1f;
 		break;
 	case WM_KEYDOWN:
 		if (wParam == 'E' || wParam == 'e') {
@@ -312,6 +294,22 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		else if (wParam == 'S' || wParam == 's') {
 			cameraY -= delta;
+		}
+		else if (wParam == 'J' || wParam == 'j') {
+			yaw -= rotDel;
+			updateCameraVec();
+		}
+		else if (wParam == 'L' || wParam == 'l') {
+			yaw += rotDel;
+			updateCameraVec();
+		}
+		else if (wParam == 'I' || wParam == 'i') {
+			pitch += rotDel;
+			updateCameraVec();
+		}
+		else if (wParam == 'K' || wParam == 'k') {
+			pitch -= rotDel;
+			updateCameraVec();
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';
