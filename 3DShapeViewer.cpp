@@ -133,6 +133,9 @@ void render()
 
 
 	// model
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::scale(model, { 0.99f, 0.99f, 0.1f });
+	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	// view
 	glm::vec3 cameraPosition = glm::vec3(cameraX, cameraY, cameraZ);
@@ -144,8 +147,7 @@ void render()
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 	// projection
-	glm::mat4 projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -10.0f, 10.0f);
-	//glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 10.0f);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 
@@ -267,10 +269,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			cameraY -= delta;
 		}
 		else if (wParam == 'W' || wParam == 'w') {
-			cameraZ += delta;
+			cameraZ -= delta;
 		}
 		else if (wParam == 'S' || wParam == 's') {
-			cameraZ -= delta;
+			cameraZ += delta;
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';

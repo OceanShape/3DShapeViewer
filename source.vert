@@ -4,6 +4,7 @@ uniform vec3 minimum;
 uniform vec3 delta;
 uniform float aspect_ratio;
 
+uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
@@ -16,6 +17,6 @@ void main() {
   float y = modelToWorld(1);
   float z = (-1e-6 < delta[2] && delta[2] < 1e-6 ) ? 0.0f : modelToWorld(2); 
   vec3 position = vec3(x, y / aspect_ratio, z);
-  gl_Position = projection * view * vec4(position.x * 0.99f, position.y * 0.99f, position.z, 1.0f);
+  gl_Position = projection * view * model * vec4(position.x, position.y, position.z, 1.0f);
   gl_PointSize = 1.0f;
 }
