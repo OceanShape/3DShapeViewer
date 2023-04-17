@@ -323,7 +323,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		break;
 	case WM_MOUSEMOVE:
 		if (mouseClicked) {
-			450
+			
 		}
 		break;
 	case WM_LBUTTONDOWN:
