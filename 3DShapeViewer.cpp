@@ -199,8 +199,8 @@ void render()
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
-	for (int i = 0; i < allBorderPoints.size() / (3 * 5); ++i) {
-		glDrawArrays(GL_LINE_STRIP, i * 5, 5);
+	for (int i = 0; i < allBorderPoints.size() / (3 * 4); ++i) {
+		glDrawArrays(GL_LINE_LOOP, i * 4, 4);
 	}
 }
 

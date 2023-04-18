@@ -89,7 +89,7 @@ struct QuadtreeNode {
 
 		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
 		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
-		vector<float> border = { Xmin, Ymin, Zmin, Xmin, Ymax, Zmin, Xmax, Ymax, Zmin, Xmax, Ymin, Zmin, Xmin, Ymin, Zmin };
+		vector<float> border = { Xmin, Ymin, Zmin, Xmin, Ymax, Zmin, Xmax, Ymax, Zmin, Xmax, Ymin, Zmin };
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 } typedef qtNode;
