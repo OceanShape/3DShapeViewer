@@ -156,8 +156,10 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="source.frag" />
-    <None Include="source.vert" />
+    <None Include="grid.frag" />
+    <None Include="grid.vert" />
+    <None Include="object.frag" />
+    <None Include="object.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

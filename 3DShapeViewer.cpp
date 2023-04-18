@@ -26,7 +26,7 @@ TCHAR szFileName[MAX_PATH];
 
 GLuint vao[2];
 GLuint vbo[2];
-GLuint program;
+GLuint programs[2];
 
 FILE* SHPFile;
 bool isShapeLoaded = false;
@@ -109,30 +109,24 @@ bool initialize()
 	eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
 	eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 
+	string shaderFileName[] = { "object.vert", "object.frag", "grid.vert", "grid.frag" };
+	for (size_t i = 0; i < 2; ++i) {
+		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+		if (!compileShader(vertexShader, readShader(shaderFileName[i * 2]).c_str())) {
+			return false;
+		}
 
-	string shaderSource = readShader("source.vert");
-	const char* shaderCstr = shaderSource.c_str();
+		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		if (!compileShader(fragmentShader, readShader(shaderFileName[i * 2 + 1]).c_str())) {
+			return false;
+		}
 
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	if (!compileShader(vertexShader, shaderCstr)) {
-		return false;
+		programs[i] = glCreateProgram();
+		glAttachShader(programs[i], vertexShader);
+		glAttachShader(programs[i], fragmentShader);
+		glLinkProgram(programs[i]);
+		glUseProgram(programs[i]);
 	}
-
-	shaderSource = readShader("source.frag");
-	shaderCstr = shaderSource.c_str();
-
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	if (!compileShader(fragmentShader, shaderCstr)) {
-		return false;
-	}
-
-	
-
-	program = glCreateProgram();
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, fragmentShader);
-	glLinkProgram(program);
-	glUseProgram(program);
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -154,20 +148,23 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 	// model
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::scale(model, { 0.99f, 0.99f, 0.1f });
-	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glm::mat4 model = glm::scale(glm::mat4(1.0f), { 0.99f, 0.99f, 0.1f });
 
 	// view
 	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
 	glm::mat4 view = glm::lookAt(position, position + cameraFront, cameraUp);
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 	// projection
 	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
+	for (int i = 0; i < 2; ++i) {
+		glUseProgram(programs[i]);
+		glUniformMatrix4fv(glGetUniformLocation(programs[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(programs[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(programs[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	}
 
 	vector<float> allObjectVertices;
 	vector<float> allObjectVertexCount;
@@ -179,6 +176,8 @@ void render()
 	
 	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel, tester);
 
+	cout << "size: " << allObjectVertexCount.size() << "/" << allBorderPoints.size() << endl;
+
 	if (trigger) {
 		//cout << allBorderPoints[0] << "/" << allBorderPoints[3 * 1] << "/" << allBorderPoints[3 * 2] << "/" << allBorderPoints[3 * 3] << endl;
 		//cout << allBorderPoints[1] << "/" << allBorderPoints[3 * 1 + 1] << "/" << allBorderPoints[3 * 2 + 1] << "/" << allBorderPoints[3 * 3 + 1] << endl;
@@ -187,7 +186,7 @@ void render()
 	}
 
 	//std::cout << "cameraZ: " << cameraZ << endl;
-
+	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
@@ -196,7 +195,7 @@ void render()
 		startIndex += allObjectVertexCount[i];
 	}
 
-
+	glUseProgram(programs[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
@@ -211,14 +210,14 @@ void cleanUp()
 	glDeleteBuffers(2, vbo);
 
 	GLuint vertexShader;
-	glGetAttachedShaders(program, 1, NULL, &vertexShader);
+	glGetAttachedShaders(programs[0], 1, NULL, &vertexShader);
 	GLuint fragmentShader;
-	glGetAttachedShaders(program, 1, NULL, &fragmentShader);
-	glDetachShader(program, vertexShader);
-	glDetachShader(program, fragmentShader);
+	glGetAttachedShaders(programs[0], 1, NULL, &fragmentShader);
+	glDetachShader(programs[0], vertexShader);
+	glDetachShader(programs[0], fragmentShader);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-	glDeleteProgram(program);
+	glDeleteProgram(programs[0]);
 
 	eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroyContext(eglDisplay, eglContext);
@@ -569,6 +568,7 @@ bool openShapefile() {
 		cameraX = 0.0f;
 		cameraY = 0.0f;
 	}
+
 	
 	GLfloat min[3], max[3], del[3];
 	if (readShapefile(min, max, del) == false) {
@@ -578,21 +578,24 @@ bool openShapefile() {
 	printf("z position: 0/%f\n", (max[2] - min[2]) / del[2]);
 	
 
-	glUniform1f(glGetUniformLocation(program, "aspect_ratio"), del[0] / del[1]);
-
-	glUniform3fv(glGetUniformLocation(program, "minimum"), 1, min);
-
-	glUniform3fv(glGetUniformLocation(program, "delta"), 1, del);
+	for (int i = 0; i < 2; ++i) {
+		glUseProgram(programs[i]);
+		glUniform1f(glGetUniformLocation(programs[i], "aspect_ratio"), del[0] / del[1]);
+		glUniform3fv(glGetUniformLocation(programs[i], "minimum"), 1, min);
+		glUniform3fv(glGetUniformLocation(programs[i], "delta"), 1, del);
+	}
 
 
 	glGenVertexArrays(2, vao);
 	glGenBuffers(2, vbo);
 
+	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
+	glUseProgram(programs[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
