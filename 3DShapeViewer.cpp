@@ -209,15 +209,16 @@ void cleanUp()
 	glDeleteVertexArrays(2, vao);
 	glDeleteBuffers(2, vbo);
 
-	GLuint vertexShader;
-	glGetAttachedShaders(programs[0], 1, NULL, &vertexShader);
-	GLuint fragmentShader;
-	glGetAttachedShaders(programs[0], 1, NULL, &fragmentShader);
-	glDetachShader(programs[0], vertexShader);
-	glDetachShader(programs[0], fragmentShader);
+	for (size_t i = 0; i < 2; ++i) {
+		GLuint vertexShader, fragmentShader;
+		glGetAttachedShaders(programs[i], 1, NULL, &vertexShader);
+		glGetAttachedShaders(programs[i], 1, NULL, &fragmentShader);
+		glDetachShader(programs[i], vertexShader);
+		glDetachShader(programs[i], fragmentShader);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-	glDeleteProgram(programs[0]);
+		glDeleteProgram(programs[i]);
+	}
 
 	eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroyContext(eglDisplay, eglContext);
