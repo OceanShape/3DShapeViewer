@@ -26,7 +26,9 @@ TCHAR szFileName[MAX_PATH];
 
 GLuint vao[2];
 GLuint vbo[2];
+GLuint ebo;
 GLuint programs[2];
+bool groundMode = false;
 
 FILE* SHPFile;
 bool isShapeLoaded = false;
@@ -176,8 +178,6 @@ void render()
 	
 	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel, tester);
 
-	cout << "size: " << allObjectVertexCount.size() << "/" << allBorderPoints.size() << endl;
-
 	if (trigger) {
 		//cout << allBorderPoints[0] << "/" << allBorderPoints[3 * 1] << "/" << allBorderPoints[3 * 2] << "/" << allBorderPoints[3 * 3] << endl;
 		//cout << allBorderPoints[1] << "/" << allBorderPoints[3 * 1 + 1] << "/" << allBorderPoints[3 * 2 + 1] << "/" << allBorderPoints[3 * 3 + 1] << endl;
@@ -185,7 +185,7 @@ void render()
 		trigger = false;
 	}
 
-	//std::cout << "cameraZ: " << cameraZ << endl;
+	// draw objects
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
@@ -195,13 +195,25 @@ void render()
 		startIndex += allObjectVertexCount[i];
 	}
 
+	// draw grid
 	glUseProgram(programs[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
-	for (int i = 0; i < allBorderPoints.size() / (3 * 4); ++i) {
-		glDrawArrays(GL_LINE_LOOP, i * 4, 4);
+
+	if (groundMode) {
+		unsigned int st = allBorderPoints.size() / 3 - 4;
+		GLuint indices[] = {st, st + 1, st + 2, st, st + 2, st + 3};
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	}
+	else {
+		for (int i = 0; i < allBorderPoints.size() / (3 * 4); ++i) {
+			glDrawArrays(GL_LINE_LOOP, i * 4, 4);
+		}
+	}
+
 }
 
 void cleanUp()
@@ -313,6 +325,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		else if (wParam == 'K' || wParam == 'k') {
 			pitch = (pitch < -85.0f) ? -85.0f : pitch - rotDel;
 			updateCameraVec();
+		}
+		else if (wParam == 'G' || wParam == 'g') {
+			groundMode = !groundMode;
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';
@@ -589,6 +604,7 @@ bool openShapefile() {
 
 	glGenVertexArrays(2, vao);
 	glGenBuffers(2, vbo);
+	glGenBuffers(1, &ebo);
 
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
