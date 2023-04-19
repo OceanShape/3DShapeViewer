@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="3DShapeViewer.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="object.h" />
     <ClInclude Include="quadtree.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="shapedata.h" />
@@ -144,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="3DShapeViewer.cpp" />
     <ClCompile Include="dbfopen.cpp" />
+    <ClCompile Include="object.cpp" />
     <ClCompile Include="shapefile.cpp" />
     <ClCompile Include="shpopen.cpp" />
     <ClCompile Include="shptree.cpp" />
