@@ -8,7 +8,7 @@
 using namespace std;
 
 struct QuadtreeNode {
-	vector<int> objectVertices;
+	vector<float> objectVertices;
 	vector<int> objectVertexCounts;
 
 	float Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
