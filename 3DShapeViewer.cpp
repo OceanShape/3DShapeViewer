@@ -152,7 +152,7 @@ void render()
 
 
 	// model
-	glm::mat4 model = glm::scale(glm::mat4(1.0f), { 0.99f, 0.99f, 0.1f });
+	glm::mat4 model = glm::mat4(1.0f);
 
 	// view
 	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
