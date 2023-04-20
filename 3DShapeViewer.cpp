@@ -2,6 +2,7 @@
 #include "shapefile.h"
 #include "shapedata.h"
 #include "quadtree.h"
+#include "object.h"
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
@@ -29,6 +30,7 @@ GLuint vbo[2];
 GLuint ebo;
 GLuint programs[2];
 bool groundMode = false;
+std::vector<Object*> objects;
 
 FILE* SHPFile;
 bool isShapeLoaded = false;
@@ -190,13 +192,16 @@ void render()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
 
-	//objectData->render(selectLevel);
+	objectData->renderObject(selectLevel);
 
-	glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
-	for (int i = 0, startIndex = 0; i < allObjectVertexCount.size(); ++i) {
-		glDrawArrays(GL_LINE_STRIP, startIndex, allObjectVertexCount[i]);
-		startIndex += allObjectVertexCount[i];
-	}
+	cout << "totalCount: " << totalCount << endl;
+	totalCount = 0;
+
+	//glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
+	//for (int i = 0, startIndex = 0; i < allObjectVertexCount.size(); ++i) {
+	//	glDrawArrays(GL_LINE_STRIP, startIndex, allObjectVertexCount[i]);
+	//	startIndex += allObjectVertexCount[i];
+	//}
 
 	// draw grid
 	glUseProgram(programs[1]);
@@ -204,19 +209,20 @@ void render()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
 
-	if (groundMode) {
-		unsigned int st = allBorderPoints.size() / 3 - 4;
-		GLuint indices[] = {st, st + 1, st + 2, st, st + 2, st + 3};
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	objectData->renderBorder(selectLevel);
+	//if (groundMode) {
+	//	unsigned int st = allBorderPoints.size() / 3 - 4;
+	//	GLuint indices[] = {st, st + 1, st + 2, st, st + 2, st + 3};
+	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	}
-	else {
-		for (int i = 0; i < allBorderPoints.size() / (3 * 4); ++i) {
-			glDrawArrays(GL_LINE_LOOP, i * 4, 4);
-		}
-	}
+	//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+	//	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	//}
+	//else {
+		//for (int i = 0; i < allBorderPoints.size() / (3 * 4); ++i) {
+		//	glDrawArrays(GL_LINE_LOOP, i * 4, 4);
+		//}
+	//}
 
 }
 
@@ -476,11 +482,12 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
-	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, zMin, zMax, MAX_LEVEL);
+	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, MAX_LEVEL);
 
-	SHPPoint* points = new SHPPoint[1000];
-	double* Zpoints = new double[1000]; // 13: PolyLineZ(ArcZ)
-	int32_t* parts = new int32_t[1000];
+	//SHPPoint* points = new SHPPoint[1000];
+	
+	double* Zpoints;
+	int32_t* parts;
 
 	//self check min max
 	float sZmin = FLT_MAX;
@@ -516,14 +523,17 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 		std::memcpy(parts, offset, sizeof(int32_t) * numParts);	offset += sizeof(int32_t) * numParts;
 
-		std::memcpy(points, offset, sizeof(SHPPoint) * numPoints);	offset += sizeof(SHPPoint) * numPoints;
+		points = new SHPPoint[numPoints];
+		std::memcpy(points, offset, sizeof(8 * 2) * numPoints);	offset += sizeof(8 * 2) * numPoints;
 
 		// Z point
 		if (offset - startOffset < contentLength * 2) {
+			Zpoints = new double[numPoints];
 			hasZvalue = true;
 
 			std::memcpy(Zrange, offset, sizeof(double) * 2);    offset += sizeof(double) * 2;
 			std::memcpy(Zpoints, offset, sizeof(double) * numPoints);	offset += sizeof(double) * numPoints;
+			delete[] Zpoints;
 		}
 
 		// M point(ignore)
@@ -532,30 +542,19 @@ bool readShapefile(float min[], float max[], float del[]) {
 			offset += sizeof(double) * numPoints;
 		}
 
-		vector<float> objectVertices;
 
-		for (int p = 0; p < numPoints; p++) {
-			float x = points[p].x;
-			float y = points[p].y;
-			float z = (hasZvalue) ? Zpoints[p] : 0.0f;
+		Object* obj = new Object(numPoints, points);
+		objects.push_back(obj);
+		objectData->storeObject(*obj);
 
-			objectVertices.push_back(x);
-			objectVertices.push_back(y);
-			objectVertices.push_back(z);
-		}
-
-		bool trigger = false;
-
-		objectData->storeObject(objectVertices, trigger);
+		delete[] parts;
+		delete[] points;
 
 		recordCount++;
 	}
 
 	std::cout << "Total record count: " << recordCount << endl;
 
-	delete[] Zpoints;
-	delete[] parts;
-	delete[] points;
 	delete[] data;
 
 	DestroyWindow(hWndProgress);

@@ -8,65 +8,70 @@
 
 using namespace std;
 
+static int totalCount = 0;
+
 struct QuadtreeNode {
 	vector<float> objectVertices;
 	vector<int> objectVertexCounts;
+	vector<Object*> objects;
 
-	float Xmin, Xmax, Ymin, Ymax, Zmin, Zmax;
+	float Xmin, Xmax, Ymin, Ymax;
 	float Xmid, Ymid;
+	float _min[2] = { FLT_MAX, FLT_MAX };
+	float _max[2] = { FLT_MIN, FLT_MIN };
+
 	int maxLevel = 0;
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 
-	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const float& _Zmin, const float& _Zmax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Zmin(_Zmin), Zmax(_Zmax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2), maxLevel(_maxLevel) {
+	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2), maxLevel(_maxLevel) {
 	}
 
-	bool isLeft(const float& _Xmin, const float& _Xmax) {
-		return Xmin <= _Xmin && Xmin <= _Xmax && _Xmin <= Xmid && _Xmax <= Xmid;
+	bool isLeft() {
+		return Xmin <= _min[0] && Xmin <= _max[0] && _min[0] <= Xmid && _max[0] <= Xmid;
 	}
-	bool isRight(const float& _Xmin, const float& _Xmax) {
-		return Xmid <= _Xmin && Xmid <= _Xmax && _Xmin <= Xmax && _Xmax <= Xmax;
+	bool isRight() {
+		return Xmid <= _min[0] && Xmid <= _max[0] && _min[0] <= Xmax && _max[0] <= Xmax;
 	}
-	bool isUp(const float& _Ymin, const float& _Ymax) {
-		return Ymid <= _Ymin && Ymid <= _Ymax && _Ymin <= Ymax && _Ymax <= Ymax;
+	bool isUp() {
+		return Ymid <= _min[1] && Ymid <= _max[1] && _min[1] <= Ymax && _max[1] <= Ymax;
 	}
-	bool isDown(const float& _Ymin, const float& _Ymax) {
-		return Ymin <= _Ymin && Ymin <= _Ymax && _Ymin <= Ymid && _Ymax <= Ymid;
+	bool isDown() {
+		return Ymin <= _min[1] && Ymin <= _max[1] && _min[1] <= Ymid && _max[1] <= Ymid;
 	}
 
-	void store(const vector<float>& _objectVertices, float _min[], float _max[], int level) {
+	void store(Object& obj, int level) {
 		if (level == maxLevel || Xmax - Xmin < 120) {
-			objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
-			objectVertexCounts.push_back(_objectVertices.size() / 3);
+			objects.push_back(&obj);
 			return;
 		}
 
-		if (isLeft(_min[0], _max[0]) && isUp(_min[1], _max[1])) {
+		_min[0] = obj.min[0], _min[1] = obj.min[1], _max[0] = obj.max[0], _max[1] = obj.max[1];
+		if (isLeft() && isUp()) {
 			if (nodes[0] == nullptr) {
-				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, Zmin, Zmax, maxLevel);
+				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, maxLevel);
 			}
-			nodes[0]->store(_objectVertices, _min, _max, level + 1);
+			nodes[0]->store(obj, level + 1);
 		}
-		else if (isRight(_min[0], _max[0]) && isUp(_min[1], _max[1])) {
+		else if (isRight() && isUp()) {
 			if (nodes[1] == nullptr) {
-				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax, Zmin, Zmax, maxLevel);
+				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax, maxLevel);
 			}
-			nodes[1]->store(_objectVertices, _min, _max, level + 1);
+			nodes[1]->store(obj, level + 1);
 		}
-		else if (isLeft(_min[0], _max[0]) && isDown(_min[1], _max[1])) {
+		else if (isLeft() && isDown()) {
 			if (nodes[2] == nullptr) {
-				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid, Zmin, Zmax, maxLevel);
+				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid, maxLevel);
 			}
-			nodes[2]->store(_objectVertices, _min, _max, level + 1);
+			nodes[2]->store(obj, level + 1);
 		}
-		else if (isRight(_min[0], _max[0]) && isDown(_min[1], _max[1])) {
+		else if (isRight() && isDown()) {
 			if (nodes[3] == nullptr) {
-				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid, Zmin, Zmax, maxLevel);
+				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid, maxLevel);
 			}
-			nodes[3]->store(_objectVertices, _min, _max, level + 1);
+			nodes[3]->store(obj, level + 1);
 		}
 		else {
-			objectVertices.insert(objectVertices.end(), _objectVertices.begin(), _objectVertices.end());
-			objectVertexCounts.push_back(_objectVertices.size() / 3);
+			objects.push_back(&obj);
 		}
 	}
 
@@ -80,32 +85,43 @@ struct QuadtreeNode {
 				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, level + 1, selectLevel, count);
 			}
 		}
-		//count += objectVertexCounts.size();
-		//count++;
-
-		//for (int i = 0; i < objectVertices.size() / 3; ++i) {
-		//	float t = 0.51;
-		//	objectVertices[i * 3 + 2] = 31.379 * t + 32.663 * (1 - t)
-		//}
 
 		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
 		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
-		vector<float> border = { Xmin, Ymin, Zmin, Xmin, Ymax, Zmin, Xmax, Ymax, Zmin, Xmax, Ymin, Zmin };
+		vector<float> border = { Xmin, Ymin, Xmin, Ymax, Xmax, Ymax, Xmax, Ymin };
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 
-	void render(int level, int selectLevel) {
+	void renderObject(int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->render(level + 1, selectLevel);
+				n->renderObject(level + 1, selectLevel);
 			}
 		}
 
+		for (auto obj : objects) {
+			obj->render();
+		}
+	}
 
+	void renderBorder(int level, int selectLevel) {
+		if (level > selectLevel) {
+			return;
+		}
+
+		for (auto n : nodes) {
+			if (n != nullptr) {
+				n->renderBorder(level + 1, selectLevel);
+			}
+		}
+
+		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
+		glDrawArrays(GL_LINE_LOOP, 0, 4);
 	}
 } typedef qtNode;
 
@@ -113,31 +129,23 @@ struct ObjectData {
 
 	shared_ptr<qtNode> root;
 
-	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax, float Zmin, float Zmax, int maxLevel) {
-		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, Zmin, Zmax, maxLevel);
+	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax, int maxLevel) {
+		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, maxLevel);
 	}
 
-	void storeObject(const vector<float>& objectVertices, bool trigger) {
-
-		float _min[3] = { FLT_MAX, FLT_MAX, FLT_MAX };
-		float _max[3] = { FLT_MIN, FLT_MIN, FLT_MIN };
-		for (size_t i = 0; i < objectVertices.size() / 3; ++i) {
-			_min[0] = std::min(_min[0], objectVertices[i * 3]);
-			_max[0] = std::max(_max[0], objectVertices[i * 3]);
-			_min[1] = std::min(_min[1], objectVertices[i * 3 + 1]);
-			_max[1] = std::max(_max[1], objectVertices[i * 3 + 1]);
-			_min[2] = std::min(_min[2], objectVertices[i * 3 + 2]);
-			_max[2] = std::max(_max[2], objectVertices[i * 3 + 2]);
-		}
-
-		root->store(objectVertices, _min, _max, 0);
+	void storeObject(Object& obj) {
+		root->store(obj, 0);
 	}
 
 	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int selectLevel, int& count) {
 		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, selectLevel, count);
 	}
 
-	void render(int selectLevel) {
-		root->render(0, selectLevel);
+	void renderObject(int selectLevel) {
+		root->renderObject(0, selectLevel);
+	}
+
+	void renderBorder(int selectLevel) {
+		root->renderBorder(0, selectLevel);
 	}
 };

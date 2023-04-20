@@ -19,14 +19,3 @@ struct SHPHeader {
 	double Mmin;
 	double Mmax;
 };
-
-struct SHPPoint {
-	double x;
-	double y;
-};
-
-struct SHPPolygon {
-	double box[4];
-	shared_ptr<vector<int32_t>> parts;
-	shared_ptr<vector<SHPPoint>> points;
-};
