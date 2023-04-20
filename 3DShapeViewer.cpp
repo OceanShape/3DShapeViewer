@@ -484,8 +484,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, MAX_LEVEL);
 
-	//SHPPoint* points = new SHPPoint[1000];
-	
+	SHPPoint* points;
 	double* Zpoints;
 	int32_t* parts;
 
@@ -521,10 +520,11 @@ bool readShapefile(float min[], float max[], float del[]) {
 		std::memcpy(&numParts, offset, 4);  offset += 4;
 		std::memcpy(&numPoints, offset, 4);  offset += 4;
 
+		parts = new int32_t[numParts];
 		std::memcpy(parts, offset, sizeof(int32_t) * numParts);	offset += sizeof(int32_t) * numParts;
 
 		points = new SHPPoint[numPoints];
-		std::memcpy(points, offset, sizeof(8 * 2) * numPoints);	offset += sizeof(8 * 2) * numPoints;
+		std::memcpy(points, offset, sizeof(SHPPoint) * numPoints);	offset += sizeof(SHPPoint) * numPoints;
 
 		// Z point
 		if (offset - startOffset < contentLength * 2) {
