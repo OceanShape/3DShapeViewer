@@ -145,7 +145,6 @@
   <ItemGroup>
     <ClCompile Include="3DShapeViewer.cpp" />
     <ClCompile Include="dbfopen.cpp" />
-    <ClCompile Include="object.cpp" />
     <ClCompile Include="shapefile.cpp" />
     <ClCompile Include="shpopen.cpp" />
     <ClCompile Include="shptree.cpp" />

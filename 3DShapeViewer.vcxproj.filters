@@ -59,9 +59,6 @@
     <ClCompile Include="shapefile.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="object.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="3DShapeViewer.rc">
