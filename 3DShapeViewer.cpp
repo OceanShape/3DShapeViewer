@@ -150,9 +150,8 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 	// model
-	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 model = glm::mat4(1.0f);// glm::scale(glm::mat4(1.0f), { 1.0f, 1.0f, 0.0f });//glm::mat4(1.0f);
 
 	// view
 	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
@@ -189,6 +188,10 @@ void render()
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+
+
+	//objectData->render(selectLevel);
+
 	glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
 	for (int i = 0, startIndex = 0; i < allObjectVertexCount.size(); ++i) {
 		glDrawArrays(GL_LINE_STRIP, startIndex, allObjectVertexCount[i]);
@@ -205,6 +208,7 @@ void render()
 		unsigned int st = allBorderPoints.size() / 3 - 4;
 		GLuint indices[] = {st, st + 1, st + 2, st, st + 2, st + 3};
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 	}

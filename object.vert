@@ -16,7 +16,7 @@ void main() {
   float x = modelToWorld(0);
   float y = modelToWorld(1);
   float z = (-1e-6 < delta[2] && delta[2] < 1e-6 ) ? 0.0f : (a_position[2] - minimum[2]) / (delta[2] * 2.0f);
-  vec3 position = vec3(x, y / aspect_ratio, z);
+  vec3 position = vec3(x, y / aspect_ratio, 0.0f);
   gl_Position = projection * view * model * vec4(position.x, position.y, position.z, 1.0f);
   gl_PointSize = 1.0f;
 }

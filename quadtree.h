@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "shapedata.h"
+#include "object.h"
 
 using namespace std;
 
@@ -92,6 +93,20 @@ struct QuadtreeNode {
 		vector<float> border = { Xmin, Ymin, Zmin, Xmin, Ymax, Zmin, Xmax, Ymax, Zmin, Xmax, Ymin, Zmin };
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
+
+	void render(int level, int selectLevel) {
+		if (level > selectLevel) {
+			return;
+		}
+
+		for (auto n : nodes) {
+			if (n != nullptr) {
+				n->render(level + 1, selectLevel);
+			}
+		}
+
+
+	}
 } typedef qtNode;
 
 struct ObjectData {
@@ -121,5 +136,8 @@ struct ObjectData {
 	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int selectLevel, int& count) {
 		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, selectLevel, count);
 	}
-};
 
+	void render(int selectLevel) {
+		root->render(0, selectLevel);
+	}
+};
