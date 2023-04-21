@@ -32,6 +32,9 @@ GLuint programs[2];
 bool groundMode = false;
 std::vector<Object*> objects;
 
+Object* testObj;
+
+
 FILE* SHPFile;
 bool isShapeLoaded = false;
 int32_t recordCount = 0;
@@ -190,7 +193,6 @@ void render()
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-
 
 	objectData->renderObject(selectLevel);
 
@@ -539,6 +541,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 		}
 
 		Object* obj = new Object(numPoints, points);
+		testObj = obj;
 		objects.push_back(obj);
 		objectData->storeObject(*obj);
 

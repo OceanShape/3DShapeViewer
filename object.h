@@ -16,7 +16,7 @@ struct SHPPoint {
 };
 
 class Object {
-private:
+public:
 	Vertex* vertices = nullptr;
 	GLuint* indices = nullptr;
 	int vertexCount = 0;
@@ -56,7 +56,7 @@ public:
 
 	void render() {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_STRIP, 0, vertexCount);
+		//glDrawArrays(GL_LINE_STRIP, 0, vertexCount);
 	}
 
 	~Object() {

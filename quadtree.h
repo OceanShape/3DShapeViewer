@@ -117,9 +117,17 @@ struct QuadtreeNode {
 			}
 		}
 
+		GLuint ebo;
+		glGenBuffers(1, &ebo);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+		GLuint indices[] = { 0, 1, 2, 3 };
 		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
 		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_LOOP, 0, 4);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * 4, indices, GL_STATIC_DRAW);
+
+		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
 	}
 } typedef qtNode;
 
