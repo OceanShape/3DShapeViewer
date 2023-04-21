@@ -20,7 +20,7 @@ struct QuadtreeNode {
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 
-	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
+	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 	}
 
 	bool isLeft() {
@@ -46,25 +46,25 @@ struct QuadtreeNode {
 		_min[0] = obj->min[0], _min[1] = obj->min[1], _max[0] = obj->max[0], _max[1] = obj->max[1];
 		if (isLeft() && isUp()) {
 			if (nodes[0] == nullptr) {
-				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, maxLevel);
+				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax);
 			}
 			nodes[0]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isUp()) {
 			if (nodes[1] == nullptr) {
-				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax, maxLevel);
+				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax);
 			}
 			nodes[1]->store(obj, level + 1, maxLevel);
 		}
 		else if (isLeft() && isDown()) {
 			if (nodes[2] == nullptr) {
-				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid, maxLevel);
+				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid);
 			}
 			nodes[2]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isDown()) {
 			if (nodes[3] == nullptr) {
-				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid, maxLevel);
+				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid);
 			}
 			nodes[3]->store(obj, level + 1, maxLevel);
 		}
@@ -130,8 +130,8 @@ struct ObjectData {
 
 	shared_ptr<qtNode> root;
 
-	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax, int maxLevel) {
-		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, maxLevel);
+	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax) {
+		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax);
 	}
 
 	void storeObject(const shared_ptr<Object> obj, int& maxLevel) {

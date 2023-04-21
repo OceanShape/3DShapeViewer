@@ -10,7 +10,6 @@ const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
 const int WINDOW_WIDTH = 913;
 const int WINDOW_HEIGHT = 959;
-const int MAX_LEVEL = 10;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -62,6 +61,7 @@ glm::vec3 cameraRight = glm::vec3(1.0f, .0f, .0f);
 
 shared_ptr<ObjectData> objectData;
 std::vector<shared_ptr<Object>> objects;
+
 
 int maxLevel = 0;
 int selectLevel = 10;
@@ -310,8 +310,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';
-			if (num > MAX_LEVEL) {
-				num = MAX_LEVEL;
+			if (num > maxLevel) {
+				num = maxLevel;
 			}
 			selectLevel = num;
 		}
@@ -451,7 +451,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
-	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop, MAX_LEVEL);
+	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop);
 
 	SHPPoint* points;
 	double* Zpoints;
