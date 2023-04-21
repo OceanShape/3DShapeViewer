@@ -32,9 +32,6 @@ GLuint programs[2];
 bool groundMode = false;
 std::vector<Object*> objects;
 
-Object* testObj;
-
-
 FILE* SHPFile;
 bool isShapeLoaded = false;
 int32_t recordCount = 0;
@@ -177,17 +174,9 @@ void render()
 	vector<float> allBorderPoints;
 
 	static int tester = 0;
-	static bool trigger = true;
-	
-	
 	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel, tester);
 
-	if (trigger) {
-		//cout << allBorderPoints[0] << "/" << allBorderPoints[3 * 1] << "/" << allBorderPoints[3 * 2] << "/" << allBorderPoints[3 * 3] << endl;
-		//cout << allBorderPoints[1] << "/" << allBorderPoints[3 * 1 + 1] << "/" << allBorderPoints[3 * 2 + 1] << "/" << allBorderPoints[3 * 3 + 1] << endl;
-		//cout << "---" << endl;
-		trigger = false;
-	}
+
 
 	// draw objects
 	glUseProgram(programs[0]);
@@ -196,39 +185,19 @@ void render()
 
 	objectData->renderObject(selectLevel);
 
-	//glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
-	//for (int i = 0, startIndex = 0; i < allObjectVertexCount.size(); ++i) {
-	//	glDrawArrays(GL_LINE_STRIP, startIndex, allObjectVertexCount[i]);
-	//	startIndex += allObjectVertexCount[i];
-	//}
-
 	// draw grid
 	glUseProgram(programs[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glBufferData(GL_ARRAY_BUFFER, allBorderPoints.size() * sizeof(float), allBorderPoints.data(), GL_STATIC_DRAW);
 
 	objectData->renderBorder(selectLevel);
-	//if (groundMode) {
-	//	unsigned int st = allBorderPoints.size() / 3 - 4;
-	//	GLuint indices[] = {st, st + 1, st + 2, st, st + 2, st + 3};
-	//	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-
-	//	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-	//	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	//}
-	//else {
-		//for (int i = 0; i < allBorderPoints.size() / (3 * 4); ++i) {
-		//	glDrawArrays(GL_LINE_LOOP, i * 4, 4);
-		//}
-	//}
-
 }
 
 void cleanUp()
 {
 	glDeleteVertexArrays(2, vao);
 	glDeleteBuffers(2, vbo);
+	glDeleteBuffers(1, &ebo);
 
 	for (size_t i = 0; i < 2; ++i) {
 		GLuint vertexShader, fragmentShader;
@@ -486,10 +455,6 @@ bool readShapefile(float min[], float max[], float del[]) {
 	double* Zpoints;
 	int32_t* parts;
 
-	//self check min max
-	float sZmin = FLT_MAX;
-	float sZmax = -FLT_MAX;
-
 	while (offset < data + fileSize) {
 		uchar* startOffset = offset;
 
@@ -541,7 +506,6 @@ bool readShapefile(float min[], float max[], float del[]) {
 		}
 
 		Object* obj = new Object(numPoints, points);
-		testObj = obj;
 		objects.push_back(obj);
 		objectData->storeObject(*obj);
 
@@ -612,13 +576,14 @@ bool openShapefile() {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
 	glUseProgram(programs[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
-
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
 	isShapeLoaded = true;
 
