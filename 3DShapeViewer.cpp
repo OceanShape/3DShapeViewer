@@ -37,6 +37,7 @@ bool isShapeLoaded = false;
 int32_t recordCount = 0;
 float aspectRatio = 1.0f;
 
+
 float fov = 45.0f;
 float cameraX = 0.0f;
 float cameraY = 0.0f;
@@ -46,7 +47,6 @@ float moveY = 0.0f;
 float moveZ = 3.0f;
 const float delta = 0.02f;
 const float deltaZ = 0.1f;
-
 
 float yaw = -90.0f;
 float pitch = 0.0f;
@@ -62,6 +62,8 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, .0f, .0f);
 
 shared_ptr<ObjectData> objectData;
+
+int maxLevel = 0;
 int selectLevel = 10;
 
 typedef unsigned char uchar;
@@ -507,7 +509,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 		Object* obj = new Object(numPoints, points);
 		objects.push_back(obj);
-		objectData->storeObject(*obj);
+		objectData->storeObject(*obj, maxLevel);
 
 		delete[] parts;
 		delete[] points;

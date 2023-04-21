@@ -18,10 +18,9 @@ struct QuadtreeNode {
 	float _min[2] = { FLT_MAX, FLT_MAX };
 	float _max[2] = { FLT_MIN, FLT_MIN };
 
-	int maxLevel = 0;
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 
-	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2), maxLevel(_maxLevel) {
+	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax, const int& _maxLevel) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 	}
 
 	bool isLeft() {
@@ -37,9 +36,10 @@ struct QuadtreeNode {
 		return Ymin <= _min[1] && Ymin <= _max[1] && _min[1] <= Ymid && _max[1] <= Ymid;
 	}
 
-	void store(Object& obj, int level) {
-		if (level == maxLevel || Xmax - Xmin < 120) {
+	void store(Object& obj, int level, int& maxLevel) {
+		if (Xmax - Xmin < 120) {
 			objects.push_back(&obj);
+			maxLevel = std::max(maxLevel, level);
 			return;
 		}
 
@@ -48,25 +48,25 @@ struct QuadtreeNode {
 			if (nodes[0] == nullptr) {
 				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, maxLevel);
 			}
-			nodes[0]->store(obj, level + 1);
+			nodes[0]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isUp()) {
 			if (nodes[1] == nullptr) {
 				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax, maxLevel);
 			}
-			nodes[1]->store(obj, level + 1);
+			nodes[1]->store(obj, level + 1, maxLevel);
 		}
 		else if (isLeft() && isDown()) {
 			if (nodes[2] == nullptr) {
 				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid, maxLevel);
 			}
-			nodes[2]->store(obj, level + 1);
+			nodes[2]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isDown()) {
 			if (nodes[3] == nullptr) {
 				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid, maxLevel);
 			}
-			nodes[3]->store(obj, level + 1);
+			nodes[3]->store(obj, level + 1, maxLevel);
 		}
 		else {
 			objects.push_back(&obj);
@@ -134,8 +134,8 @@ struct ObjectData {
 		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, maxLevel);
 	}
 
-	void storeObject(Object& obj) {
-		root->store(obj, 0);
+	void storeObject(Object& obj, int& maxLevel) {
+		root->store(obj, 0, maxLevel);
 	}
 
 	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int selectLevel, int& count) {
