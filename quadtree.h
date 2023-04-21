@@ -8,8 +8,6 @@
 
 using namespace std;
 
-static int totalCount = 0;
-
 struct QuadtreeNode {
 	vector<float> objectVertices;
 	vector<int> objectVertexCounts;

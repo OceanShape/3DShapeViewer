@@ -194,9 +194,6 @@ void render()
 
 	objectData->renderObject(selectLevel);
 
-	cout << "totalCount: " << totalCount << endl;
-	totalCount = 0;
-
 	//glBufferData(GL_ARRAY_BUFFER, allObjectVertices.size() * sizeof(float), allObjectVertices.data(), GL_STATIC_DRAW);
 	//for (int i = 0, startIndex = 0; i < allObjectVertexCount.size(); ++i) {
 	//	glDrawArrays(GL_LINE_STRIP, startIndex, allObjectVertexCount[i]);
@@ -299,7 +296,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		fov -= wDel * .1f;
 		fov = (fov > 89.0f) ? 89.0f : (fov < 1.0f) ? 1.0f : fov;
-		cout << "fov: " << fov << endl;
 		break;
 	case WM_KEYDOWN:
 		if (wParam == 'E' || wParam == 'e') {
@@ -542,7 +538,6 @@ bool readShapefile(float min[], float max[], float del[]) {
 			offset += sizeof(double) * numPoints;
 		}
 
-
 		Object* obj = new Object(numPoints, points);
 		objects.push_back(obj);
 		objectData->storeObject(*obj);
@@ -553,7 +548,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 		recordCount++;
 	}
 
-	std::cout << "Total record count: " << recordCount << endl;
+	std::cout << "Total record count: " << objects.size() << endl;
 
 	delete[] data;
 

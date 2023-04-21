@@ -21,12 +21,11 @@ private:
 	GLuint* indices = nullptr;
 	int vertexCount = 0;
 
-
 public:
 	//float min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
 	//float max[3]{ DBL_MIN, DBL_MIN, DBL_MIN };
-	double min[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
-	double max[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
+	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
+	double max[3]{ DBL_MIN, DBL_MIN, DBL_MIN };
 
 	Object(int _vertexCount, SHPPoint* _vertices) : vertexCount(_vertexCount) {
 		vertices = new Vertex[vertexCount];
@@ -63,15 +62,8 @@ public:
 			renderVertices[i * 3 + 2] = 0.0f;
 		}
 
-		glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(float), renderVertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), renderVertices, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINE_STRIP, 0, vertexCount);
-
-
-		/*glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(float), vertices, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_STRIP, 0, vertexCount);*/
-
-		/*glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-		glDrawElements(GL_LINE_LOOP, vertexCount, GL_UNSIGNED_INT, 0);*/
 
 		delete[] renderVertices;
 	}
