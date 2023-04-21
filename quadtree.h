@@ -11,7 +11,7 @@ using namespace std;
 struct QuadtreeNode {
 	vector<float> objectVertices;
 	vector<int> objectVertexCounts;
-	vector<Object*> objects;
+	vector<shared_ptr<Object>> objects;
 
 	float Xmin, Xmax, Ymin, Ymax;
 	float Xmid, Ymid;
@@ -36,14 +36,14 @@ struct QuadtreeNode {
 		return Ymin <= _min[1] && Ymin <= _max[1] && _min[1] <= Ymid && _max[1] <= Ymid;
 	}
 
-	void store(Object& obj, int level, int& maxLevel) {
+	void store(const shared_ptr<Object> obj, int level, int& maxLevel) {
 		if (Xmax - Xmin < 120) {
-			objects.push_back(&obj);
+			objects.push_back(obj);
 			maxLevel = std::max(maxLevel, level);
 			return;
 		}
 
-		_min[0] = obj.min[0], _min[1] = obj.min[1], _max[0] = obj.max[0], _max[1] = obj.max[1];
+		_min[0] = obj->min[0], _min[1] = obj->min[1], _max[0] = obj->max[0], _max[1] = obj->max[1];
 		if (isLeft() && isUp()) {
 			if (nodes[0] == nullptr) {
 				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax, maxLevel);
@@ -69,7 +69,7 @@ struct QuadtreeNode {
 			nodes[3]->store(obj, level + 1, maxLevel);
 		}
 		else {
-			objects.push_back(&obj);
+			objects.push_back(obj);
 		}
 	}
 
@@ -134,7 +134,7 @@ struct ObjectData {
 		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax, maxLevel);
 	}
 
-	void storeObject(Object& obj, int& maxLevel) {
+	void storeObject(const shared_ptr<Object> obj, int& maxLevel) {
 		root->store(obj, 0, maxLevel);
 	}
 

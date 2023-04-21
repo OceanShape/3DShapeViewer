@@ -30,7 +30,6 @@ GLuint vbo[2];
 GLuint ebo;
 GLuint programs[2];
 bool groundMode = false;
-std::vector<Object*> objects;
 
 FILE* SHPFile;
 bool isShapeLoaded = false;
@@ -62,6 +61,7 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 cameraRight = glm::vec3(1.0f, .0f, .0f);
 
 shared_ptr<ObjectData> objectData;
+std::vector<shared_ptr<Object>> objects;
 
 int maxLevel = 0;
 int selectLevel = 10;
@@ -507,9 +507,9 @@ bool readShapefile(float min[], float max[], float del[]) {
 			offset += sizeof(double) * numPoints;
 		}
 
-		Object* obj = new Object(numPoints, points);
+		shared_ptr<Object> obj = make_shared<Object>(numPoints, points);
 		objects.push_back(obj);
-		objectData->storeObject(*obj, maxLevel);
+		objectData->storeObject(obj, maxLevel);
 
 		delete[] parts;
 		delete[] points;
