@@ -58,7 +58,9 @@ public:
 
 //static MeshCollection ms;
 
-struct QuadtreeNode {
+class QuadtreeNode {
+	friend class ObjectData;
+
 	vector<float> objectVertices; // deprecate
 	vector<int> objectVertexCounts; // deprecate
 	vector<shared_ptr<Object>> objects;
@@ -70,10 +72,10 @@ struct QuadtreeNode {
 	float _max[2] = { FLT_MIN, FLT_MIN };
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
-
+public:
 	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 	}
-
+private:
 	bool isLeft() {
 		return Xmin <= _min[0] && Xmin <= _max[0] && _min[0] <= Xmid && _max[0] <= Xmid;
 	}
@@ -178,10 +180,11 @@ struct QuadtreeNode {
 	}
 } typedef qtNode;
 
-struct ObjectData {
-
+class ObjectData {
+	
 	shared_ptr<qtNode> root;
 
+public:
 	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax) {
 		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax);
 	}
