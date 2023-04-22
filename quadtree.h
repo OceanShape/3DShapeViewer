@@ -8,13 +8,64 @@
 
 using namespace std;
 
+// MeshCollection(prototype)
+class MeshCollection {
+public:
+	float* allObjectVertices;
+	int* allObjectIndices;
+	int* allObjectVertexCount;
+	int currentObjectVertexIndex = 0;
+
+	float* allGridVertices;
+	int* allGridIndices;
+	int currentGridVertexIndex = 0;
+
+	MeshCollection(int allObjectCount, int allGridCount) {
+		allObjectVertices = new float[allObjectCount * 3];
+		allObjectIndices = new int[allObjectCount * 3];
+		allObjectVertexCount = new int[allObjectCount];
+
+		allGridVertices = new float[allGridCount * 4];
+		allGridIndices = new int[allGridCount * 4];
+	}
+
+	~MeshCollection() {
+		delete[] allObjectVertices;
+		delete[] allObjectIndices;
+		delete[] allObjectVertexCount;
+		delete[] allGridVertices;
+		delete[] allGridIndices;
+	}
+
+	void addObjectVertices(shared_ptr<Object> obj) {
+		for (int i = 0; i < obj->vertexCount; ++i) {
+			allObjectVertices[currentObjectVertexIndex] = obj->vertices[i].x;
+			allObjectVertices[currentObjectVertexIndex + 1] = obj->vertices[i].y;
+			allObjectVertices[currentObjectVertexIndex + 2] = obj->vertices[i].z;
+
+			allObjectIndices;
+			currentObjectVertexIndex += 3;
+		}
+
+	}
+
+	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
+		allGridVertices;
+		allGridIndices;
+		currentGridVertexIndex++;
+	}
+};
+
+//static MeshCollection ms;
+
 struct QuadtreeNode {
-	vector<float> objectVertices;
-	vector<int> objectVertexCounts;
+	vector<float> objectVertices; // deprecate
+	vector<int> objectVertexCounts; // deprecate
 	vector<shared_ptr<Object>> objects;
 
 	float Xmin, Xmax, Ymin, Ymax;
 	float Xmid, Ymid;
+	// min max buffer for objects
 	float _min[2] = { FLT_MAX, FLT_MAX };
 	float _max[2] = { FLT_MIN, FLT_MIN };
 
@@ -73,6 +124,7 @@ struct QuadtreeNode {
 		}
 	}
 
+	// deprecate
 	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int level, int selectLevel, int& count) {
 		if (level > selectLevel) {
 			return;
