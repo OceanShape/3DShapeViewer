@@ -10,6 +10,7 @@ const int WINDOW_POS_X = 500;
 const int WINDOW_POS_Y = 0;
 const int WINDOW_WIDTH = 913;
 const int WINDOW_HEIGHT = 959;
+const float CAMERA_START_Z = 3.0f;
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;
@@ -39,7 +40,7 @@ float aspectRatio = 1.0f;
 float fov = 45.0f;
 float cameraX = 0.0f;
 float cameraY = 0.0f;
-float cameraZ = 3.0f;
+float cameraZ = CAMERA_START_Z;
 float moveX = 0.0f;
 float moveY = 0.0f;
 float moveZ = 3.0f;
@@ -62,9 +63,8 @@ glm::vec3 cameraRight = glm::vec3(1.0f, .0f, .0f);
 shared_ptr<ObjectData> objectData;
 std::vector<shared_ptr<Object>> objects;
 
-
 int maxLevel = 0;
-int selectLevel = 10;
+int currentLevel = 0;
 
 typedef unsigned char uchar;
 
@@ -176,7 +176,7 @@ void render()
 	vector<float> allBorderPoints;
 
 	static int tester = 0;
-	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, selectLevel, tester);
+	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, currentLevel, tester);
 
 
 
@@ -185,14 +185,14 @@ void render()
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
-	objectData->renderObject(selectLevel);
+	objectData->renderObject(currentLevel);
 
 	// draw grid
 	glUseProgram(programs[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 
-	objectData->renderBorder(selectLevel);
+	objectData->renderBorder(currentLevel);
 }
 
 void cleanUp()
@@ -242,6 +242,12 @@ void closeShapefile() {
 	}
 }
 
+void setCurrentLevel(int cameraZ) {
+	if (0.0f <= cameraZ <= 3.0f) {
+		float deltaLevel = 1.0f / (maxLevel + 1.0f);
+		currentLevel = (int)((1.0f - cameraZ / CAMERA_START_Z) / deltaLevel);
+	}
+}
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -273,9 +279,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_KEYDOWN:
 		if (wParam == 'E' || wParam == 'e') {
 			cameraZ -= deltaZ;
+			setCurrentLevel(cameraZ);
 		}
 		else if (wParam == 'Q' || wParam == 'q') {
 			cameraZ += deltaZ;
+			setCurrentLevel(cameraZ);
 		}
 		else if (wParam == 'A' || wParam == 'a') {
 			cameraX -= delta;
@@ -313,7 +321,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			if (num > maxLevel) {
 				num = maxLevel;
 			}
-			selectLevel = num;
+			currentLevel = num;
 		}
 		break;
 	case WM_MOUSEMOVE:

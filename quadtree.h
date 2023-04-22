@@ -193,15 +193,15 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int selectLevel, int& count) {
-		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, selectLevel, count);
+	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int currentLevel, int& count) {
+		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, currentLevel, count);
 	}
 
-	void renderObject(int selectLevel) {
-		root->renderObject(0, selectLevel);
+	void renderObject(int currentLevel) {
+		root->renderObject(0, currentLevel);
 	}
 
-	void renderBorder(int selectLevel) {
-		root->renderBorder(0, selectLevel);
+	void renderBorder(int currentLevel) {
+		root->renderBorder(0, currentLevel);
 	}
 };
