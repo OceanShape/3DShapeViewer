@@ -515,7 +515,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 			offset += sizeof(double) * numPoints;
 		}
 
-		shared_ptr<Object> obj = make_shared<Object>(numPoints, points);
+		shared_ptr<Object> obj = make_shared<Object>(points, numPoints, parts, numParts);
 		objects.push_back(obj);
 		objectData->storeObject(obj, maxLevel);
 
