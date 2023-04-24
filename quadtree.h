@@ -29,27 +29,22 @@ public:
 	// set allObjectVertices / allObjectIndices
 	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
 		objectVertices = new float[_allObjectCount * 3];
-		objectIndices = new int[_allObjectCount];
-		memcpy(objectVertexCount, _vertexCount, sizeof(float) * _allObjectCount);
+		objectIndices = new int[_allVertexCount];
+		for (int i = 0; i < _allVertexCount; ++i) {
+			objectIndices[i] = i;
+		}
+		std::memcpy(objectVertexCount, _vertexCount, sizeof(float) * _allObjectCount);
 	}
 
 	void allocateGridMemory(int nodeCount) {
 		allGridVertices = new float[nodeCount * 3 * 4];
 	}
 
-	// set allObjectVertices / allObjectIndices
-
-	// render function
 	void addObjectVertices(shared_ptr<Object> obj) {
-		//for (int i = 0; i < obj->vertexCount; ++i) {
-		//	allObjectVertices[currentObjectVertexIndex] = obj->vertices[i].x;
-		//	allObjectVertices[currentObjectVertexIndex + 1] = obj->vertices[i].y;
-		//	allObjectVertices[currentObjectVertexIndex + 2] = obj->vertices[i].z;
+		//obj 전체 버텍스 추가(전체 버텍스 수 확인)
+		std::memcpy(objectVertices, )
 
-		//	allObjectIndices;
-		//	currentObjectVertexIndex += 3;
-		//}
-
+		//part 카운트(전체 파트 수 확인)
 	}
 
 	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
@@ -58,7 +53,10 @@ public:
 		++borderCount;
 	}
 
-	void clearVertices() {
+	void clearObject() {
+	}
+
+	void clearBorder() {
 		borderCount = 0;
 	}
 };
@@ -154,19 +152,19 @@ private:
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 
-	void renderObject(int level, int selectLevel) {
+	void renderObject(MeshCollectionMemory& ms, int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->renderObject(level + 1, selectLevel);
+				n->renderObject(ms, level + 1, selectLevel);
 			}
 		}
 
 		for (auto obj : objects) {
-			obj->render();
+			ms.addObjectVertices(obj);
 		}
 	}
 
@@ -215,7 +213,10 @@ public:
 	}
 
 	void renderObject(int currentLevel) {
-		root->renderObject(0, currentLevel);
+
+		ms.clearObject();
+
+		root->renderObject(ms, 0, currentLevel);
 
 		/*
 		root->getBorderVertices(ms, 0, currentLevel);
@@ -231,7 +232,8 @@ public:
 
 	void renderBorder(int currentLevel) {
 
-		ms.clearVertices();
+		ms.clearBorder();
+
 		root->getBorderVertices(ms, 0, currentLevel);
 
 		glBufferData(GL_ARRAY_BUFFER, ms.borderCount * 4 * 3 * sizeof(float), ms.allGridVertices, GL_STATIC_DRAW);
