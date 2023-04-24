@@ -464,6 +464,8 @@ bool readShapefile(float min[], float max[], float del[]) {
 	SHPPoint* points;
 	double* Zpoints;
 	int32_t* parts;
+	vector<int> objectVertexCount;
+	int allVertexCount = 0;
 
 	while (offset < data + fileSize) {
 		uchar* startOffset = offset;
@@ -518,6 +520,8 @@ bool readShapefile(float min[], float max[], float del[]) {
 		shared_ptr<Object> obj = make_shared<Object>(points, numPoints, parts, numParts);
 		objects.push_back(obj);
 		objectData->storeObject(obj, maxLevel);
+		objectVertexCount.push_back(numPoints);
+		allVertexCount += numPoints;
 
 		delete[] parts;
 		delete[] points;
@@ -526,6 +530,8 @@ bool readShapefile(float min[], float max[], float del[]) {
 	}
 
 	std::cout << "Total record count: " << objects.size() << endl;
+	//objectData->allocateObjectMemory(objects.size(), allVertexCount, objectVertexCount.data())
+	objectData->allocateGridMemory();
 
 	delete[] data;
 

@@ -9,50 +9,57 @@
 using namespace std;
 
 // MeshCollection(prototype)
-class MeshCollection {
+class MeshCollectionMemory {
 public:
-	float* allObjectVertices;
-	int* allObjectIndices;
-	int* allObjectVertexCount;
+	float* objectVertices;
+	int* objectIndices;
+	int* objectVertexCount;
 	int currentObjectVertexIndex = 0;
 
 	float* allGridVertices;
-	int* allGridIndices;
-	int currentGridVertexIndex = 0;
+	int borderCount = 0;
 
-	MeshCollection(int allObjectCount, int allGridCount) {
-		allObjectVertices = new float[allObjectCount * 3];
-		allObjectIndices = new int[allObjectCount * 3];
-		allObjectVertexCount = new int[allObjectCount];
-
-		allGridVertices = new float[allGridCount * 4];
-		allGridIndices = new int[allGridCount * 4];
-	}
-
-	~MeshCollection() {
-		delete[] allObjectVertices;
-		delete[] allObjectIndices;
-		delete[] allObjectVertexCount;
+	~MeshCollectionMemory() {
+		delete[] objectVertices;
+		delete[] objectIndices;
+		delete[] objectVertexCount;
 		delete[] allGridVertices;
-		delete[] allGridIndices;
 	}
 
-	void addObjectVertices(shared_ptr<Object> obj) {
-		for (int i = 0; i < obj->vertexCount; ++i) {
-			allObjectVertices[currentObjectVertexIndex] = obj->vertices[i].x;
-			allObjectVertices[currentObjectVertexIndex + 1] = obj->vertices[i].y;
-			allObjectVertices[currentObjectVertexIndex + 2] = obj->vertices[i].z;
+	// set allObjectVertices / allObjectIndices
+	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
+		objectVertices = new float[_allObjectCount * 3];
+		objectIndices = new int[_allObjectCount];
+		memcpy(objectVertexCount, _vertexCount, sizeof(float) * _allObjectCount);
+	}
 
-			allObjectIndices;
-			currentObjectVertexIndex += 3;
-		}
+	void allocateGridMemory(int nodeCount) {
+		allGridVertices = new float[nodeCount * 3 * 4];
+	}
+
+	// set allObjectVertices / allObjectIndices
+
+	// render function
+	void addObjectVertices(shared_ptr<Object> obj) {
+		//for (int i = 0; i < obj->vertexCount; ++i) {
+		//	allObjectVertices[currentObjectVertexIndex] = obj->vertices[i].x;
+		//	allObjectVertices[currentObjectVertexIndex + 1] = obj->vertices[i].y;
+		//	allObjectVertices[currentObjectVertexIndex + 2] = obj->vertices[i].z;
+
+		//	allObjectIndices;
+		//	currentObjectVertexIndex += 3;
+		//}
 
 	}
 
 	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
-		allGridVertices;
-		allGridIndices;
-		currentGridVertexIndex++;
+		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+		std::memcpy(&allGridVertices[borderCount * 4 * 3], border, sizeof(float) * 4 * 3);
+		++borderCount;
+	}
+
+	void clearVertices() {
+		borderCount = 0;
 	}
 };
 
@@ -60,6 +67,8 @@ public:
 
 class QuadtreeNode {
 	friend class ObjectData;
+
+	static int nodeCount;
 
 	vector<float> objectVertices; // deprecate
 	vector<int> objectVertexCounts; // deprecate
@@ -74,6 +83,7 @@ class QuadtreeNode {
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
 	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
+		++nodeCount;
 	}
 private:
 	bool isLeft() {
@@ -160,33 +170,40 @@ private:
 		}
 	}
 
-	void renderBorder(int level, int selectLevel) {
+	void getBorderVertices(MeshCollectionMemory& ms, int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->renderBorder(level + 1, selectLevel);
+				n->getBorderVertices(ms, level + 1, selectLevel);
 			}
 		}
 
-		GLuint indices[] = { 0, 1, 2, 3 };
-		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
-		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-
-		glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
+		ms.addGridVertices(Xmin, Xmax, Ymin, Ymax);
 	}
 } typedef qtNode;
+
+int qtNode::nodeCount = 0;
 
 class ObjectData {
 	
 	shared_ptr<qtNode> root;
+	MeshCollectionMemory ms;
 
 public:
 	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax) {
 		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax);
+		ms = MeshCollectionMemory();
+	}
+
+	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
+		ms.allocateObjectMemory(_allObjectCount, _allVertexCount, _vertexCount);
+	}
+
+	void allocateGridMemory() {
+		ms.allocateGridMemory(QuadtreeNode::nodeCount);
 	}
 
 	void storeObject(const shared_ptr<Object> obj, int& maxLevel) {
@@ -199,9 +216,27 @@ public:
 
 	void renderObject(int currentLevel) {
 		root->renderObject(0, currentLevel);
+
+		/*
+		root->getBorderVertices(ms, 0, currentLevel);
+
+		//border
+		glBufferData(GL_ARRAY_BUFFER, ms.borderCount * 3 * sizeof(float), ms.borderVertices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ms.borderCount * sizeof(GLuint), ms.borderIndices, GL_STATIC_DRAW);
+		for (int i = 0; i < ms.borderCount; ++i) {
+			glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, index~~~~~);
+		}
+		*/
 	}
 
 	void renderBorder(int currentLevel) {
-		root->renderBorder(0, currentLevel);
+
+		ms.clearVertices();
+		root->getBorderVertices(ms, 0, currentLevel);
+
+		glBufferData(GL_ARRAY_BUFFER, ms.borderCount * 4 * 3 * sizeof(float), ms.allGridVertices, GL_STATIC_DRAW);
+		for (int i = 0; i < ms.borderCount; ++i) {
+			glDrawArrays(GL_LINE_LOOP, i * 4, 4);
+		}
 	}
 };
