@@ -12,28 +12,25 @@ using namespace std;
 class MeshCollectionMemory {
 public:
 	float* objectVertices;
-	int* objectIndices;
 	int* objectVertexCount;
-	int currentObjectVertexIndex = 0;
+	int currentObjectCount = 0;
+	int allVertexCount = 0;
 
 	float* allGridVertices;
 	int borderCount = 0;
 
 	~MeshCollectionMemory() {
 		delete[] objectVertices;
-		delete[] objectIndices;
 		delete[] objectVertexCount;
 		delete[] allGridVertices;
 	}
 
 	// set allObjectVertices / allObjectIndices
 	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
-		objectVertices = new float[_allObjectCount * 3];
-		objectIndices = new int[_allVertexCount];
-		for (int i = 0; i < _allVertexCount; ++i) {
-			objectIndices[i] = i;
-		}
-		std::memcpy(objectVertexCount, _vertexCount, sizeof(float) * _allObjectCount);
+		allVertexCount = _allVertexCount;
+		objectVertices = new float[_allVertexCount * 3];
+		objectVertexCount = new int32_t[_allObjectCount];
+		std::memcpy(objectVertexCount, _vertexCount, sizeof(int32_t) * _allObjectCount);
 	}
 
 	void allocateGridMemory(int nodeCount) {
@@ -42,22 +39,17 @@ public:
 
 	void addObjectVertices(shared_ptr<Object> obj) {
 		//obj 전체 버텍스 추가(전체 버텍스 수 확인)
-		std::memcpy(objectVertices, )
+		std::memcpy(objectVertices, obj->vertices, sizeof(Vertex) * obj->vertexCount);
 
 		//part 카운트(전체 파트 수 확인)
+		std::memcpy(&objectVertexCount[currentObjectCount], obj->partVertexCounts, sizeof(int32_t) * obj->partCount);
+		currentObjectCount += obj->partCount;
 	}
 
 	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
 		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
 		std::memcpy(&allGridVertices[borderCount * 4 * 3], border, sizeof(float) * 4 * 3);
 		++borderCount;
-	}
-
-	void clearObject() {
-	}
-
-	void clearBorder() {
-		borderCount = 0;
 	}
 };
 
@@ -152,18 +144,19 @@ private:
 		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
 	}
 
-	void renderObject(MeshCollectionMemory& ms, int level, int selectLevel) {
+	void getObjectVertices(MeshCollectionMemory& ms, int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->renderObject(ms, level + 1, selectLevel);
+				n->getObjectVertices(ms, level + 1, selectLevel);
 			}
 		}
 
 		for (auto obj : objects) {
+			obj->render();
 			ms.addObjectVertices(obj);
 		}
 	}
@@ -214,25 +207,31 @@ public:
 
 	void renderObject(int currentLevel) {
 
-		ms.clearObject();
+		ms.currentObjectCount = 0;
 
-		root->renderObject(ms, 0, currentLevel);
+		root->getObjectVertices(ms, 0, currentLevel);
 
-		/*
-		root->getBorderVertices(ms, 0, currentLevel);
-
-		//border
-		glBufferData(GL_ARRAY_BUFFER, ms.borderCount * 3 * sizeof(float), ms.borderVertices, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ms.borderCount * sizeof(GLuint), ms.borderIndices, GL_STATIC_DRAW);
-		for (int i = 0; i < ms.borderCount; ++i) {
-			glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, index~~~~~);
+		for (int i = 0; i < ms.objectVertexCount[0]; ++i) {
+			cout << ms.objectVertices[0 + i * 3] << ", " << ms.objectVertices[1 + i * 3] << ", " << ms.objectVertices[2 + i * 3] << endl;
 		}
-		*/
+		cout << endl;
+		for (int i = 0; i < ms.objectVertexCount[1]; ++i) {
+			cout << ms.objectVertices[0 + i * 3] << ", " << ms.objectVertices[1 + i * 3] << ", " << ms.objectVertices[2 + i * 3] << endl;
+		}
+		cout << endl;
+
+		glBufferData(GL_ARRAY_BUFFER, ms.allVertexCount * 3 * sizeof(float), ms.objectVertices, GL_STATIC_DRAW);
+		
+		int pos = 0;
+		for (int i = 0; i < ms.currentObjectCount; ++i) {
+			glDrawArrays(GL_LINE_STRIP, pos, ms.objectVertexCount[i]);
+			pos += ms.objectVertexCount[i];
+		}
 	}
 
 	void renderBorder(int currentLevel) {
 
-		ms.clearBorder();
+		ms.borderCount = 0;
 
 		root->getBorderVertices(ms, 0, currentLevel);
 

@@ -64,7 +64,7 @@ shared_ptr<ObjectData> objectData;
 std::vector<shared_ptr<Object>> objects;
 
 int maxLevel = 0;
-int currentLevel = 0;
+int currentLevel = 10;
 
 typedef unsigned char uchar;
 
@@ -467,7 +467,8 @@ bool readShapefile(float min[], float max[], float del[]) {
 	vector<int> objectVertexCount;
 	int allVertexCount = 0;
 
-	while (offset < data + fileSize) {
+	for (int i = 0; i < 2; ++i){
+	//while (offset < data + fileSize) {
 		uchar* startOffset = offset;
 
 		bool hasZvalue = false;
@@ -530,7 +531,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 	}
 
 	std::cout << "Total record count: " << objects.size() << endl;
-	//objectData->allocateObjectMemory(objects.size(), allVertexCount, objectVertexCount.data())
+	objectData->allocateObjectMemory(objects.size(), allVertexCount, objectVertexCount.data());
 	objectData->allocateGridMemory();
 
 	delete[] data;
