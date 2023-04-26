@@ -45,7 +45,7 @@ float moveX = 0.0f;
 float moveY = 0.0f;
 float moveZ = 3.0f;
 const float delta = 0.02f;
-const float deltaZ = 0.1f;
+const float deltaZ = 0.05f;
 
 float yaw = -90.0f;
 float pitch = 0.0f;
@@ -175,11 +175,6 @@ void render()
 	vector<float> allObjectVertexCount;
 	vector<float> allBorderPoints;
 
-	static int tester = 0;
-	objectData->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, currentLevel, tester);
-
-
-
 	// draw objects
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
@@ -237,7 +232,7 @@ string readShader(const string& filepath) {
 
 void closeShapefile() {
 	if (isShapeLoaded) {
-		objectData.reset();
+		//objectData.reset();
 		fclose(SHPFile);
 	}
 }
@@ -246,6 +241,10 @@ void setCurrentLevel(int cameraZ) {
 	if (0.0f <= cameraZ <= 3.0f) {
 		float deltaLevel = 1.0f / (maxLevel + 1.0f);
 		currentLevel = (int)((1.0f - cameraZ / CAMERA_START_Z) / deltaLevel);
+		if (currentLevel == 2) {
+			int a = 10;
+		}
+		cout << "cur level" << currentLevel << endl;
 	}
 }
 
@@ -531,6 +530,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 	}
 
 	std::cout << "Total record count: " << objects.size() << endl;
+	std::cout << "max level: " << maxLevel << endl;
 	objectData->allocateObjectMemory(objects.size(), allVertexCount, objectVertexCount.data());
 	objectData->allocateGridMemory();
 

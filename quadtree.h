@@ -24,6 +24,9 @@ public:
 		delete[] objectVertices;
 		delete[] objectVertexCount;
 		delete[] allGridVertices;
+		objectVertices = nullptr;
+		objectVertexCount = nullptr;
+		allGridVertices = nullptr;
 	}
 
 	void clearMemory() {
@@ -61,15 +64,11 @@ public:
 	}
 };
 
-//static MeshCollection ms;
-
 class QuadtreeNode {
 	friend class ObjectData;
 
 	static int nodeCount;
 
-	vector<float> objectVertices; // deprecate
-	vector<int> objectVertexCounts; // deprecate
 	vector<shared_ptr<Object>> objects;
 
 	float Xmin, Xmax, Ymin, Ymax;
@@ -134,24 +133,6 @@ private:
 		}
 	}
 
-	// deprecate
-	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int level, int selectLevel, int& count) {
-		if (level > selectLevel) {
-			return;
-		}
-
-		for (auto n : nodes) {
-			if (n != nullptr) {
-				n->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, level + 1, selectLevel, count);
-			}
-		}
-
-		allObjectVertices.insert(allObjectVertices.end(), objectVertices.begin(), objectVertices.end());
-		allObjectVertexCount.insert(allObjectVertexCount.end(), objectVertexCounts.begin(), objectVertexCounts.end());
-		vector<float> border = { Xmin, Ymin, Xmin, Ymax, Xmax, Ymax, Xmax, Ymin };
-		allBorderPoints.insert(allBorderPoints.end(), border.begin(), border.end());
-	}
-
 	void getObjectVertices(MeshCollectionMemory& ms, int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
@@ -188,64 +169,48 @@ int qtNode::nodeCount = 0;
 class ObjectData {
 	
 	shared_ptr<qtNode> root;
-	MeshCollectionMemory ms;
+	shared_ptr<MeshCollectionMemory> ms;
 
 public:
 	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax) {
 		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax);
-		ms = MeshCollectionMemory();
+		ms = make_shared<MeshCollectionMemory>();
 	}
 
 	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
-		ms.allocateObjectMemory(_allObjectCount, _allVertexCount, _vertexCount);
+		ms->allocateObjectMemory(_allObjectCount, _allVertexCount, _vertexCount);
 	}
 
 	void allocateGridMemory() {
-		ms.allocateGridMemory(QuadtreeNode::nodeCount);
+		ms->allocateGridMemory(QuadtreeNode::nodeCount);
 	}
 
 	void storeObject(const shared_ptr<Object> obj, int& maxLevel) {
 		root->store(obj, 0, maxLevel);
 	}
 
-	void addVertexAndPoint(vector<float>& allObjectVertices, vector<float>& allObjectVertexCount, vector<float>& allBorderPoints, int currentLevel, int& count) {
-		root->addVertexAndPoint(allObjectVertices, allObjectVertexCount, allBorderPoints, 0, currentLevel, count);
-	}
-
 	void renderObject(int currentLevel) {
 
-		ms.clearMemory();
+		ms->clearMemory();
 
-		root->getObjectVertices(ms, 0, currentLevel);
+		root->getObjectVertices(*ms, 0, currentLevel);
 
-		//for (int i = 0; i < ms.objectVertexCount[0]; ++i) {
-		//	int st = i * 3;
-		//	cout << ms.objectVertices[st + 0] << ", " << ms.objectVertices[st + 1] << ", " << ms.objectVertices[st + 2] << endl;
-		//}
-		//cout << endl;
-		//for (int i = 0; i < ms.objectVertexCount[1]; ++i) {
-		//	int st = ms.objectVertexCount[0] * 3 + i * 3;
-		//	cout << ms.objectVertices[st + 0] << ", " << ms.objectVertices[st + 1] << ", " << ms.objectVertices[st + 2] << endl;
-		//}
-		//cout << endl;
-
-		glBufferData(GL_ARRAY_BUFFER, ms.allVertexCount * 3 * sizeof(float), ms.objectVertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, ms->allVertexCount * 3 * sizeof(float), ms->objectVertices, GL_STATIC_DRAW);
 		
-		int pos = 0;
-		for (int i = 0; i < ms.currentObjectCount; ++i) {
-			glDrawArrays(GL_LINE_STRIP, pos, ms.objectVertexCount[i]);
-			pos += ms.objectVertexCount[i];
+		for (int i = 0, pos = 0; i < ms->currentObjectCount; ++i) {
+			glDrawArrays(GL_LINE_STRIP, pos, ms->objectVertexCount[i]);
+			pos += ms->objectVertexCount[i];
 		}
 	}
 
 	void renderBorder(int currentLevel) {
 
-		ms.clearMemory();
+		ms->clearMemory();
 
-		root->getBorderVertices(ms, 0, currentLevel);
+		root->getBorderVertices(*ms, 0, currentLevel);
 
-		glBufferData(GL_ARRAY_BUFFER, ms.borderCount * 4 * 3 * sizeof(float), ms.allGridVertices, GL_STATIC_DRAW);
-		for (int i = 0; i < ms.borderCount; ++i) {
+		glBufferData(GL_ARRAY_BUFFER, ms->borderCount * 4 * 3 * sizeof(float), ms->allGridVertices, GL_STATIC_DRAW);
+		for (int i = 0; i < ms->borderCount; ++i) {
 			glDrawArrays(GL_LINE_LOOP, i * 4, 4);
 		}
 	}

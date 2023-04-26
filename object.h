@@ -78,9 +78,9 @@ public:
 	// just debugging
 	void render() {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-		for (size_t currentPart = 0; currentPart < partCount; ++currentPart) {
-			glDrawElements(GL_LINE_STRIP, partVertexCounts[currentPart], GL_UNSIGNED_INT, (void*)(partStartIndex[currentPart] * sizeof(GLuint)));
+		for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
+			glDrawArrays(GL_LINE_STRIP, pos, partVertexCounts[currentPart]);
+			pos += partVertexCounts[currentPart];
 		}
 	}
 
