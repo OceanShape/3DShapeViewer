@@ -202,8 +202,8 @@ void cleanUp()
 		glGetAttachedShaders(programs[i], 1, NULL, &fragmentShader);
 		glDetachShader(programs[i], vertexShader);
 		glDetachShader(programs[i], fragmentShader);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
 		glDeleteProgram(programs[i]);
 	}
 
@@ -241,10 +241,7 @@ void setCurrentLevel(int cameraZ) {
 	if (0.0f <= cameraZ <= 3.0f) {
 		float deltaLevel = 1.0f / (maxLevel + 1.0f);
 		currentLevel = (int)((1.0f - cameraZ / CAMERA_START_Z) / deltaLevel);
-		if (currentLevel == 2) {
-			int a = 10;
-		}
-		cout << "cur level" << currentLevel << endl;
+		cout << "current level" << currentLevel << endl;
 	}
 }
 

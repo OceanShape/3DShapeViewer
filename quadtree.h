@@ -24,9 +24,6 @@ public:
 		delete[] objectVertices;
 		delete[] objectVertexCount;
 		delete[] allGridVertices;
-		objectVertices = nullptr;
-		objectVertexCount = nullptr;
-		allGridVertices = nullptr;
 	}
 
 	void clearMemory() {
@@ -54,7 +51,7 @@ public:
 
 		//part 카운트(전체 파트 수 확인)
 		std::memcpy(&objectVertexCount[currentObjectCount], obj->partVertexCounts, sizeof(int32_t) * obj->partCount);
-		currentObjectCount += obj->partCount;//
+		currentObjectCount += obj->partCount;
 	}
 
 	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
@@ -133,7 +130,7 @@ private:
 		}
 	}
 
-	void getObjectVertices(MeshCollectionMemory& ms, int level, int selectLevel) {
+	void getObjectVertices(shared_ptr<MeshCollectionMemory> ms, int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
@@ -145,11 +142,11 @@ private:
 		}
 
 		for (auto obj : objects) {
-			ms.addObjectVertices(obj);
+			ms->addObjectVertices(obj);
 		}
 	}
 
-	void getBorderVertices(MeshCollectionMemory& ms, int level, int selectLevel) {
+	void getBorderVertices(shared_ptr<MeshCollectionMemory> ms, int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
@@ -160,7 +157,7 @@ private:
 			}
 		}
 
-		ms.addGridVertices(Xmin, Xmax, Ymin, Ymax);
+		ms->addGridVertices(Xmin, Xmax, Ymin, Ymax);
 	}
 } typedef qtNode;
 
@@ -193,7 +190,7 @@ public:
 
 		ms->clearMemory();
 
-		root->getObjectVertices(*ms, 0, currentLevel);
+		root->getObjectVertices(ms, 0, currentLevel);
 
 		glBufferData(GL_ARRAY_BUFFER, ms->allVertexCount * 3 * sizeof(float), ms->objectVertices, GL_STATIC_DRAW);
 		
@@ -207,7 +204,7 @@ public:
 
 		ms->clearMemory();
 
-		root->getBorderVertices(*ms, 0, currentLevel);
+		root->getBorderVertices(ms, 0, currentLevel);
 
 		glBufferData(GL_ARRAY_BUFFER, ms->borderCount * 4 * 3 * sizeof(float), ms->allGridVertices, GL_STATIC_DRAW);
 		for (int i = 0; i < ms->borderCount; ++i) {
