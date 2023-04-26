@@ -64,7 +64,7 @@ shared_ptr<ObjectData> objectData;
 std::vector<shared_ptr<Object>> objects;
 
 int maxLevel = 0;
-int currentLevel = 10;
+int currentLevel = 0;
 
 typedef unsigned char uchar;
 
@@ -467,8 +467,8 @@ bool readShapefile(float min[], float max[], float del[]) {
 	vector<int> objectVertexCount;
 	int allVertexCount = 0;
 
-	for (int i = 0; i < 2; ++i){
-	//while (offset < data + fileSize) {
+	//for (int i = 0; i < 2; ++i){
+	while (offset < data + fileSize) {
 		uchar* startOffset = offset;
 
 		bool hasZvalue = false;
@@ -591,7 +591,7 @@ bool openShapefile() {
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 

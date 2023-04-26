@@ -14,6 +14,7 @@ public:
 	float* objectVertices;
 	int* objectVertexCount;
 	int currentObjectCount = 0;
+	int currentVertexCount = 0;
 	int allVertexCount = 0;
 
 	float* allGridVertices;
@@ -23,6 +24,12 @@ public:
 		delete[] objectVertices;
 		delete[] objectVertexCount;
 		delete[] allGridVertices;
+	}
+
+	void clearMemory() {
+		currentObjectCount = 0;
+		currentVertexCount = 0;
+		borderCount = 0;
 	}
 
 	// set allObjectVertices / allObjectIndices
@@ -39,11 +46,12 @@ public:
 
 	void addObjectVertices(shared_ptr<Object> obj) {
 		//obj 전체 버텍스 추가(전체 버텍스 수 확인)
-		std::memcpy(objectVertices, obj->vertices, sizeof(Vertex) * obj->vertexCount);
+		std::memcpy(&objectVertices[currentVertexCount * 3], obj->vertices, sizeof(Vertex) * obj->vertexCount);
+		currentVertexCount += obj->vertexCount;
 
 		//part 카운트(전체 파트 수 확인)
 		std::memcpy(&objectVertexCount[currentObjectCount], obj->partVertexCounts, sizeof(int32_t) * obj->partCount);
-		currentObjectCount += obj->partCount;
+		currentObjectCount += obj->partCount;//
 	}
 
 	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
@@ -156,7 +164,6 @@ private:
 		}
 
 		for (auto obj : objects) {
-			obj->render();
 			ms.addObjectVertices(obj);
 		}
 	}
@@ -207,18 +214,20 @@ public:
 
 	void renderObject(int currentLevel) {
 
-		ms.currentObjectCount = 0;
+		ms.clearMemory();
 
 		root->getObjectVertices(ms, 0, currentLevel);
 
-		for (int i = 0; i < ms.objectVertexCount[0]; ++i) {
-			cout << ms.objectVertices[0 + i * 3] << ", " << ms.objectVertices[1 + i * 3] << ", " << ms.objectVertices[2 + i * 3] << endl;
-		}
-		cout << endl;
-		for (int i = 0; i < ms.objectVertexCount[1]; ++i) {
-			cout << ms.objectVertices[0 + i * 3] << ", " << ms.objectVertices[1 + i * 3] << ", " << ms.objectVertices[2 + i * 3] << endl;
-		}
-		cout << endl;
+		//for (int i = 0; i < ms.objectVertexCount[0]; ++i) {
+		//	int st = i * 3;
+		//	cout << ms.objectVertices[st + 0] << ", " << ms.objectVertices[st + 1] << ", " << ms.objectVertices[st + 2] << endl;
+		//}
+		//cout << endl;
+		//for (int i = 0; i < ms.objectVertexCount[1]; ++i) {
+		//	int st = ms.objectVertexCount[0] * 3 + i * 3;
+		//	cout << ms.objectVertices[st + 0] << ", " << ms.objectVertices[st + 1] << ", " << ms.objectVertices[st + 2] << endl;
+		//}
+		//cout << endl;
 
 		glBufferData(GL_ARRAY_BUFFER, ms.allVertexCount * 3 * sizeof(float), ms.objectVertices, GL_STATIC_DRAW);
 		
@@ -231,7 +240,7 @@ public:
 
 	void renderBorder(int currentLevel) {
 
-		ms.borderCount = 0;
+		ms.clearMemory();
 
 		root->getBorderVertices(ms, 0, currentLevel);
 
