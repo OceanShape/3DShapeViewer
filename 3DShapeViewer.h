@@ -33,7 +33,7 @@ bool initialize();
 void render();
 void cleanUp();
 void updateCameraVec();
-void setCurrentLevel(float cameraZ);
+void setLevelAndViewBoundary(float cameraZ);
 
 string readShader(const string& filepath);
 bool openShapefile();

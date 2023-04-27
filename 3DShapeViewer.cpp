@@ -237,11 +237,16 @@ void closeShapefile() {
 	}
 }
 
-void setCurrentLevel(float cameraZ) {
+void setLevelAndViewBoundary(float cameraZ) {
+	
 	if (0.0f <= cameraZ <= CAMERA_START_Z) {
 		float deltaLevel = CAMERA_START_Z / (maxLevel + 1.0f);
 		currentLevel = (int)((3.0f - cameraZ) / deltaLevel);
 		cout << "current level: [" << currentLevel << "]" << endl;
+
+		// set boundary
+		(CAMERA_START_Z - cameraZ)* tan(fov / 2);
+		cout << "camera Z: " << cameraZ << endl;
 	}
 }
 
@@ -271,15 +276,16 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		fov -= wDel * .1f;
 		fov = (fov > 89.0f) ? 89.0f : (fov < 1.0f) ? 1.0f : fov;
+		cout << "fov: " << fov << endl;
 		break;
 	case WM_KEYDOWN:
 		if (wParam == 'E' || wParam == 'e') {
 			cameraZ -= deltaZ;
-			setCurrentLevel(cameraZ);
+			setLevelAndViewBoundary(cameraZ);
 		}
 		else if (wParam == 'Q' || wParam == 'q') {
 			cameraZ += deltaZ;
-			setCurrentLevel(cameraZ);
+			setLevelAndViewBoundary(cameraZ);
 		}
 		else if (wParam == 'A' || wParam == 'a') {
 			cameraX -= delta;
