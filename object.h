@@ -61,8 +61,11 @@ public:
 
 		std::memcpy(partStartIndex, _parts, sizeof(int32_t) * partCount);
 
-		if (partCount == 2) {
-			cout << _parts[0] << "/" << _parts[1] << endl;
+		if (partCount > 1) {
+			for (int i = 0; i < partCount; ++i) {
+				cout << _parts[i] << " ";
+			}
+			cout << endl;
 		}
 
 		setIndex();

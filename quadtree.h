@@ -12,7 +12,7 @@ using namespace std;
 class MeshCollectionMemory {
 public:
 	float* objectVertices;
-	int* objectVertexCount;
+	int32_t* objectVertexCount;
 	int currentObjectCount = 0;
 	int currentVertexCount = 0;
 	int allVertexCount = 0;
@@ -33,7 +33,7 @@ public:
 	}
 
 	// set allObjectVertices / allObjectIndices
-	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
+	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int32_t _vertexCount[]) {
 		allVertexCount = _allVertexCount;
 		objectVertices = new float[_allVertexCount * 3];
 		objectVertexCount = new int32_t[_allObjectCount];
@@ -143,6 +143,7 @@ private:
 
 		for (auto obj : objects) {
 			ms->addObjectVertices(obj);
+			//obj->render();
 		}
 	}
 
@@ -174,7 +175,7 @@ public:
 		ms = make_shared<MeshCollectionMemory>();
 	}
 
-	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int _vertexCount[]) {
+	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int32_t _vertexCount[]) {
 		ms->allocateObjectMemory(_allObjectCount, _allVertexCount, _vertexCount);
 	}
 

@@ -81,7 +81,6 @@ bool checkShaderCompileStatus(GLuint shader)
 		cerr << "Shader compile error: " << infoLog.data() << endl;
 		return false;
 	}
-	std::cout << "Shader compile complite" << endl;
 	return true;
 }
 
@@ -463,8 +462,9 @@ bool readShapefile(float min[], float max[], float del[]) {
 	SHPPoint* points;
 	double* Zpoints;
 	int32_t* parts;
-	vector<int> objectVertexCount;
+	vector<int32_t> objectVertexCount;
 	int allVertexCount = 0;
+	int extraPartCount = 0;
 
 	//for (int i = 0; i < 2; ++i){
 	while (offset < data + fileSize) {
@@ -517,6 +517,11 @@ bool readShapefile(float min[], float max[], float del[]) {
 			offset += sizeof(double) * numPoints;
 		}
 
+		if (numParts > 1) {
+			cout << "numParts: " << numParts << endl;
+			extraPartCount += numParts - 1;
+		}
+
 		shared_ptr<Object> obj = make_shared<Object>(points, numPoints, parts, numParts);
 		objects.push_back(obj);
 		objectData->storeObject(obj, maxLevel);
@@ -531,7 +536,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
-	objectData->allocateObjectMemory(objects.size(), allVertexCount, objectVertexCount.data());
+	objectData->allocateObjectMemory(objects.size() + extraPartCount, allVertexCount, objectVertexCount.data());
 	objectData->allocateGridMemory();
 
 	delete[] data;
