@@ -197,13 +197,12 @@ void cleanUp()
 	glDeleteBuffers(1, &ebo);
 
 	for (size_t i = 0; i < 2; ++i) {
-		GLuint vertexShader, fragmentShader;
-		glGetAttachedShaders(programs[i], 1, NULL, &vertexShader);
-		glGetAttachedShaders(programs[i], 1, NULL, &fragmentShader);
-		glDetachShader(programs[i], vertexShader);
-		glDetachShader(programs[i], fragmentShader);
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
+		GLuint shaders[2];
+		glGetAttachedShaders(programs[i], 2, NULL, shaders);
+		for (size_t j = 0; j < 2; ++j) {
+			glDetachShader(programs[i], shaders[j]);
+			glDeleteShader(shaders[j]);
+		}
 		glDeleteProgram(programs[i]);
 	}
 
