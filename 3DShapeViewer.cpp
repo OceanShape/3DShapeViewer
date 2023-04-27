@@ -237,11 +237,11 @@ void closeShapefile() {
 	}
 }
 
-void setCurrentLevel(int cameraZ) {
-	if (0.0f <= cameraZ <= 3.0f) {
-		float deltaLevel = 1.0f / (maxLevel + 1.0f);
-		currentLevel = (int)((1.0f - cameraZ / CAMERA_START_Z) / deltaLevel);
-		cout << "current level" << currentLevel << endl;
+void setCurrentLevel(float cameraZ) {
+	if (0.0f <= cameraZ <= CAMERA_START_Z) {
+		float deltaLevel = CAMERA_START_Z / (maxLevel + 1.0f);
+		currentLevel = (int)((3.0f - cameraZ) / deltaLevel);
+		cout << "current level: [" << currentLevel << "]" << endl;
 	}
 }
 
@@ -336,7 +336,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		if (isShapeLoaded) {
 			render();
-		eglSwapBuffers(eglDisplay, eglSurface);
+			eglSwapBuffers(eglDisplay, eglSurface);
 		}
 		break;
 	default:

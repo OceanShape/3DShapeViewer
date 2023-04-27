@@ -127,6 +127,7 @@ private:
 		}
 		else {
 			objects.push_back(obj);
+			maxLevel = std::max(maxLevel, level);
 		}
 	}
 
