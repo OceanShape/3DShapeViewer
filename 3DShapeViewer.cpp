@@ -29,7 +29,7 @@ GLuint vao[2];
 GLuint vbo[2];
 GLuint ebo;
 GLuint programs[2];
-bool groundMode = false;
+bool drawGrid = false;
 
 FILE* SHPFile;
 bool isShapeLoaded = false;
@@ -190,11 +190,13 @@ void render()
 	objectData->renderObject(currentLevel, boundaryX, boundaryY);
 
 	// draw grid
-	glUseProgram(programs[1]);
-	glBindVertexArray(vao[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	if (drawGrid) {
+		glUseProgram(programs[1]);
+		glBindVertexArray(vao[1]);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 
-	objectData->renderBorder(currentLevel);
+		objectData->renderBorder(currentLevel);
+	}
 }
 
 void cleanUp()
@@ -253,17 +255,12 @@ void setLevelAndViewBoundary() {
 
 		float distance = cameraZ;
 
-		// set boundary x
+		// set boundary
 		float centerX = (maxTotal[0] + minTotal[0]) / 2 + delTotal[0] * cameraX;
-		float delBoundaryX = delTotal[0] * distance * (tan(fov / 2)) / 1.4f;
-		boundaryX[0] = centerX - delBoundaryX;
-		boundaryX[1] = centerX + delBoundaryX;
-
-		// set boundary y
 		float centerY = (maxTotal[1] + minTotal[1]) / 2 + delTotal[0] * cameraY;
-		float delBoundaryY = delTotal[0] * distance * (tan(fov / 2)) / 1.4f;
-		boundaryY[0] = centerY - delBoundaryY;
-		boundaryY[1] = centerY + delBoundaryY;
+		float delBoundary = delTotal[0] * distance * (tan(fov / 2)) / 1.41f;
+		boundaryX[0] = centerX - delBoundary; boundaryX[1] = centerX + delBoundary;
+		boundaryY[0] = centerY - delBoundary; boundaryY[1] = centerY + delBoundary;
 	}
 }
 
@@ -292,7 +289,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_MOUSEWHEEL:
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		fov -= wDel * .1f;
-		fov = (fov > 89.0f) ? 89.0f : (fov < 1.0f) ? 1.0f : fov;
+		fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
 		std::cout << "fov: " << fov << endl;
 		break;
 	case WM_KEYDOWN:
@@ -337,7 +334,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			updateCameraVec();
 		}
 		else if (wParam == 'G' || wParam == 'g') {
-			groundMode = !groundMode;
+			drawGrid = !drawGrid;
 		}
 		else if ('0' <= wParam && wParam <= '9') {
 			int num = wParam - '0';
