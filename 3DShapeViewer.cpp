@@ -46,6 +46,11 @@ float moveY = 0.0f;
 float moveZ = 3.0f;
 const float delta = 0.02f;
 const float deltaZ = 0.05f;
+GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
+GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
+GLfloat delTotal[3];
+float boundaryX[2];
+float boundaryY[2];
 
 float yaw = -90.0f;
 float pitch = 0.0f;
@@ -181,7 +186,8 @@ void render()
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
-	objectData->renderObject(currentLevel);
+
+	objectData->renderObject(currentLevel, boundaryX, boundaryY);
 
 	// draw grid
 	glUseProgram(programs[1]);
@@ -230,6 +236,7 @@ string readShader(const string& filepath) {
 }
 
 
+
 void closeShapefile() {
 	if (isShapeLoaded) {
 		//objectData.reset();
@@ -237,16 +244,26 @@ void closeShapefile() {
 	}
 }
 
-void setLevelAndViewBoundary(float cameraZ) {
+void setLevelAndViewBoundary() {
 	
-	if (0.0f <= cameraZ <= CAMERA_START_Z) {
+	if (0.0f < cameraZ <= CAMERA_START_Z) {
 		float deltaLevel = CAMERA_START_Z / (maxLevel + 1.0f);
 		currentLevel = (int)((3.0f - cameraZ) / deltaLevel);
-		cout << "current level: [" << currentLevel << "]" << endl;
+		std::cout << "current level: [" << currentLevel << "]" << endl;
 
-		// set boundary
-		(CAMERA_START_Z - cameraZ)* tan(fov / 2);
-		cout << "camera Z: " << cameraZ << endl;
+		float distance = cameraZ;
+
+		// set boundary x
+		float centerX = (maxTotal[0] + minTotal[0]) / 2 + delTotal[0] * cameraX;
+		float delBoundaryX = delTotal[0] * distance * (tan(fov / 2)) / 1.4f;
+		boundaryX[0] = centerX - delBoundaryX;
+		boundaryX[1] = centerX + delBoundaryX;
+
+		// set boundary y
+		float centerY = (maxTotal[1] + minTotal[1]) / 2 + delTotal[0] * cameraY;
+		float delBoundaryY = delTotal[0] * distance * (tan(fov / 2)) / 1.4f;
+		boundaryY[0] = centerY - delBoundaryY;
+		boundaryY[1] = centerY + delBoundaryY;
 	}
 }
 
@@ -276,28 +293,32 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		fov -= wDel * .1f;
 		fov = (fov > 89.0f) ? 89.0f : (fov < 1.0f) ? 1.0f : fov;
-		cout << "fov: " << fov << endl;
+		std::cout << "fov: " << fov << endl;
 		break;
 	case WM_KEYDOWN:
 		if (wParam == 'E' || wParam == 'e') {
 			cameraZ -= deltaZ;
-			setLevelAndViewBoundary(cameraZ);
+			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'Q' || wParam == 'q') {
 			cameraZ += deltaZ;
-			setLevelAndViewBoundary(cameraZ);
+			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'A' || wParam == 'a') {
 			cameraX -= delta;
+			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'D' || wParam == 'd') {
 			cameraX += delta;
+			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'W' || wParam == 'w') {
 			cameraY += delta;
+			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'S' || wParam == 's') {
 			cameraY -= delta;
+			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'J' || wParam == 'j') {
 			yaw = (yaw < -175.0f) ? -175.0f : yaw - rotDel;
@@ -362,7 +383,7 @@ void memSwap(void* const data, size_t size) {
 	}
 }
 
-bool readShapefile(float min[], float max[], float del[]) {
+bool readShapefile() {
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	int progressWidth = 440;
@@ -449,17 +470,25 @@ bool readShapefile(float min[], float max[], float del[]) {
 	float zMin = shpHeaderData.Zmin;
 	float zMax = shpHeaderData.Zmax;
 
-	min[0] = xMin;
-	min[1] = yMin;
-	min[2] = zMin;
-	max[2] = zMax;
+	minTotal[0] = xMin;
+	minTotal[1] = yMin;
+	minTotal[2] = zMin;
+	maxTotal[0] = xMax;
+	maxTotal[1] = yMax;
+	maxTotal[2] = zMax;
 
-	del[0] = (xMax - xMin) / 2.0f;
-	del[1] = (yMax - yMin) / 2.0f;
-	del[2] = (zMax - zMin) / 2.0f;
+	delTotal[0] = (xMax - xMin) / 2.0f;
+	delTotal[1] = (yMax - yMin) / 2.0f;
+	delTotal[2] = (zMax - zMin) / 2.0f;
 
-	float yTop = (yMin + yMax) / 2 + del[0];
-	float yBot = (yMin + yMax) / 2 - del[0];
+	float yTop = (yMin + yMax) / 2 + delTotal[0];
+	float yBot = (yMin + yMax) / 2 - delTotal[0];
+
+	boundaryX[0] = xMin;
+	boundaryX[1] = xMax;
+
+	boundaryY[0] = yBot;
+	boundaryY[1] = yTop;
 
 	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
@@ -524,7 +553,7 @@ bool readShapefile(float min[], float max[], float del[]) {
 		}
 
 		if (numParts > 1) {
-			cout << "numParts: " << numParts << endl;
+			std::cout << "numParts: " << numParts << endl;
 			extraPartCount += numParts - 1;
 		}
 
@@ -579,19 +608,19 @@ bool openShapefile() {
 	}
 
 	
-	GLfloat min[3], max[3], del[3];
-	if (readShapefile(min, max, del) == false) {
+
+	if (readShapefile() == false) {
 		return false;
 	}
-	printf("del: %.10f\n", del[2]);
-	printf("z position: 0/%f\n", (max[2] - min[2]) / del[2]);
+	printf("del: %.10f\n", delTotal[2]);
+	printf("z position: 0/%f\n", (maxTotal[2] - minTotal[2]) / delTotal[2]);
 	
 
 	for (int i = 0; i < 2; ++i) {
 		glUseProgram(programs[i]);
-		glUniform1f(glGetUniformLocation(programs[i], "aspect_ratio"), del[0] / del[1]);
-		glUniform3fv(glGetUniformLocation(programs[i], "minimum"), 1, min);
-		glUniform3fv(glGetUniformLocation(programs[i], "delta"), 1, del);
+		glUniform1f(glGetUniformLocation(programs[i], "aspect_ratio"), delTotal[0] / delTotal[1]);
+		glUniform3fv(glGetUniformLocation(programs[i], "minimum"), 1, minTotal);
+		glUniform3fv(glGetUniformLocation(programs[i], "delta"), 1, delTotal);
 	}
 
 

@@ -44,7 +44,18 @@ public:
 		allGridVertices = new float[nodeCount * 3 * 4];
 	}
 
-	void addObjectVertices(shared_ptr<Object> obj) {
+	void addObjectVertices(shared_ptr<Object> obj, float boundaryX[], float boundaryY[]) {
+
+		// check x boundary
+		if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1]) {
+			return;
+		}
+
+		// check y boundary
+		if (obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
+			return;
+		}
+
 		//obj 전체 버텍스 추가(전체 버텍스 수 확인)
 		std::memcpy(&objectVertices[currentVertexCount * 3], obj->vertices, sizeof(Vertex) * obj->vertexCount);
 		currentVertexCount += obj->vertexCount;
@@ -131,19 +142,19 @@ private:
 		}
 	}
 
-	void getObjectVertices(shared_ptr<MeshCollectionMemory> ms, int level, int selectLevel) {
+	void getObjectVertices(shared_ptr<MeshCollectionMemory> ms, int level, int selectLevel, float boundaryX[], float boundaryY[]) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->getObjectVertices(ms, level + 1, selectLevel);
+				n->getObjectVertices(ms, level + 1, selectLevel, boundaryX, boundaryY);
 			}
 		}
 
 		for (auto obj : objects) {
-			ms->addObjectVertices(obj);
+			ms->addObjectVertices(obj, boundaryX, boundaryY);
 			//obj->render();
 		}
 	}
@@ -188,11 +199,11 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void renderObject(int currentLevel) {
+	void renderObject(int currentLevel, float boundaryX[], float boundaryY[]) {
 
 		ms->clearMemory();
 
-		root->getObjectVertices(ms, 0, currentLevel);
+		root->getObjectVertices(ms, 0, currentLevel, boundaryX, boundaryY);
 
 		glBufferData(GL_ARRAY_BUFFER, ms->allVertexCount * 3 * sizeof(float), ms->objectVertices, GL_STATIC_DRAW);
 		
