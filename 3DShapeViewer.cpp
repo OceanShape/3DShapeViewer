@@ -136,6 +136,8 @@ bool initialize()
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	eglSwapBuffers(eglDisplay, eglSurface);
 
 	return true;
 }
@@ -332,9 +334,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		PostQuitMessage(0);
 		break;
 	case WM_PAINT:
-		glClear(GL_COLOR_BUFFER_BIT);
-		if (isShapeLoaded) render();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (isShapeLoaded) {
+			render();
 		eglSwapBuffers(eglDisplay, eglSurface);
+		}
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -641,8 +645,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY3DSHAPEVIEWER));
 	MSG msg = {};
-
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
