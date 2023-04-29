@@ -78,7 +78,6 @@ public:
 		}
 	}
 
-	// just debugging
 	void render() {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {

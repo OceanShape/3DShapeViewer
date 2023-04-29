@@ -43,33 +43,6 @@ public:
 	void allocateGridMemory(int nodeCount) {
 		allGridVertices = new float[nodeCount * 3 * 4];
 	}
-
-	void addObjectVertices(shared_ptr<Object> obj, float boundaryX[], float boundaryY[]) {
-
-		// check x boundary
-		if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1]) {
-			return;
-		}
-
-		// check y boundary
-		if (obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
-			return;
-		}
-
-		//obj 전체 버텍스 추가(전체 버텍스 수 확인)
-		std::memcpy(&objectVertices[currentVertexCount * 3], obj->vertices, sizeof(Vertex) * obj->vertexCount);
-		currentVertexCount += obj->vertexCount;
-
-		//part 카운트(전체 파트 수 확인)
-		std::memcpy(&objectVertexCount[currentObjectCount], obj->partVertexCounts, sizeof(int32_t) * obj->partCount);
-		currentObjectCount += obj->partCount;
-	}
-
-	void addGridVertices(const float& Xmin, const float& Xmax, const float& Ymin, const float& Ymax) {
-		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
-		std::memcpy(&allGridVertices[borderCount * 4 * 3], border, sizeof(float) * 4 * 3);
-		++borderCount;
-	}
 };
 
 class QuadtreeNode {
@@ -142,35 +115,34 @@ private:
 		}
 	}
 
-	void getObjectVertices(shared_ptr<MeshCollectionMemory> ms, int level, int selectLevel, float boundaryX[], float boundaryY[]) {
+	void render(int level, int selectLevel, float boundaryX[], float boundaryY[]) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->getObjectVertices(ms, level + 1, selectLevel, boundaryX, boundaryY);
+				render(level + 1, selectLevel, boundaryX, boundaryY);
 			}
 		}
+
+		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
+		glDrawArrays(GL_LINE_LOOP, 0, 4);
 
 		for (auto obj : objects) {
-			ms->addObjectVertices(obj, boundaryX, boundaryY);
-			//obj->render();
-		}
-	}
-
-	void getBorderVertices(shared_ptr<MeshCollectionMemory> ms, int level, int selectLevel) {
-		if (level > selectLevel) {
-			return;
-		}
-
-		for (auto n : nodes) {
-			if (n != nullptr) {
-				n->getBorderVertices(ms, level + 1, selectLevel);
+			// check x boundary
+			if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1]) {
+				continue;
 			}
-		}
 
-		ms->addGridVertices(Xmin, Xmax, Ymin, Ymax);
+			// check y boundary
+			if (obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
+				continue;
+			}
+
+			obj->render();
+		}
 	}
 } typedef qtNode;
 
@@ -187,41 +159,11 @@ public:
 		ms = make_shared<MeshCollectionMemory>();
 	}
 
-	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int32_t _vertexCount[]) {
-		ms->allocateObjectMemory(_allObjectCount, _allVertexCount, _vertexCount);
-	}
-
-	void allocateGridMemory() {
-		ms->allocateGridMemory(QuadtreeNode::nodeCount);
-	}
-
-	void storeObject(const shared_ptr<Object> obj, int& maxLevel) {
+	void store(const shared_ptr<Object> obj, int& maxLevel) {
 		root->store(obj, 0, maxLevel);
 	}
 
-	void renderObject(int currentLevel, float boundaryX[], float boundaryY[]) {
-
-		ms->clearMemory();
-
-		root->getObjectVertices(ms, 0, currentLevel, boundaryX, boundaryY);
-
-		glBufferData(GL_ARRAY_BUFFER, ms->allVertexCount * 3 * sizeof(float), ms->objectVertices, GL_STATIC_DRAW);
-		
-		for (int i = 0, pos = 0; i < ms->currentObjectCount; ++i) {
-			glDrawArrays(GL_LINE_STRIP, pos, ms->objectVertexCount[i]);
-			pos += ms->objectVertexCount[i];
-		}
-	}
-
-	void renderBorder(int currentLevel) {
-
-		ms->clearMemory();
-
-		root->getBorderVertices(ms, 0, currentLevel);
-
-		glBufferData(GL_ARRAY_BUFFER, ms->borderCount * 4 * 3 * sizeof(float), ms->allGridVertices, GL_STATIC_DRAW);
-		for (int i = 0; i < ms->borderCount; ++i) {
-			glDrawArrays(GL_LINE_LOOP, i * 4, 4);
-		}
+	void render(int selectLevel, float boundaryX[], float boundaryY[]) {
+		root->render(0, selectLevel, boundaryX, boundaryY);
 	}
 };

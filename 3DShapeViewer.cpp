@@ -177,26 +177,17 @@ void render()
 		glUniformMatrix4fv(glGetUniformLocation(programs[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	}
 
-	vector<float> allObjectVertices;
-	vector<float> allObjectVertexCount;
-	vector<float> allBorderPoints;
-
 	// draw objects
 	glUseProgram(programs[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
+	cout << currentLevel << endl;
+	objectData->render(currentLevel, boundaryX, boundaryY);
 
-	objectData->renderObject(currentLevel, boundaryX, boundaryY);
-
-	// draw grid
-	if (drawGrid) {
-		glUseProgram(programs[1]);
-		glBindVertexArray(vao[1]);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-
-		objectData->renderBorder(currentLevel);
-	}
+	glUseProgram(programs[1]);
+	glBindVertexArray(vao[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 }
 
 void cleanUp()
@@ -221,7 +212,6 @@ void cleanUp()
 	eglTerminate(eglDisplay);
 }
 
-
 string readShader(const string& filepath) {
 	ifstream file(filepath);
 	if (!file.is_open()) {
@@ -236,8 +226,6 @@ string readShader(const string& filepath) {
 
 	return shader_code;
 }
-
-
 
 void closeShapefile() {
 	if (isShapeLoaded) {
@@ -494,11 +482,8 @@ bool readShapefile() {
 	SHPPoint* points;
 	double* Zpoints;
 	int32_t* parts;
-	vector<int32_t> objectVertexCount;
-	int allVertexCount = 0;
-	int extraPartCount = 0;
 
-	//for (int i = 0; i < 2; ++i){
+	//for (int i = 0; i < 1; ++i){
 	while (offset < data + fileSize) {
 		uchar* startOffset = offset;
 
@@ -549,16 +534,9 @@ bool readShapefile() {
 			offset += sizeof(double) * numPoints;
 		}
 
-		if (numParts > 1) {
-			std::cout << "numParts: " << numParts << endl;
-			extraPartCount += numParts - 1;
-		}
-
 		shared_ptr<Object> obj = make_shared<Object>(points, numPoints, parts, numParts);
 		objects.push_back(obj);
-		objectData->storeObject(obj, maxLevel);
-		objectVertexCount.push_back(numPoints);
-		allVertexCount += numPoints;
+		objectData->store(obj, maxLevel);
 
 		delete[] parts;
 		delete[] points;
@@ -568,8 +546,6 @@ bool readShapefile() {
 
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
-	objectData->allocateObjectMemory(objects.size() + extraPartCount, allVertexCount, objectVertexCount.data());
-	objectData->allocateGridMemory();
 
 	delete[] data;
 
