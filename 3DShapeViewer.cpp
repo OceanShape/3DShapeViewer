@@ -483,8 +483,8 @@ bool readShapefile() {
 	double* Zpoints;
 	int32_t* parts;
 
-	//for (int i = 0; i < 1; ++i){
-	while (offset < data + fileSize) {
+	for (int i = 0; i < 1; ++i){
+	//while (offset < data + fileSize) {
 		uchar* startOffset = offset;
 
 		bool hasZvalue = false;
