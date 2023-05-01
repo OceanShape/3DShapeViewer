@@ -80,10 +80,15 @@ public:
 
 	void render() {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 		for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
-			glDrawArrays(GL_LINE_STRIP, pos, partVertexCounts[currentPart]);
+			glDrawElements(GL_LINE_LOOP, partVertexCounts[currentPart], GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 			pos += partVertexCounts[currentPart];
 		}
+		//for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
+		//	glDrawArrays(GL_LINE_STRIP, pos, partVertexCounts[currentPart]);
+		//	pos += partVertexCounts[currentPart];
+		//}
 	}
 
 	~Object() {
