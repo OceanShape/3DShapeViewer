@@ -3,6 +3,7 @@
 #include "shapedata.h"
 #include "quadtree.h"
 #include "object.h"
+#include "renderoption.h"
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
@@ -25,10 +26,7 @@ HWND hWnd;
 HINSTANCE hInst;
 TCHAR szFileName[MAX_PATH];
 
-GLuint vao[2];
-GLuint vbo[2];
-GLuint ebo;
-GLuint program[2];
+RenderOption renderOption;
 bool drawGrid = false;
 
 FILE* SHPFile;
@@ -131,11 +129,13 @@ bool initialize()
 			return false;
 		}
 
-		program[i] = glCreateProgram();
-		glAttachShader(program[i], vertexShader);
-		glAttachShader(program[i], fragmentShader);
-		glLinkProgram(program[i]);
-		glUseProgram(program[i]);
+
+		GLuint program = glCreateProgram();
+		glAttachShader(program, vertexShader);
+		glAttachShader(program, fragmentShader);
+		glLinkProgram(program);
+		glUseProgram(program);
+		renderOption.program[i] = program;
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -171,38 +171,38 @@ void render()
 	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
 
 	for (int i = 0; i < 2; ++i) {
-		glUseProgram(program[i]);
-		glUniformMatrix4fv(glGetUniformLocation(program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUseProgram(renderOption.program[i]);
+		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	}
 
 	// draw objects
-	glUseProgram(program[0]);
-	glBindVertexArray(vao[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glUseProgram(renderOption.program[0]);
+	glBindVertexArray(renderOption.vao[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 	objectData->render(currentLevel, boundaryX, boundaryY);
 
-	glUseProgram(program[1]);
-	glBindVertexArray(vao[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glUseProgram(renderOption.program[1]);
+	glBindVertexArray(renderOption.vao[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
 }
 
 void cleanUp()
 {
-	glDeleteVertexArrays(2, vao);
-	glDeleteBuffers(2, vbo);
-	glDeleteBuffers(1, &ebo);
+	glDeleteVertexArrays(2, renderOption.vao);
+	glDeleteBuffers(2, renderOption.vbo);
+	glDeleteBuffers(1, &renderOption.ebo);
 
 	for (size_t i = 0; i < 2; ++i) {
 		GLuint shaders[2];
-		glGetAttachedShaders(program[i], 2, NULL, shaders);
+		glGetAttachedShaders(renderOption.program[i], 2, NULL, shaders);
 		for (size_t j = 0; j < 2; ++j) {
-			glDetachShader(program[i], shaders[j]);
+			glDetachShader(renderOption.program[i], shaders[j]);
 			glDeleteShader(shaders[j]);
 		}
-		glDeleteProgram(program[i]);
+		glDeleteProgram(renderOption.program[i]);
 	}
 
 	eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -468,14 +468,14 @@ bool readShapefile() {
 	delTotal[2] = (zMax - zMin) / 2.0f;
 
 	{
-	float yTop = (yMin + yMax) / 2 + delTotal[0];
-	float yBot = (yMin + yMax) / 2 - delTotal[0];
+		float yTop = (yMin + yMax) / 2 + delTotal[0];
+		float yBot = (yMin + yMax) / 2 - delTotal[0];
 
-	boundaryX[0] = xMin;
-	boundaryX[1] = xMax;
+		boundaryX[0] = xMin;
+		boundaryX[1] = xMax;
 
-	boundaryY[0] = yBot;
-	boundaryY[1] = yTop;
+		boundaryY[0] = yBot;
+		boundaryY[1] = yTop;
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
 		float max[2] = { shpHeaderData.Xmax , yTop };
@@ -593,30 +593,30 @@ bool openShapefile() {
 	
 
 	for (int i = 0; i < 2; ++i) {
-		glUseProgram(program[i]);
-		glUniform1f(glGetUniformLocation(program[i], "aspect_ratio"), delTotal[0] / delTotal[1]);
-		glUniform3fv(glGetUniformLocation(program[i], "minimum"), 1, minTotal);
-		glUniform3fv(glGetUniformLocation(program[i], "delta"), 1, delTotal);
+		glUseProgram(renderOption.program[i]);
+		glUniform1f(glGetUniformLocation(renderOption.program[i], "aspect_ratio"), delTotal[0] / delTotal[1]);
+		glUniform3fv(glGetUniformLocation(renderOption.program[i], "minimum"), 1, minTotal);
+		glUniform3fv(glGetUniformLocation(renderOption.program[i], "delta"), 1, delTotal);
 	}
 
 
-	glGenVertexArrays(2, vao);
-	glGenBuffers(2, vbo);
-	glGenBuffers(1, &ebo);
+	glGenVertexArrays(2, renderOption.vao);
+	glGenBuffers(2, renderOption.vbo);
+	glGenBuffers(1, &renderOption.ebo);
 
-	glUseProgram(program[0]);
-	glBindVertexArray(vao[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+	glUseProgram(renderOption.program[0]);
+	glBindVertexArray(renderOption.vao[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderOption.ebo);
 
-	glUseProgram(program[1]);
-	glBindVertexArray(vao[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glUseProgram(renderOption.program[1]);
+	glBindVertexArray(renderOption.vao[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderOption.ebo);
 
 	isShapeLoaded = true;
 
