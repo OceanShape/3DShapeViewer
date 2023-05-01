@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <cstdlib>
 
 #include "shapedata.h"
 #include "object.h"
@@ -49,6 +50,9 @@ class QuadtreeNode {
 	friend class ObjectData;
 
 	static int nodeCount;
+
+	static float boundaryX[2];
+	static float boundaryY[2];
 
 	vector<shared_ptr<Object>> objects;
 
@@ -115,29 +119,29 @@ private:
 		}
 	}
 
-	void render(int level, int selectLevel, float boundaryX[], float boundaryY[]) {
+	void render(int level, int selectLevel) {
 		if (level > selectLevel) {
 			return;
 		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->render(level + 1, selectLevel, boundaryX, boundaryY);
+				n->render(level + 1, selectLevel);
 			}
 		}
 
-		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
-		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_LOOP, 0, 4);
+		// check boundaries(border)
+		if ((Xmax < boundaryX[0] || Xmin > boundaryX[1] ||
+			Ymax < boundaryY[0] || Ymin > boundaryY[1]) == false) {
+			float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+			glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
+			glDrawArrays(GL_LINE_LOOP, 0, 4);
+		}
 
 		for (auto obj : objects) {
-			// check x boundary
-			if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1]) {
-				continue;
-			}
-
-			// check y boundary
-			if (obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
+			// check boundaries(obj)
+			if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1] ||
+				obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
 				continue;
 			}
 
@@ -147,6 +151,8 @@ private:
 } typedef qtNode;
 
 int qtNode::nodeCount = 0;
+float qtNode::boundaryX[2] = { 0.0f, 0.0f };
+float qtNode::boundaryY[2] = { 0.0f, 0.0f };
 
 class ObjectData {
 	
@@ -164,6 +170,8 @@ public:
 	}
 
 	void render(int selectLevel, float boundaryX[], float boundaryY[]) {
-		root->render(0, selectLevel, boundaryX, boundaryY);
+		std::copy(boundaryX, boundaryX + 2, qtNode::boundaryX);
+		std::copy(boundaryY, boundaryY + 2, qtNode::boundaryY);
+		root->render(0, selectLevel);
 	}
 };

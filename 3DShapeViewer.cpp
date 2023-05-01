@@ -28,7 +28,7 @@ TCHAR szFileName[MAX_PATH];
 GLuint vao[2];
 GLuint vbo[2];
 GLuint ebo;
-GLuint programs[2];
+GLuint program[2];
 bool drawGrid = false;
 
 FILE* SHPFile;
@@ -131,11 +131,11 @@ bool initialize()
 			return false;
 		}
 
-		programs[i] = glCreateProgram();
-		glAttachShader(programs[i], vertexShader);
-		glAttachShader(programs[i], fragmentShader);
-		glLinkProgram(programs[i]);
-		glUseProgram(programs[i]);
+		program[i] = glCreateProgram();
+		glAttachShader(program[i], vertexShader);
+		glAttachShader(program[i], fragmentShader);
+		glLinkProgram(program[i]);
+		glUseProgram(program[i]);
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -171,21 +171,20 @@ void render()
 	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
 
 	for (int i = 0; i < 2; ++i) {
-		glUseProgram(programs[i]);
-		glUniformMatrix4fv(glGetUniformLocation(programs[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(programs[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(programs[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUseProgram(program[i]);
+		glUniformMatrix4fv(glGetUniformLocation(program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	}
 
 	// draw objects
-	glUseProgram(programs[0]);
+	glUseProgram(program[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 
-	cout << currentLevel << endl;
 	objectData->render(currentLevel, boundaryX, boundaryY);
 
-	glUseProgram(programs[1]);
+	glUseProgram(program[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 }
@@ -198,12 +197,12 @@ void cleanUp()
 
 	for (size_t i = 0; i < 2; ++i) {
 		GLuint shaders[2];
-		glGetAttachedShaders(programs[i], 2, NULL, shaders);
+		glGetAttachedShaders(program[i], 2, NULL, shaders);
 		for (size_t j = 0; j < 2; ++j) {
-			glDetachShader(programs[i], shaders[j]);
+			glDetachShader(program[i], shaders[j]);
 			glDeleteShader(shaders[j]);
 		}
-		glDeleteProgram(programs[i]);
+		glDeleteProgram(program[i]);
 	}
 
 	eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -590,10 +589,10 @@ bool openShapefile() {
 	
 
 	for (int i = 0; i < 2; ++i) {
-		glUseProgram(programs[i]);
-		glUniform1f(glGetUniformLocation(programs[i], "aspect_ratio"), delTotal[0] / delTotal[1]);
-		glUniform3fv(glGetUniformLocation(programs[i], "minimum"), 1, minTotal);
-		glUniform3fv(glGetUniformLocation(programs[i], "delta"), 1, delTotal);
+		glUseProgram(program[i]);
+		glUniform1f(glGetUniformLocation(program[i], "aspect_ratio"), delTotal[0] / delTotal[1]);
+		glUniform3fv(glGetUniformLocation(program[i], "minimum"), 1, minTotal);
+		glUniform3fv(glGetUniformLocation(program[i], "delta"), 1, delTotal);
 	}
 
 
@@ -601,14 +600,14 @@ bool openShapefile() {
 	glGenBuffers(2, vbo);
 	glGenBuffers(1, &ebo);
 
-	glUseProgram(programs[0]);
+	glUseProgram(program[0]);
 	glBindVertexArray(vao[0]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
-	glUseProgram(programs[1]);
+	glUseProgram(program[1]);
 	glBindVertexArray(vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
