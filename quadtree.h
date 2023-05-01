@@ -122,7 +122,7 @@ private:
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				render(level + 1, selectLevel, boundaryX, boundaryY);
+				n->render(level + 1, selectLevel, boundaryX, boundaryY);
 			}
 		}
 
