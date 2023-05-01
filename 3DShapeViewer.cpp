@@ -177,16 +177,7 @@ void render()
 		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	}
 
-	// draw objects
-	glUseProgram(renderOption.program[0]);
-	glBindVertexArray(renderOption.vao[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
-
 	objectData->render(currentLevel, boundaryX, boundaryY);
-
-	glUseProgram(renderOption.program[1]);
-	glBindVertexArray(renderOption.vao[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
 }
 
 void cleanUp()
@@ -617,6 +608,8 @@ bool openShapefile() {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderOption.ebo);
+
+	objectData->setRenderOpiton(renderOption);
 
 	isShapeLoaded = true;
 

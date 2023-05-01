@@ -6,6 +6,7 @@
 
 #include "shapedata.h"
 #include "object.h"
+#include "renderoption.h"
 
 using namespace std;
 
@@ -53,6 +54,8 @@ class QuadtreeNode {
 
 	static float boundaryX[2];
 	static float boundaryY[2];
+
+	static RenderOption renderOption;
 
 	vector<shared_ptr<Object>> objects;
 
@@ -130,16 +133,20 @@ private:
 			}
 		}
 
-		// check boundaries(border)
 		if ((Xmax < boundaryX[0] || Xmin > boundaryX[1] ||
 			Ymax < boundaryY[0] || Ymin > boundaryY[1]) == false) {
-			float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
-			glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
-			glDrawArrays(GL_LINE_LOOP, 0, 4);
+			drawBorder();
 		}
 
+		drawObject();
+	}
+
+	void drawObject() {
+		glUseProgram(renderOption.program[0]);
+		glBindVertexArray(renderOption.vao[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
+
 		for (auto obj : objects) {
-			// check boundaries(obj)
 			if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1] ||
 				obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
 				continue;
@@ -148,11 +155,22 @@ private:
 			obj->render();
 		}
 	}
+
+	void drawBorder() {
+		glUseProgram(renderOption.program[1]);
+		glBindVertexArray(renderOption.vao[1]);
+		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
+
+		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
+		glDrawArrays(GL_LINE_LOOP, 0, 4);
+	}
 } typedef qtNode;
 
 int qtNode::nodeCount = 0;
 float qtNode::boundaryX[2] = { 0.0f, 0.0f };
 float qtNode::boundaryY[2] = { 0.0f, 0.0f };
+RenderOption qtNode::renderOption = { 0, };
 
 class ObjectData {
 	
@@ -163,6 +181,10 @@ public:
 	ObjectData(float min[], float max[]) {
 		root = make_shared<qtNode>(min[0], max[0], min[1], max[1]);
 		ms = make_shared<MeshCollectionMemory>();
+	}
+
+	void setRenderOpiton(const RenderOption& renderOption) {
+		std::copy(&renderOption, &renderOption + 1, &qtNode::renderOption);
 	}
 
 	void store(const shared_ptr<Object> obj, int& maxLevel) {
