@@ -160,8 +160,8 @@ class ObjectData {
 	shared_ptr<MeshCollectionMemory> ms;
 
 public:
-	ObjectData(float Xmin, float Xmax, float Ymin, float Ymax) {
-		root = make_shared<qtNode>(Xmin, Xmax, Ymin, Ymax);
+	ObjectData(float min[], float max[]) {
+		root = make_shared<qtNode>(min[0], max[0], min[1], max[1]);
 		ms = make_shared<MeshCollectionMemory>();
 	}
 

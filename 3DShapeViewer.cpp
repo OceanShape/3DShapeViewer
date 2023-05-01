@@ -461,10 +461,13 @@ bool readShapefile() {
 	maxTotal[1] = yMax;
 	maxTotal[2] = zMax;
 
+	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
+
 	delTotal[0] = (xMax - xMin) / 2.0f;
 	delTotal[1] = (yMax - yMin) / 2.0f;
 	delTotal[2] = (zMax - zMin) / 2.0f;
 
+	{
 	float yTop = (yMin + yMax) / 2 + delTotal[0];
 	float yBot = (yMin + yMax) / 2 - delTotal[0];
 
@@ -474,9 +477,10 @@ bool readShapefile() {
 	boundaryY[0] = yBot;
 	boundaryY[1] = yTop;
 
-	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
-
-	objectData = make_shared<ObjectData>(shpHeaderData.Xmin, shpHeaderData.Xmax, yBot, yTop);
+		float min[2] = { shpHeaderData.Xmin, yBot };
+		float max[2] = { shpHeaderData.Xmax , yTop };
+		objectData = make_shared<ObjectData>(min, max);
+	}
 
 	SHPPoint* points;
 	double* Zpoints;
