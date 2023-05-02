@@ -142,6 +142,7 @@
     <ClInclude Include="shapefile.h" />
     <ClInclude Include="ShpLibraryTest\shapefil.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="triangulation.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="3DShapeViewer.cpp" />
