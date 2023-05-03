@@ -181,3 +181,26 @@ Expected Output:
 (0, 0) (1, 0) (1, 1)
 (0, 0) (0, 1) (1, 1)
 */
+
+//function BowyerWatson(pointList)
+//    // pointList는 삼각화될 점을 정의하는 좌표 집합입니다.
+//    triangulation : = 빈 삼각형 메쉬 데이터 구조
+//    super - triangle을 triangulation에 추가합니다. // 모든 점을 완전히 포함할 수 있도록 충분히 큰 삼각형이어야 합니다.
+//    pointList의 각 점에 대해 // 모든 점을 하나씩 삼각화에 추가합니다.
+//        badTriangles : = 빈 집합
+//        triangulation의 각 삼각형에 대해 // 삽입으로 인해 더 이상 유효하지 않은 모든 삼각형을 찾습니다.
+//            if point가 삼각형의 원 내부에 있다면
+//                badTriangles에 삼각형을 추가합니다.
+//        polygon : = 빈 집합
+//        badTriangles의 각 삼각형에 대해 // 다각형 구멍의 경계를 찾습니다.
+//            삼각형의 각 변에 대해
+//                if 다른 badTriangles에 의해 공유되지 않는다면
+//                    polygon에 edge를 추가합니다.
+//        badTriangles의 각 삼각형을 제거합니다. // 데이터 구조에서 제거합니다.
+//        polygon의 각 edge에 대해 // 다각형 구멍을 다시 삼각화합니다.
+//            edge와 point로부터 삼각형을 생성합니다.
+//            newTri를 triangulation에 추가합니다.
+//    triangulation의 각 삼각형에 대해 // 점 삽입이 완료되었습니다. 이제 정리합니다.
+//        원래 super - triangle의 정점을 포함하는 경우
+//            triangulation에서 삼각형을 제거합니다.
+//    triangulation을 반환합니다.
