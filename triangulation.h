@@ -94,11 +94,19 @@ void AddPoint(std::vector<Triangle>& triangulation, Point point)
         if (InCircle(point, t))
         {
             bad_triangles.push_back(t);
-            polygon.push_back(std::make_pair(t.a, t.b));
-            polygon.push_back(std::make_pair(t.b, t.c));
-            polygon.push_back(std::make_pair(t.c, t.a));
         }
     }
+
+    for (const Triangle& t : bad_triangles)
+    {
+        auto index = std::find(polygon.begin(), polygon.end(), std::make_pair(t.a, t.b));
+        if (index != polygon.end()) {
+
+        }
+    }
+    polygon.push_back(std::make_pair(t.a, t.b));
+    polygon.push_back(std::make_pair(t.b, t.c));
+    polygon.push_back(std::make_pair(t.c, t.a));
 
     triangulation.erase(std::remove_if(triangulation.begin(), triangulation.end(),
         [&](Triangle t) { return std::find(bad_triangles.begin(), bad_triangles.end(), t) != bad_triangles.end(); }),
