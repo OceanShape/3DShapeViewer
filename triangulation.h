@@ -28,7 +28,16 @@ struct Triangle
     void printStatus() {
         printf("(%f, %f)(%f, %f)(%f, %f)\n", a.x, a.y, b.x, b.y, c.x, c.y);
     }
+    bool hasPoint(const Point& p) {
+        return points[0] == p || points[1] == p || points[2] == p;
+    }
 };
+
+typedef std::pair<Point, Point> PairPoint;
+template <>
+bool std::operator==(const PairPoint& lhs, const PairPoint& rhs) {
+    return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.first == rhs.second && lhs.second == rhs.first);
+}
 
 // 중복된 점이 없다고 가정
 bool CircumCircle(Point p1, Point p2, Point p3, Point& center, double& radius)
@@ -89,32 +98,46 @@ void AddPoint(std::vector<Triangle>& triangulation, Point point)
 {
     std::vector<Triangle> bad_triangles;
     std::vector<std::pair<Point, Point>> polygon;
+
+    // triangulation의 각 삼각형에 대해 삽입으로 인해 더 이상 유효하지 않은 모든 삼각형을 찾아냄
     for (const Triangle& t : triangulation)
     {
+        // point가 삼각형의 원 내부에 있다면 badTriangles에 삼각형을 추가
         if (InCircle(point, t))
         {
             bad_triangles.push_back(t);
         }
     }
 
-    for (const Triangle& t : bad_triangles)
-    {
-        auto index = std::find(polygon.begin(), polygon.end(), std::make_pair(t.a, t.b));
-        if (index != polygon.end()) {
-
+    //        badTriangles의 각 삼각형에 대해 다각형 구멍의 경계를 찾습니다.
+    //            삼각형의 각 변에 대해
+    //                다른 badTriangles에 의해 공유되지 않는다면 polygon에 edge를 추가
+    for (const Triangle& t : bad_triangles) {
+        Point tmp[3] = { t.a, t.b, t.c };
+        for (int i = 0; i < 3; ++i) {
+            auto edge = std::make_pair(tmp[i], tmp[(i + 1) % 3]);
+            auto iter = std::find(polygon.begin(), polygon.end(), edge);
+            if (iter != polygon.end()) {
+                polygon.erase(iter);
+            }
+            else {
+                polygon.push_back(edge);
+            }
         }
     }
-    polygon.push_back(std::make_pair(t.a, t.b));
-    polygon.push_back(std::make_pair(t.b, t.c));
-    polygon.push_back(std::make_pair(t.c, t.a));
 
+
+    // badTriangles의 각 삼각형을 데이터 구조에서 제거
     triangulation.erase(std::remove_if(triangulation.begin(), triangulation.end(),
         [&](Triangle t) { return std::find(bad_triangles.begin(), bad_triangles.end(), t) != bad_triangles.end(); }),
         triangulation.end());
 
+    // polygon의 각 edge에 대해 다각형 구멍을 다시 삼각화
     for (const std::pair<Point, Point>& edge : polygon)
     {
+        // edge와 point로부터 삼각형을 생성
         Triangle new_triangle(point, edge.first, edge.second);
+        // newTri를 triangulation에 추가
         triangulation.push_back(new_triangle);
     }
 }
@@ -122,6 +145,9 @@ void AddPoint(std::vector<Triangle>& triangulation, Point point)
 std::vector<Triangle> Triangulate(std::vector<Point> points)
 {
     std::vector<Triangle> triangulation;
+
+    // super - triangle을 triangulation에 추가
+    // 모든 점을 완전히 포함할 수 있도록 충분히 큰 삼각형
     double xmin = points[0].x;
     double ymin = points[0].y;
     double xmax = xmin;
@@ -147,48 +173,39 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
     Triangle bounding_triangle(p1, p2, p3);
     triangulation.push_back(bounding_triangle);
 
+    // 모든 점을 하나씩 삼각화에 추가
     for (const Point& p : points)
     {
         AddPoint(triangulation, p);
-        std::cout << "-----" << std::endl;
     }
 
+    // 원래 super - triangle의 정점을 포함하는 경우 해당 삼각형을 triangulation에서 제거
     triangulation.erase(
         std::remove_if(
             triangulation.begin(), triangulation.end(),
             [&](Triangle t) {
-                return std::find_if(std::begin(t.points), std::end(t.points), [&](Point p) { return std::abs(p.x - xmid) > 1.5 * dmax || std::abs(p.y - ymid) > 1.5 * dmax; }) != std::end(t.points);
+                return std::find_if(std::begin(t.points), std::end(t.points), [&](const Point& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
             }
-        ),
-        triangulation.end()
-                );
+    ), triangulation.end());
 
+
+    // triangulation을 반환
     return triangulation;
 }
 
-/*
-int main()
-{
-    std::vector<Point> points = { {0,0}, {0,1}, {1,0}, {1,1} };
-    std::vector<Triangle> triangulation = Triangulate(points);
-    for (const Triangle& t : triangulation)
-    {
-        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
-        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
-        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
-    }
-
-    return 0;
-}
-*/
-
-/*
-Expected Output:
-(0, 0) (0, 1) (1, 0)
-(0, 1) (1, 0) (1, 1)
-(0, 0) (1, 0) (1, 1)
-(0, 0) (0, 1) (1, 1)
-*/
+//int main()
+//{
+//    std::vector<Point> points = { {-1,0}, {2,0}, {0,2}, {3,2} };
+//    std::vector<Triangle> triangulation = Triangulate(points);
+//    for (const Triangle& t : triangulation)
+//    {
+//        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
+//        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
+//        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
+//    }
+//
+//    return 0;
+//}
 
 //function BowyerWatson(pointList)
 //    // pointList는 삼각화될 점을 정의하는 좌표 집합입니다.
