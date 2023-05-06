@@ -3,15 +3,10 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <glm/glm.hpp>
 
-struct Point
-{
-    double x, y;
-    Point(double x = 0.0f, double y = 0.0f) : x(x), y(y) {}
-    bool operator==(const Point& p) const {
-        return (this->x == p.x && this->y == p.y);
-    }
-};
+typedef glm::vec3 Point;
+typedef std::pair<Point, Point> PairPoint;
 
 struct Triangle
 {
@@ -33,7 +28,6 @@ struct Triangle
     }
 };
 
-typedef std::pair<Point, Point> PairPoint;
 template <>
 bool std::operator==(const PairPoint& lhs, const PairPoint& rhs) {
     return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.first == rhs.second && lhs.second == rhs.first);
@@ -78,7 +72,7 @@ bool CircumCircle(Point p1, Point p2, Point p3, Point& center, double& radius)
     double dx = p2.x - xc;
     double dy = p2.y - yc;
     radius = std::sqrt(dx * dx + dy * dy);
-    center = Point(xc, yc);
+    center = Point(xc, yc, .0f);
     return true;
 }
 
@@ -166,9 +160,9 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
     double xmid = xmin + dx / 2.0;
     double ymid = ymin + dy / 2.0;
 
-    Point p1(xmid - 20 * dmax, ymid - dmax);
-    Point p2(xmid, ymid + 20 * dmax);
-    Point p3(xmid + 20 * dmax, ymid - dmax);
+    Point p1(xmid - 20 * dmax, ymid - dmax, .0f);
+    Point p2(xmid, ymid + 20 * dmax, .0f);
+    Point p3(xmid + 20 * dmax, ymid - dmax, .0f);
 
     Triangle bounding_triangle(p1, p2, p3);
     triangulation.push_back(bounding_triangle);
@@ -193,19 +187,19 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
     return triangulation;
 }
 
-//int main()
-//{
-//    std::vector<Point> points = { {-1,0}, {2,0}, {0,2}, {3,2} };
-//    std::vector<Triangle> triangulation = Triangulate(points);
-//    for (const Triangle& t : triangulation)
-//    {
-//        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
-//        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
-//        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
-//    }
-//
-//    return 0;
-//}
+int main()
+{
+    std::vector<Point> points = { {-1,0, .0f}, {1,0, .0f}, {2,2, .0f}, {-2,2, .0f}, {0, 3, .0f}, {0, 2, .0f} };
+    std::vector<Triangle> triangulation = Triangulate(points);
+    for (const Triangle& t : triangulation)
+    {
+        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
+        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
+        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
+    }
+
+    return 0;
+}
 
 //function BowyerWatson(pointList)
 //    // pointList는 삼각화될 점을 정의하는 좌표 집합입니다.
@@ -240,3 +234,7 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
 // 알고 있는 것: 지나는 점(A-B 중심)/수직인 직선/지나는 평면
 // 1. 중심점을 지나면서, A-B에 수직인 평면의 방정식을 구함
 // 2. 두 평면이 겹치는 직선의 방정식을 구함
+
+//1. A-B의 중점 q구함
+//2. 점q를 지나고 벡터 A->B를 법선벡터로 가지는 평면 L 구함
+//3. 평면 L과 M의 교선(직선)의 방정식 구함
