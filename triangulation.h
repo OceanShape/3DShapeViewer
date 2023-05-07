@@ -187,19 +187,19 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
     return triangulation;
 }
 
-int main()
-{
-    std::vector<Point> points = { {-1,0, .0f}, {1,0, .0f}, {2,2, .0f}, {-2,2, .0f}, {0, 3, .0f}, {0, 2, .0f} };
-    std::vector<Triangle> triangulation = Triangulate(points);
-    for (const Triangle& t : triangulation)
-    {
-        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
-        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
-        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
-    }
-
-    return 0;
-}
+//int main()
+//{
+//    std::vector<Point> points = { {-1,0, .0f}, {1,0, .0f}, {2,2, .0f}, {-2,2, .0f}, {0, 3, .0f}, {0, 2, .0f} };
+//    std::vector<Triangle> triangulation = Triangulate(points);
+//    for (const Triangle& t : triangulation)
+//    {
+//        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
+//        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
+//        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
+//    }
+//
+//    return 0;
+//}
 
 //function BowyerWatson(pointList)
 //    // pointList는 삼각화될 점을 정의하는 좌표 집합입니다.
