@@ -438,6 +438,8 @@ bool readShapefile() {
 		return false;
 	}
 
+	Object::type = shpHeaderData.SHPType;
+
 	float xMin = shpHeaderData.Xmin;
 	float yMin = shpHeaderData.Ymin;
 	float xMax = shpHeaderData.Xmax;

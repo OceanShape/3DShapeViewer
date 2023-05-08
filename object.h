@@ -17,6 +17,8 @@ struct SHPPoint {
 	double y;
 };
 
+int Object::type = 0;
+
 class Object {
 public:
 	Vertex* vertices = nullptr;
@@ -25,6 +27,8 @@ public:
 	int32_t* partStartIndex = nullptr;
 	int vertexCount = 0;
 	int partCount = 0;
+
+	static int type;
 
 public:
 	float min[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
@@ -73,8 +77,19 @@ public:
 
 	// Set index with triangulation
 	void setIndex() {
-		for (size_t i = 0; i < vertexCount; ++i) {
-			indices[i] = i;
+		if (type == 5) {
+			// loop를 고려해서, 맨 마지막 점은 빼고 넣을 것
+			//for (size_t i = 0; i < partVertexCounts[0]; ++i) {
+
+			//}
+			for (size_t i = 0; i < vertexCount; ++i) {
+				indices[i] = i;
+			}
+		}
+		else {
+			for (size_t i = 0; i < vertexCount; ++i) {
+				indices[i] = i;
+			}
 		}
 	}
 
