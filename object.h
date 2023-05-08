@@ -5,6 +5,7 @@
 #include <GLES3/gl3.h>
 
 #include "quadtree.h"
+#include "triangulation.h"
 
 typedef glm::vec3 Vertex;
 
@@ -17,6 +18,7 @@ class Object {
 public:
 	Vertex* vertices = nullptr;
 	GLuint* indices = nullptr;
+	int indexCount = 0;
 	int32_t* partVertexCounts = nullptr;
 	int32_t* partStartIndex = nullptr;
 	int vertexCount = 0;
@@ -71,13 +73,23 @@ public:
 
 	// Set index with triangulation
 	void setIndex() {
-		if (type == 5) {
+		if (type == 5 && partCount == 1) {
 			// loop를 고려해서, 맨 마지막 점은 빼고 넣을 것
 			//for (size_t i = 0; i < partVertexCounts[0]; ++i) {
 
 			//}
-			for (size_t i = 0; i < vertexCount; ++i) {
-				indices[i] = i;
+
+			std::vector<Triangle> triangulation;
+			Triangulate(triangulation, vertices, partVertexCounts[0] - 1);
+
+			delete[] indices;
+			indexCount = triangulation.size() * 3;
+			int* indices = new int[triangulation.size() * 3];
+
+			for (int i = 0; i < triangulation.size(); i++) {
+				indices[i * 3] = triangulation[i].a.index;
+				indices[i * 3 + 1] = triangulation[i].b.index;
+				indices[i * 3 + 2] = triangulation[i].c.index;
 			}
 		}
 		else {
@@ -88,16 +100,27 @@ public:
 	}
 
 	void render() {
-		glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-		for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
-			glDrawElements(GL_LINE_LOOP, partVertexCounts[currentPart], GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
-			pos += partVertexCounts[currentPart];
+		if (type == 5 && partCount == 1) {
+			if (vertexCount == 5) {
+				int a = 01;
+			}
+			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
+			glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 		}
-		//for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
-		//	glDrawArrays(GL_LINE_STRIP, pos, partVertexCounts[currentPart]);
-		//	pos += partVertexCounts[currentPart];
-		//}
+		else {
+			//glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+			//glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
+			//for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
+			//	glDrawElements(GL_LINE_LOOP, partVertexCounts[currentPart], GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+			//	pos += partVertexCounts[currentPart];
+			//}
+
+			//for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
+			//	glDrawArrays(GL_LINE_STRIP, pos, partVertexCounts[currentPart]);
+			//	pos += partVertexCounts[currentPart];
+			//}
+		}
 	}
 
 	~Object() {
