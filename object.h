@@ -6,18 +6,12 @@
 
 #include "quadtree.h"
 
-struct Vertex {
-	float x;
-	float y;
-	float z;
-};
+typedef glm::vec3 Vertex;
 
 struct SHPPoint {
 	double x;
 	double y;
 };
-
-int Object::type = 0;
 
 class Object {
 public:
@@ -113,3 +107,5 @@ public:
 		delete[] partStartIndex;
 	}
 };
+
+int Object::type = 0;
