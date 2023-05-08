@@ -5,14 +5,14 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 
-typedef glm::vec3 Point;
-typedef std::pair<Point, Point> PairPoint;
+typedef glm::vec3 Vertex;
+typedef std::pair<Vertex, Vertex> PairPoint;
 
 struct Triangle
 {
-    Point a, b, c;
-    Point points[3];
-    Triangle(Point a, Point b, Point c) : a(a), b(b), c(c) {
+    Vertex a, b, c;
+    Vertex points[3];
+    Triangle(Vertex a, Vertex b, Vertex c) : a(a), b(b), c(c) {
         points[0] = a;
         points[1] = b;
         points[2] = c;
@@ -23,7 +23,7 @@ struct Triangle
     void printStatus() {
         printf("(%f, %f)(%f, %f)(%f, %f)\n", a.x, a.y, b.x, b.y, c.x, c.y);
     }
-    bool hasPoint(const Point& p) {
+    bool hasPoint(const Vertex& p) {
         return points[0] == p || points[1] == p || points[2] == p;
     }
 };
@@ -34,7 +34,7 @@ bool std::operator==(const PairPoint& lhs, const PairPoint& rhs) {
 }
 
 // 중복된 점이 없다고 가정
-bool CircumCircle(Point p1, Point p2, Point p3, Point& center, double& radius)
+bool CircumCircle(Vertex p1, Vertex p2, Vertex p3, Vertex& center, double& radius)
 {
     double fabsy1y2 = std::abs(p1.y - p2.y);
     double fabsy2y3 = std::abs(p2.y - p3.y);
@@ -72,13 +72,13 @@ bool CircumCircle(Point p1, Point p2, Point p3, Point& center, double& radius)
     double dx = p2.x - xc;
     double dy = p2.y - yc;
     radius = std::sqrt(dx * dx + dy * dy);
-    center = Point(xc, yc, .0f);
+    center = Vertex(xc, yc, .0f);
     return true;
 }
 
-bool InCircle(Point p, Triangle t)
+bool InCircle(Vertex p, Triangle t)
 {
-    Point center;
+    Vertex center;
     double radius;
     if (!CircumCircle(t.a, t.b, t.c, center, radius))
         return false;
@@ -88,10 +88,10 @@ bool InCircle(Point p, Triangle t)
     return (dist_squared <= radius * radius);
 }
 
-void AddPoint(std::vector<Triangle>& triangulation, Point point)
+void AddPoint(std::vector<Triangle>& triangulation, Vertex point)
 {
     std::vector<Triangle> bad_triangles;
-    std::vector<std::pair<Point, Point>> polygon;
+    std::vector<std::pair<Vertex, Vertex>> polygon;
 
     // triangulation의 각 삼각형에 대해 삽입으로 인해 더 이상 유효하지 않은 모든 삼각형을 찾아냄
     for (const Triangle& t : triangulation)
@@ -107,7 +107,7 @@ void AddPoint(std::vector<Triangle>& triangulation, Point point)
     //            삼각형의 각 변에 대해
     //                다른 badTriangles에 의해 공유되지 않는다면 polygon에 edge를 추가
     for (const Triangle& t : bad_triangles) {
-        Point tmp[3] = { t.a, t.b, t.c };
+        Vertex tmp[3] = { t.a, t.b, t.c };
         for (int i = 0; i < 3; ++i) {
             auto edge = std::make_pair(tmp[i], tmp[(i + 1) % 3]);
             auto iter = std::find(polygon.begin(), polygon.end(), edge);
@@ -127,7 +127,7 @@ void AddPoint(std::vector<Triangle>& triangulation, Point point)
         triangulation.end());
 
     // polygon의 각 edge에 대해 다각형 구멍을 다시 삼각화
-    for (const std::pair<Point, Point>& edge : polygon)
+    for (const std::pair<Vertex, Vertex>& edge : polygon)
     {
         // edge와 point로부터 삼각형을 생성
         Triangle new_triangle(point, edge.first, edge.second);
@@ -136,7 +136,8 @@ void AddPoint(std::vector<Triangle>& triangulation, Point point)
     }
 }
 
-std::vector<Triangle> Triangulate(std::vector<Point> points)
+// 중복된 점은 없다고 가정
+std::vector<Triangle> Triangulate(const Vertex points[], size_t pointCount)
 {
     std::vector<Triangle> triangulation;
 
@@ -146,12 +147,11 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
     double ymin = points[0].y;
     double xmax = xmin;
     double ymax = ymin;
-    for (auto p : points)
-    {
-        if (p.x < xmin) xmin = p.x;
-        if (p.y < ymin) ymin = p.y;
-        if (p.x > xmax) xmax = p.x;
-        if (p.y > ymax) ymax = p.y;
+    for (size_t i = 0; i < pointCount; ++i) {
+        if (points[i].x < xmin) xmin = points[i].x;
+        if (points[i].y < ymin) ymin = points[i].y;
+        if (points[i].x > xmax) xmax = points[i].x;
+        if (points[i].y > ymax) ymax = points[i].y;
     }
 
     double dx = xmax - xmin;
@@ -160,17 +160,16 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
     double xmid = xmin + dx / 2.0;
     double ymid = ymin + dy / 2.0;
 
-    Point p1(xmid - 20 * dmax, ymid - dmax, .0f);
-    Point p2(xmid, ymid + 20 * dmax, .0f);
-    Point p3(xmid + 20 * dmax, ymid - dmax, .0f);
+    Vertex p1(xmid - 20 * dmax, ymid - dmax, .0f);
+    Vertex p2(xmid, ymid + 20 * dmax, .0f);
+    Vertex p3(xmid + 20 * dmax, ymid - dmax, .0f);
 
     Triangle bounding_triangle(p1, p2, p3);
     triangulation.push_back(bounding_triangle);
 
     // 모든 점을 하나씩 삼각화에 추가
-    for (const Point& p : points)
-    {
-        AddPoint(triangulation, p);
+    for (size_t i = 0; i < pointCount; ++i) {
+        AddPoint(triangulation, points[i]);
     }
 
     // 원래 super - triangle의 정점을 포함하는 경우 해당 삼각형을 triangulation에서 제거
@@ -178,7 +177,7 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
         std::remove_if(
             triangulation.begin(), triangulation.end(),
             [&](Triangle t) {
-                return std::find_if(std::begin(t.points), std::end(t.points), [&](const Point& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
+                return std::find_if(std::begin(t.points), std::end(t.points), [&](const Vertex& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
             }
     ), triangulation.end());
 
@@ -189,8 +188,8 @@ std::vector<Triangle> Triangulate(std::vector<Point> points)
 
 //int main()
 //{
-//    std::vector<Point> points = { {-1,0, .0f}, {1,0, .0f}, {2,2, .0f}, {-2,2, .0f}, {0, 3, .0f}, {0, 2, .0f} };
-//    std::vector<Triangle> triangulation = Triangulate(points);
+//    std::vector<Vertex> points = { {-1,0, .0f}, {1,0, .0f}, {2,2, .0f}, {-2,2, .0f}, {0, 3, .0f}, {0, 2, .0f} };
+//    std::vector<Triangle> triangulation = Triangulate(points.data(), points.size());
 //    for (const Triangle& t : triangulation)
 //    {
 //        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
