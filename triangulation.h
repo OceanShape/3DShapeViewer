@@ -6,92 +6,107 @@
 #include <glm/glm.hpp>
 
 typedef glm::vec3 Vertex;
-typedef std::pair<Vertex, Vertex> PairPoint;
+
+struct IndexVertex {
+    glm::vec3 vertex = glm::vec3(.0f);
+    int index = 0;
+
+    IndexVertex() {}
+    IndexVertex(glm::vec3 _vertex, int _index) : vertex(_vertex), index(_index) {}
+    //IndexVertex(const IndexVertex& _iv) : vertex(_iv.vertex), index(_iv.index) {}
+
+    bool operator==(const IndexVertex& iv) const {
+        return vertex[0] == iv.vertex[0] && vertex[1] == iv.vertex[1] && vertex[2] == iv.vertex[2];
+    }
+
+}typedef idxVertex;
 
 struct Triangle
 {
-    Vertex a, b, c;
-    Vertex points[3];
-    Triangle(Vertex a, Vertex b, Vertex c) : a(a), b(b), c(c) {
+    idxVertex a, b, c;
+    idxVertex points[3];
+    Triangle(idxVertex a, idxVertex b, idxVertex c) : a(a), b(b), c(c) {
         points[0] = a;
         points[1] = b;
         points[2] = c;
     }
+
     bool operator==(const Triangle& t) const {
-        return (this->a == t.a && this->b == t.b && this->c == t.c);
+        return (a == t.a && b == t.b && c == t.c);
     }
     void printStatus() {
-        printf("(%f, %f)(%f, %f)(%f, %f)\n", a.x, a.y, b.x, b.y, c.x, c.y);
+        printf("(%f, %f)(%f, %f)(%f, %f)\n", a.vertex.x, a.vertex.y, b.vertex.x, b.vertex.y, c.vertex.x, c.vertex.y);
     }
-    bool hasPoint(const Vertex& p) {
+    bool hasPoint(const idxVertex& p) {
         return points[0] == p || points[1] == p || points[2] == p;
     }
 };
 
+typedef std::pair<idxVertex, idxVertex> PairPoint;
 template <>
 bool std::operator==(const PairPoint& lhs, const PairPoint& rhs) {
     return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.first == rhs.second && lhs.second == rhs.first);
 }
 
 // 중복된 점이 없다고 가정
-bool CircumCircle(Vertex p1, Vertex p2, Vertex p3, Vertex& center, double& radius)
+bool CircumCircle(idxVertex p1, idxVertex p2, idxVertex p3, glm::vec3& center, double& radius)
 {
-    double fabsy1y2 = std::abs(p1.y - p2.y);
-    double fabsy2y3 = std::abs(p2.y - p3.y);
+    double fabsy1y2 = std::abs(p1.vertex.y - p2.vertex.y);
+    double fabsy2y3 = std::abs(p2.vertex.y - p3.vertex.y);
     double xc, yc;
     if (fabsy1y2 < 1e-10 && fabsy2y3 < 1e-10) {
         return false;
     }
     else if (fabsy1y2 < 1e-10)
     {
-        double m2 = -((p3.x - p2.x) / (p3.y - p2.y));
-        double mx2 = (p2.x + p3.x) / 2.0;
-        double my2 = (p2.y + p3.y) / 2.0;
-        xc = (p2.x + p1.x) / 2.0;
+        double m2 = -((p3.vertex.x - p2.vertex.x) / (p3.vertex.y - p2.vertex.y));
+        double mx2 = (p2.vertex.x + p3.vertex.x) / 2.0;
+        double my2 = (p2.vertex.y + p3.vertex.y) / 2.0;
+        xc = (p2.vertex.x + p1.vertex.x) / 2.0;
         yc = m2 * (xc - mx2) + my2;
     }
     else if (fabsy2y3 < 1e-10)
     {
-        double m1 = -((p2.x - p1.x) / (p2.y - p1.y));
-        double mx1 = (p1.x + p2.x) / 2.0;
-        double my1 = (p1.y + p2.y) / 2.0;
-        xc = (p3.x + p2.x) / 2.0;
+        double m1 = -((p2.vertex.x - p1.vertex.x) / (p2.vertex.y - p1.vertex.y));
+        double mx1 = (p1.vertex.x + p2.vertex.x) / 2.0;
+        double my1 = (p1.vertex.y + p2.vertex.y) / 2.0;
+        xc = (p3.vertex.x + p2.vertex.x) / 2.0;
         yc = m1 * (xc - mx1) + my1;
     }
     else
     {
-        double m1 = -((p2.x - p1.x) / (p2.y - p1.y));
-        double m2 = -((p3.x - p2.x) / (p3.y - p2.y));
-        double mx1 = (p1.x + p2.x) / 2.0;
-        double mx2 = (p2.x + p3.x) / 2.0;
-        double my1 = (p1.y + p2.y) / 2.0;
-        double my2 = (p2.y + p3.y) / 2.0;
+        double m1 = -((p2.vertex.x - p1.vertex.x) / (p2.vertex.y - p1.vertex.y));
+        double m2 = -((p3.vertex.x - p2.vertex.x) / (p3.vertex.y - p2.vertex.y));
+        double mx1 = (p1.vertex.x + p2.vertex.x) / 2.0;
+        double mx2 = (p2.vertex.x + p3.vertex.x) / 2.0;
+        double my1 = (p1.vertex.y + p2.vertex.y) / 2.0;
+        double my2 = (p2.vertex.y + p3.vertex.y) / 2.0;
         xc = (m1 * mx1 - m2 * mx2 + my2 - my1) / (m1 - m2);
         yc = m1 * (xc - mx1) + my1;
     }
-    double dx = p2.x - xc;
-    double dy = p2.y - yc;
+    double dx = p2.vertex.x - xc;
+    double dy = p2.vertex.y - yc;
     radius = std::sqrt(dx * dx + dy * dy);
-    center = Vertex(xc, yc, .0f);
+    center = glm::vec3(xc, yc, .0f);
     return true;
 }
 
-bool InCircle(Vertex p, Triangle t)
+bool InCircle(idxVertex p, Triangle t)
 {
-    Vertex center;
+    glm::vec3 center;
     double radius;
     if (!CircumCircle(t.a, t.b, t.c, center, radius))
         return false;
-    double dx = p.x - center.x;
-    double dy = p.y - center.y;
+    double dx = p.vertex.x - center.x;
+    double dy = p.vertex.y - center.y;
     double dist_squared = dx * dx + dy * dy;
     return (dist_squared <= radius * radius);
 }
 
-void AddPoint(std::vector<Triangle>& triangulation, Vertex point)
+void AddPoint(std::vector<Triangle>& triangulation, idxVertex point)
 {
     std::vector<Triangle> bad_triangles;
-    std::vector<std::pair<Vertex, Vertex>> polygon;
+    std::vector<std::pair<idxVertex, idxVertex>> polygon;
 
     // triangulation의 각 삼각형에 대해 삽입으로 인해 더 이상 유효하지 않은 모든 삼각형을 찾아냄
     for (const Triangle& t : triangulation)
@@ -107,7 +122,7 @@ void AddPoint(std::vector<Triangle>& triangulation, Vertex point)
     //            삼각형의 각 변에 대해
     //                다른 badTriangles에 의해 공유되지 않는다면 polygon에 edge를 추가
     for (const Triangle& t : bad_triangles) {
-        Vertex tmp[3] = { t.a, t.b, t.c };
+        idxVertex tmp[3] = { t.a, t.b, t.c };
         for (int i = 0; i < 3; ++i) {
             auto edge = std::make_pair(tmp[i], tmp[(i + 1) % 3]);
             auto iter = std::find(polygon.begin(), polygon.end(), edge);
@@ -120,14 +135,13 @@ void AddPoint(std::vector<Triangle>& triangulation, Vertex point)
         }
     }
 
-
     // badTriangles의 각 삼각형을 데이터 구조에서 제거
     triangulation.erase(std::remove_if(triangulation.begin(), triangulation.end(),
         [&](Triangle t) { return std::find(bad_triangles.begin(), bad_triangles.end(), t) != bad_triangles.end(); }),
         triangulation.end());
 
     // polygon의 각 edge에 대해 다각형 구멍을 다시 삼각화
-    for (const std::pair<Vertex, Vertex>& edge : polygon)
+    for (const std::pair<idxVertex, idxVertex>& edge : polygon)
     {
         // edge와 point로부터 삼각형을 생성
         Triangle new_triangle(point, edge.first, edge.second);
@@ -137,21 +151,19 @@ void AddPoint(std::vector<Triangle>& triangulation, Vertex point)
 }
 
 // 중복된 점은 없다고 가정
-std::vector<Triangle> Triangulate(const Vertex points[], size_t pointCount)
+std::vector<Triangle> Triangulate(std::vector<Triangle>& triangulation, Vertex vertices[], int pointCount)
 {
-    std::vector<Triangle> triangulation;
-
     // super - triangle을 triangulation에 추가
     // 모든 점을 완전히 포함할 수 있도록 충분히 큰 삼각형
-    double xmin = points[0].x;
-    double ymin = points[0].y;
+    double xmin = vertices[0].x;
+    double ymin = vertices[0].y;
     double xmax = xmin;
     double ymax = ymin;
-    for (size_t i = 0; i < pointCount; ++i) {
-        if (points[i].x < xmin) xmin = points[i].x;
-        if (points[i].y < ymin) ymin = points[i].y;
-        if (points[i].x > xmax) xmax = points[i].x;
-        if (points[i].y > ymax) ymax = points[i].y;
+    for (int i = 0; i < pointCount; ++i) {
+        if (vertices[i].x < xmin) xmin = vertices[i].x;
+        if (vertices[i].y < ymin) ymin = vertices[i].y;
+        if (vertices[i].x > xmax) xmax = vertices[i].x;
+        if (vertices[i].y > ymax) ymax = vertices[i].y;
     }
 
     double dx = xmax - xmin;
@@ -160,16 +172,16 @@ std::vector<Triangle> Triangulate(const Vertex points[], size_t pointCount)
     double xmid = xmin + dx / 2.0;
     double ymid = ymin + dy / 2.0;
 
-    Vertex p1(xmid - 20 * dmax, ymid - dmax, .0f);
-    Vertex p2(xmid, ymid + 20 * dmax, .0f);
-    Vertex p3(xmid + 20 * dmax, ymid - dmax, .0f);
+    idxVertex p1(glm::vec3(xmid - 20 * dmax, ymid - dmax, .0f), pointCount);
+    idxVertex p2(glm::vec3(xmid, ymid + 20 * dmax, .0f), pointCount + 1);
+    idxVertex p3(glm::vec3(xmid + 20 * dmax, ymid - dmax, .0f), pointCount + 2);
 
     Triangle bounding_triangle(p1, p2, p3);
     triangulation.push_back(bounding_triangle);
 
     // 모든 점을 하나씩 삼각화에 추가
-    for (size_t i = 0; i < pointCount; ++i) {
-        AddPoint(triangulation, points[i]);
+    for (int i = 0; i < pointCount; ++i) {
+        AddPoint(triangulation, idxVertex(vertices[i], i));
     }
 
     // 원래 super - triangle의 정점을 포함하는 경우 해당 삼각형을 triangulation에서 제거
@@ -177,28 +189,51 @@ std::vector<Triangle> Triangulate(const Vertex points[], size_t pointCount)
         std::remove_if(
             triangulation.begin(), triangulation.end(),
             [&](Triangle t) {
-                return std::find_if(std::begin(t.points), std::end(t.points), [&](const Vertex& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
+                return std::find_if(std::begin(t.points), std::end(t.points), [&](const idxVertex& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
             }
     ), triangulation.end());
-
 
     // triangulation을 반환
     return triangulation;
 }
 
-//int main()
-//{
-//    std::vector<Vertex> points = { {-1,0, .0f}, {1,0, .0f}, {2,2, .0f}, {-2,2, .0f}, {0, 3, .0f}, {0, 2, .0f} };
-//    std::vector<Triangle> triangulation = Triangulate(points.data(), points.size());
-//    for (const Triangle& t : triangulation)
-//    {
-//        std::cout << "(" << t.a.x << ", " << t.a.y << ") ";
-//        std::cout << "(" << t.b.x << ", " << t.b.y << ") ";
-//        std::cout << "(" << t.c.x << ", " << t.c.y << ")" << std::endl;
-//    }
-//
-//    return 0;
-//}
+/*
+int main()
+{
+    //std::vector<idxVertex> points = { idxVertex({0, 2, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5), idxVertex({2,2, .0f}, 6), idxVertex({-2,2, .0f}, 3), idxVertex({0, 3, .0f}, 4)};
+    //std::vector<idxVertex> points = { idxVertex({0, 1, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5), idxVertex({0,-1, .0f}, 6) };
+    //Vertex points[] = {{0, 1, .0f}, {-1,0, .0f},{1,0, .0f},{0,-1, .0f}};
+
+    Vertex points[] = { {0, 2, .0f}, {-1,0, .0f},{1,0, .0f},{2,2, .0f},{-2,2, .0f},{0, 3, .0f} };
+    std::vector<Triangle> triangulation;
+    Triangulate(triangulation, points, 6);
+    int* indices = new int[triangulation.size() * 3];
+
+    for (int i = 0; i < triangulation.size(); i++){
+        indices[i * 3] = triangulation[i].a.index;
+        indices[i * 3 + 1] = triangulation[i].b.index;
+        indices[i * 3 + 2] = triangulation[i].c.index;
+    }
+
+    //for (const Triangle& t : triangulation)
+    for (int i = 0; i < triangulation.size() * 3; i += 3)
+    {
+        std::cout << "(" << indices[i] << indices[i + 1] << indices[i + 2] << ") " << std::endl;
+
+        //std::cout << "(" << t.a.index << ") ";
+        //std::cout << "(" << t.b.index << ") ";
+        //std::cout << "(" << t.c.index << ") " << std::endl;
+
+        //std::cout << "(" << t.a.vertex.x << ", " << t.a.vertex.y << ") ";
+        //std::cout << "(" << t.b.vertex.x << ", " << t.b.vertex.y << ") ";
+        //std::cout << "(" << t.c.vertex.x << ", " << t.c.vertex.y << ")" << std::endl;
+    }
+
+    delete[] indices;
+
+    return 0;
+}
+*/
 
 //function BowyerWatson(pointList)
 //    // pointList는 삼각화될 점을 정의하는 좌표 집합입니다.
