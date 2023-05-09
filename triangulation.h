@@ -156,6 +156,19 @@ void AddPoint(std::vector<Triangle>& triangulation, idxVertex point)
     for (const std::pair<idxVertex, idxVertex>& edge : polygon)
     {
         // edge와 point로부터 삼각형을 생성
+        idxVertex tmp[] = { point, edge.first, edge.second };
+        std::sort(tmp, tmp + 3, [](idxVertex& p1, idxVertex& p2) -> bool {
+            return p1.index < p2.index;
+            });
+
+
+        glm::vec3 v1(tmp[1].vertex - tmp[0].vertex);
+        glm::vec3 v2(tmp[2].vertex - tmp[0].vertex);
+
+        if (glm::dot(glm::cross(v2, v1), glm::vec3(0, 0, 1)) < 0) {
+            continue;
+        }
+
         Triangle new_triangle(point, edge.first, edge.second);
         // newTri를 triangulation에 추가
         triangulation.push_back(new_triangle);
@@ -205,39 +218,6 @@ std::vector<Triangle> Triangulate(std::vector<Triangle>& triangulation, Vertex v
             }
     ), triangulation.end());
 
-
-    //제외할 삼각형(오목 다각형을 만드는 삼각형) 추가
-    std::vector<Triangle> outerTri;
-    //for (int i = 0; i < 1; ++i) {
-    std::cout << pointCount << std::endl;
-    for (int i = 0; i < pointCount; ++i) {
-        int idx0 = i, idx1 = (i + 1) % pointCount, idx2 = (i + 2) % pointCount;
-        Vertex p0(vertices[idx0]);
-        Vertex p1(vertices[idx1]);
-        Vertex p2(vertices[idx2]);
-
-        glm::vec3 v1(p1 - p0);
-        glm::vec3 v2(p2 - p0);
-
-        //std::cout << "val1: " << v1.x << "," << v1.y << "," << v1.z << std::endl;
-        //std::cout << "val2: " << v2.x << "," << v2.y << "," << v2.z << std::endl;
-
-        //std::cout << std::endl;
-
-        if (glm::dot(glm::cross(v2, v1), glm::vec3(0, 0, 1)) > 0) {
-            outerTri.push_back(Triangle(idxVertex(p0, idx0), idxVertex(p1, idx1), idxVertex(p2, idx2)));
-        }
-    }
-
-    triangulation.erase(
-        std::remove_if(
-            triangulation.begin(), triangulation.end(),
-            [&](Triangle t) {
-                return std::find_if(std::begin(t.points), std::end(t.points), [&](const idxVertex& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
-            }
-    ), triangulation.end());
-
-
     // triangulation을 반환
     return triangulation;
 }
@@ -258,6 +238,14 @@ int main()
     Vertex points[] = { {1, .0f, .0f}, {1, -1, .0f}, {-1, -1, .0f}, {-1, 1, .0f}, {0, 1, .0f}, {.0f, .0f, .0f} };
     Triangulate(triangulation, points, 6);
 
+    std::cout << "tri " << triangulation.size() << std::endl;
+
+    for (int i = 0; i < triangulation.size(); i++) {
+        std::cout << "(" << triangulation[i].a.vertex.x << "," << triangulation[i].a.vertex.y << "," << triangulation[i].a.vertex.z << ")";
+        std::cout << "(" << triangulation[i].b.vertex.x << "," << triangulation[i].b.vertex.y << "," << triangulation[i].b.vertex.z << ")";
+        std::cout << "(" << triangulation[i].c.vertex.x << "," << triangulation[i].c.vertex.y << "," << triangulation[i].c.vertex.z << ")";
+        std::cout << std::endl;
+    }
 
     //for (int i = 0; i < triangulation.size(); i++){
     //    indices[i * 3] = triangulation[i].a.index;
