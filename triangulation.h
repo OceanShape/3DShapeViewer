@@ -4,6 +4,7 @@
 #include <cmath>
 #include <algorithm>
 #include <glm/glm.hpp>
+#include <set>
 
 typedef glm::vec3 Vertex;
 
@@ -14,6 +15,13 @@ struct IndexVertex {
     IndexVertex() {}
     IndexVertex(glm::vec3 _vertex, int _index) : vertex(_vertex), index(_index) {}
     //IndexVertex(const IndexVertex& _iv) : vertex(_iv.vertex), index(_iv.index) {}
+
+    bool operator<(const IndexVertex& v) const {
+        if (vertex.x == v.vertex.x) {
+            return vertex.y < v.vertex.y;
+        }
+        return vertex.x < v.vertex.x;
+    }
 
     bool operator==(const IndexVertex& iv) const {
         return vertex[0] == iv.vertex[0] && vertex[1] == iv.vertex[1] && vertex[2] == iv.vertex[2];
@@ -32,22 +40,26 @@ struct Triangle
     }
 
     bool operator==(const Triangle& t) const {
-        return (a == t.a && b == t.b && c == t.c);
+        std::set<idxVertex> s;
+        s.insert(a), s.insert(b), s.insert(c);
+        s.insert(t.a), s.insert(t.b), s.insert(t.c);
+        return s.size() == 3;
     }
     void printStatus() {
         printf("(%f, %f)(%f, %f)(%f, %f)\n", a.vertex.x, a.vertex.y, b.vertex.x, b.vertex.y, c.vertex.x, c.vertex.y);
     }
+
     bool hasPoint(const idxVertex& p) {
         return points[0] == p || points[1] == p || points[2] == p;
     }
 };
 
-typedef std::pair<idxVertex, idxVertex> PairPoint;
+typedef std::pair<idxVertex, idxVertex> PairPoint;//
 template <>
 bool std::operator==(const PairPoint& lhs, const PairPoint& rhs) {
     return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.first == rhs.second && lhs.second == rhs.first);
 }
-
+//
 // 중복된 점이 없다고 가정
 bool CircumCircle(idxVertex p1, idxVertex p2, idxVertex p3, glm::vec3& center, double& radius)
 {
@@ -193,47 +205,85 @@ std::vector<Triangle> Triangulate(std::vector<Triangle>& triangulation, Vertex v
             }
     ), triangulation.end());
 
+
+    //제외할 삼각형(오목 다각형을 만드는 삼각형) 추가
+    std::vector<Triangle> outerTri;
+    //for (int i = 0; i < 1; ++i) {
+    std::cout << pointCount << std::endl;
+    for (int i = 0; i < pointCount; ++i) {
+        int idx0 = i, idx1 = (i + 1) % pointCount, idx2 = (i + 2) % pointCount;
+        Vertex p0(vertices[idx0]);
+        Vertex p1(vertices[idx1]);
+        Vertex p2(vertices[idx2]);
+
+        glm::vec3 v1(p1 - p0);
+        glm::vec3 v2(p2 - p0);
+
+        //std::cout << "val1: " << v1.x << "," << v1.y << "," << v1.z << std::endl;
+        //std::cout << "val2: " << v2.x << "," << v2.y << "," << v2.z << std::endl;
+
+        //std::cout << std::endl;
+
+        if (glm::dot(glm::cross(v2, v1), glm::vec3(0, 0, 1)) > 0) {
+            outerTri.push_back(Triangle(idxVertex(p0, idx0), idxVertex(p1, idx1), idxVertex(p2, idx2)));
+        }
+    }
+
+    triangulation.erase(
+        std::remove_if(
+            triangulation.begin(), triangulation.end(),
+            [&](Triangle t) {
+                return std::find_if(std::begin(t.points), std::end(t.points), [&](const idxVertex& p) {return bounding_triangle.hasPoint(p); }) != std::end(t.points);
+            }
+    ), triangulation.end());
+
+
     // triangulation을 반환
     return triangulation;
 }
 
-/*
+
 int main()
 {
     //std::vector<idxVertex> points = { idxVertex({0, 2, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5), idxVertex({2,2, .0f}, 6), idxVertex({-2,2, .0f}, 3), idxVertex({0, 3, .0f}, 4)};
-    //std::vector<idxVertex> points = { idxVertex({0, 1, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5), idxVertex({0,-1, .0f}, 6) };
+    //Triangle tri1 = Triangle{ idxVertex({0, 1, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5) };
     //Vertex points[] = {{0, 1, .0f}, {-1,0, .0f},{1,0, .0f},{0,-1, .0f}};
 
-    Vertex points[] = { {0, 2, .0f}, {-1,0, .0f},{1,0, .0f},{2,2, .0f},{-2,2, .0f},{0, 3, .0f} };
+    //Vertex points[] = { {0, 2, .0f}, {-1,0, .0f},{1,0, .0f},{2,2, .0f},{-2,2, .0f},{0, 3, .0f} };
+    //std::vector<Triangle> triangulation;
+    //Triangulate(triangulation, points, 6);
+    //int* indices = new int[triangulation.size() * 3];
+
     std::vector<Triangle> triangulation;
+    Vertex points[] = { {1, .0f, .0f}, {1, -1, .0f}, {-1, -1, .0f}, {-1, 1, .0f}, {0, 1, .0f}, {.0f, .0f, .0f} };
     Triangulate(triangulation, points, 6);
-    int* indices = new int[triangulation.size() * 3];
 
-    for (int i = 0; i < triangulation.size(); i++){
-        indices[i * 3] = triangulation[i].a.index;
-        indices[i * 3 + 1] = triangulation[i].b.index;
-        indices[i * 3 + 2] = triangulation[i].c.index;
-    }
 
-    //for (const Triangle& t : triangulation)
-    for (int i = 0; i < triangulation.size() * 3; i += 3)
-    {
-        std::cout << "(" << indices[i] << indices[i + 1] << indices[i + 2] << ") " << std::endl;
+    //for (int i = 0; i < triangulation.size(); i++){
+    //    indices[i * 3] = triangulation[i].a.index;
+    //    indices[i * 3 + 1] = triangulation[i].b.index;
+    //    indices[i * 3 + 2] = triangulation[i].c.index;
+    //}
 
-        //std::cout << "(" << t.a.index << ") ";
-        //std::cout << "(" << t.b.index << ") ";
-        //std::cout << "(" << t.c.index << ") " << std::endl;
+    ////for (const Triangle& t : triangulation)
+    //for (int i = 0; i < triangulation.size() * 3; i += 3)
+    //{
+    //    std::cout << "(" << indices[i] << indices[i + 1] << indices[i + 2] << ") " << std::endl;
 
-        //std::cout << "(" << t.a.vertex.x << ", " << t.a.vertex.y << ") ";
-        //std::cout << "(" << t.b.vertex.x << ", " << t.b.vertex.y << ") ";
-        //std::cout << "(" << t.c.vertex.x << ", " << t.c.vertex.y << ")" << std::endl;
-    }
+    //    //std::cout << "(" << t.a.index << ") ";
+    //    //std::cout << "(" << t.b.index << ") ";
+    //    //std::cout << "(" << t.c.index << ") " << std::endl;
 
-    delete[] indices;
+    //    //std::cout << "(" << t.a.vertex.x << ", " << t.a.vertex.y << ") ";
+    //    //std::cout << "(" << t.b.vertex.x << ", " << t.b.vertex.y << ") ";
+    //    //std::cout << "(" << t.c.vertex.x << ", " << t.c.vertex.y << ")" << std::endl;
+    //}
+
+    //delete[] indices;
 
     return 0;
 }
-*/
+
 
 //function BowyerWatson(pointList)
 //    // pointList는 삼각화될 점을 정의하는 좌표 집합입니다.
