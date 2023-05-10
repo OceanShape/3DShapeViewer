@@ -54,9 +54,9 @@ struct Triangle
     }
 };
 
-typedef std::pair<idxVertex, idxVertex> PairPoint;//
+typedef std::pair<idxVertex, idxVertex> Line;
 template <>
-bool std::operator==(const PairPoint& lhs, const PairPoint& rhs) {
+bool std::operator==(const Line& lhs, const Line& rhs) {
     return (lhs.first == rhs.first && lhs.second == rhs.second) || (lhs.first == rhs.second && lhs.second == rhs.first);
 }
 //
@@ -118,7 +118,7 @@ bool InCircle(idxVertex p, Triangle t)
 void AddPoint(std::vector<Triangle>& triangulation, idxVertex point)
 {
     std::vector<Triangle> bad_triangles;
-    std::vector<std::pair<idxVertex, idxVertex>> polygon;
+    std::vector<Line> polygon;
 
     // triangulation의 각 삼각형에 대해 삽입으로 인해 더 이상 유효하지 않은 모든 삼각형을 찾아냄
     for (const Triangle& t : triangulation)
@@ -153,31 +153,61 @@ void AddPoint(std::vector<Triangle>& triangulation, idxVertex point)
         triangulation.end());
 
     // polygon의 각 edge에 대해 다각형 구멍을 다시 삼각화
-    for (const std::pair<idxVertex, idxVertex>& edge : polygon)
+    for (const Line& edge : polygon)
     {
-        // edge와 point로부터 삼각형을 생성
-        idxVertex tmp[] = { point, edge.first, edge.second };
-        std::sort(tmp, tmp + 3, [](idxVertex& p1, idxVertex& p2) -> bool {
-            return p1.index < p2.index;
-            });
-
-
-        glm::vec3 v1(tmp[1].vertex - tmp[0].vertex);
-        glm::vec3 v2(tmp[2].vertex - tmp[0].vertex);
-
-        if (glm::dot(glm::cross(v2, v1), glm::vec3(0, 0, 1)) < 0) {
-            continue;
-        }
-
+        // edge와 point로부터 삼각형 생성
         Triangle new_triangle(point, edge.first, edge.second);
-        // newTri를 triangulation에 추가
         triangulation.push_back(new_triangle);
     }
+}
+
+bool isOutside(std::vector<Line>& lines, Triangle& t) {
+    bool outsideTrigger = false;
+    int sameLineCount = 0;
+
+    for (auto p : { (t.a.vertex + t.b.vertex) /= 2, (t.b.vertex + t.c.vertex) /= 2, (t.c.vertex + t.a.vertex) /= 2 }) {
+        int intersectionCount = 0;
+        bool isSameLine = false;
+
+        for (int i = 0; i < lines.size(); i++) {
+            auto ax = lines[i].first.vertex.x;
+            auto ay = lines[i].first.vertex.y;
+            auto bx = lines[i].second.vertex.x;
+            auto by = lines[i].second.vertex.y;
+
+
+            if (p.x == (ax + bx) / 2 && p.y == (ay + by) / 2) {
+                sameLineCount++;
+                isSameLine = true;
+                break;
+            }
+
+            //점 B가 선분 (p[i], p[j])의 y좌표 사이에 있음
+            if ((lines[i].first.vertex.y > p.y) != (lines[i].second.vertex.y > p.y)) {
+                double atX = (lines[i].second.vertex.x - lines[i].first.vertex.x) * (p.y - lines[i].first.vertex.y) / (lines[i].second.vertex.y - lines[i].first.vertex.y) + lines[i].first.vertex.x;
+                if (p.x < atX) {
+                    intersectionCount++;
+                }
+            }
+        }
+
+        if (isSameLine == false && intersectionCount % 2 == 0) {
+            outsideTrigger = true;
+        }
+    }
+
+    return sameLineCount != 3 && outsideTrigger;
 }
 
 // 중복된 점은 없다고 가정
 std::vector<Triangle> Triangulate(std::vector<Triangle>& triangulation, Vertex vertices[], int pointCount)
 {
+    // 다각형의 선분을 따로 저장
+    std::vector<Line> polyline;
+    for (int i = 0; i < pointCount; ++i) {
+        polyline.push_back(std::make_pair(idxVertex(vertices[i], i), idxVertex(vertices[i + 1], i + 1)));
+    }
+
     // super - triangle을 triangulation에 추가
     // 모든 점을 완전히 포함할 수 있도록 충분히 큰 삼각형
     double xmin = vertices[0].x;
@@ -218,59 +248,66 @@ std::vector<Triangle> Triangulate(std::vector<Triangle>& triangulation, Vertex v
             }
     ), triangulation.end());
 
-    // triangulation을 반환
+    //제외할 외곽 삼각형 추가
+    //삼각형의 변 중 하나라도 다각형의 밖에 있을 경우
+    //삼각형의 변은 중심점 하나만 다룬다
+    triangulation.erase(
+        std::remove_if(
+            triangulation.begin(), triangulation.end(),
+            [&](Triangle& t) {return isOutside(polyline, t); }
+    ), triangulation.end());
+
     return triangulation;
 }
 
-
-int main()
-{
-    //std::vector<idxVertex> points = { idxVertex({0, 2, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5), idxVertex({2,2, .0f}, 6), idxVertex({-2,2, .0f}, 3), idxVertex({0, 3, .0f}, 4)};
-    //Triangle tri1 = Triangle{ idxVertex({0, 1, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5) };
-    //Vertex points[] = {{0, 1, .0f}, {-1,0, .0f},{1,0, .0f},{0,-1, .0f}};
-
-    //Vertex points[] = { {0, 2, .0f}, {-1,0, .0f},{1,0, .0f},{2,2, .0f},{-2,2, .0f},{0, 3, .0f} };
-    //std::vector<Triangle> triangulation;
-    //Triangulate(triangulation, points, 6);
-    //int* indices = new int[triangulation.size() * 3];
-
-    std::vector<Triangle> triangulation;
-    Vertex points[] = { {1, .0f, .0f}, {1, -1, .0f}, {-1, -1, .0f}, {-1, 1, .0f}, {0, 1, .0f}, {.0f, .0f, .0f} };
-    Triangulate(triangulation, points, 6);
-
-    std::cout << "tri " << triangulation.size() << std::endl;
-
-    for (int i = 0; i < triangulation.size(); i++) {
-        std::cout << "(" << triangulation[i].a.vertex.x << "," << triangulation[i].a.vertex.y << "," << triangulation[i].a.vertex.z << ")";
-        std::cout << "(" << triangulation[i].b.vertex.x << "," << triangulation[i].b.vertex.y << "," << triangulation[i].b.vertex.z << ")";
-        std::cout << "(" << triangulation[i].c.vertex.x << "," << triangulation[i].c.vertex.y << "," << triangulation[i].c.vertex.z << ")";
-        std::cout << std::endl;
-    }
-
-    //for (int i = 0; i < triangulation.size(); i++){
-    //    indices[i * 3] = triangulation[i].a.index;
-    //    indices[i * 3 + 1] = triangulation[i].b.index;
-    //    indices[i * 3 + 2] = triangulation[i].c.index;
-    //}
-
-    ////for (const Triangle& t : triangulation)
-    //for (int i = 0; i < triangulation.size() * 3; i += 3)
-    //{
-    //    std::cout << "(" << indices[i] << indices[i + 1] << indices[i + 2] << ") " << std::endl;
-
-    //    //std::cout << "(" << t.a.index << ") ";
-    //    //std::cout << "(" << t.b.index << ") ";
-    //    //std::cout << "(" << t.c.index << ") " << std::endl;
-
-    //    //std::cout << "(" << t.a.vertex.x << ", " << t.a.vertex.y << ") ";
-    //    //std::cout << "(" << t.b.vertex.x << ", " << t.b.vertex.y << ") ";
-    //    //std::cout << "(" << t.c.vertex.x << ", " << t.c.vertex.y << ")" << std::endl;
-    //}
-
-    //delete[] indices;
-
-    return 0;
-}
+//int main()
+//{
+//    //std::vector<idxVertex> points = { idxVertex({0, 2, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5), idxVertex({2,2, .0f}, 6), idxVertex({-2,2, .0f}, 3), idxVertex({0, 3, .0f}, 4)};
+//    //Triangle tri1 = Triangle{ idxVertex({0, 1, .0f}, 8), idxVertex({-1,0, .0f}, 7), idxVertex({1,0, .0f}, 5) };
+//    //Vertex points[] = {{0, 1, .0f}, {-1,0, .0f},{1,0, .0f},{0,-1, .0f}};
+//
+//    //Vertex points[] = { {0, 2, .0f}, {-1,0, .0f},{1,0, .0f},{2,2, .0f},{-2,2, .0f},{0, 3, .0f} };
+//    //std::vector<Triangle> triangulation;
+//    //Triangulate(triangulation, points, 6);
+//    //int* indices = new int[triangulation.size() * 3];
+//
+//    std::vector<Triangle> triangulation;
+//    Vertex points[] = { {1, .0f, .0f}, {1, -1, .0f}, {-1, -1, .0f}, {-1, 1, .0f}, {0, 1, .0f}, {.0f, .0f, .0f}, {1, .0f, .0f} };
+//    Triangulate(triangulation, points, 6);
+//
+//    std::cout << "tri " << triangulation.size() << std::endl;
+//
+//    for (int i = 0; i < triangulation.size(); i++) {
+//        std::cout << "(" << triangulation[i].a.vertex.x << "," << triangulation[i].a.vertex.y << "," << triangulation[i].a.vertex.z << ")";
+//        std::cout << "(" << triangulation[i].b.vertex.x << "," << triangulation[i].b.vertex.y << "," << triangulation[i].b.vertex.z << ")";
+//        std::cout << "(" << triangulation[i].c.vertex.x << "," << triangulation[i].c.vertex.y << "," << triangulation[i].c.vertex.z << ")";
+//        std::cout << std::endl;
+//    }
+//
+//    //for (int i = 0; i < triangulation.size(); i++){
+//    //    indices[i * 3] = triangulation[i].a.index;
+//    //    indices[i * 3 + 1] = triangulation[i].b.index;
+//    //    indices[i * 3 + 2] = triangulation[i].c.index;
+//    //}
+//
+//    ////for (const Triangle& t : triangulation)
+//    //for (int i = 0; i < triangulation.size() * 3; i += 3)
+//    //{
+//    //    std::cout << "(" << indices[i] << indices[i + 1] << indices[i + 2] << ") " << std::endl;
+//
+//    //    //std::cout << "(" << t.a.index << ") ";
+//    //    //std::cout << "(" << t.b.index << ") ";
+//    //    //std::cout << "(" << t.c.index << ") " << std::endl;
+//
+//    //    //std::cout << "(" << t.a.vertex.x << ", " << t.a.vertex.y << ") ";
+//    //    //std::cout << "(" << t.b.vertex.x << ", " << t.b.vertex.y << ") ";
+//    //    //std::cout << "(" << t.c.vertex.x << ", " << t.c.vertex.y << ")" << std::endl;
+//    //}
+//
+//    //delete[] indices;
+//
+//    return 0;
+//}
 
 
 //function BowyerWatson(pointList)

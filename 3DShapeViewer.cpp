@@ -42,7 +42,7 @@ float cameraZ = CAMERA_START_Z;
 float moveX = 0.0f;
 float moveY = 0.0f;
 float moveZ = 3.0f;
-const float delta = 0.02f;
+const float delta = 0.01f;
 const float deltaZ = 0.05f;
 GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
 GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };

@@ -103,14 +103,15 @@ public:
 
 	void render() {
 		if (type == 5 && partCount == 1) {
-			if (vertexCount == 5) {
-				int a = 01; 
-			}
 			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-			//glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-			for (size_t pos = 0; pos < indexCount; pos += 3) {
-				glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+			if (partCount > 1) {
+				glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+			}
+			else {
+				for (size_t pos = 0; pos < indexCount; pos += 3) {
+					glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+				}
 			}
 		}
 		else {
