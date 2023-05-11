@@ -45,7 +45,7 @@
     <ClInclude Include="renderoption.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="triangulation.h">
+    <ClInclude Include="triangulation_delaunay.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
