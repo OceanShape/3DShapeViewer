@@ -5,9 +5,7 @@
 #include <GLES3/gl3.h>
 
 #include "quadtree.h"
-//#include "triangulation.h"
-
-typedef glm::vec3 Vertex;
+#include "triangulation.h"
 
 struct SHPPoint {
 	double x;
@@ -16,7 +14,7 @@ struct SHPPoint {
 
 class Object {
 public:
-	Vertex* vertices = nullptr;
+	Triangulation::Vertex* vertices = nullptr;
 	GLuint* indices = nullptr;
 	int indexCount = 0;
 	int32_t* partVertexCounts = nullptr;
@@ -33,7 +31,7 @@ public:
 	//double max[3]{ DBL_MIN, DBL_MIN, DBL_MIN };
 
 	Object(SHPPoint* _vertices, int _vertexCount, int32_t* _parts, int _partCount) : vertexCount(_vertexCount), partCount(_partCount) {
-		vertices = new Vertex[vertexCount];
+		vertices = new Triangulation::Vertex[vertexCount];
 		indices = new GLuint[vertexCount];
 		partVertexCounts = new int32_t[partCount];
 		partStartIndex = new int32_t[partCount];
@@ -69,30 +67,29 @@ public:
 		}
 
 		setIndex();
-
-		int a = 10;
 	}
 
 	// Set index with triangulation
 	void setIndex() {
-		if (false) { // type == 5 && partCount == 1
+		if (partCount == 1) { // type == 5 && partCount == 1
 			// loop를 고려해서, 맨 마지막 점은 빼고 넣을 것
 			//for (size_t i = 0; i < partVertexCounts[0]; ++i) {
 
 			//}
 
-			//std::vector<Triangle> triangulation;
-			//Triangulate(triangulation, vertices, partVertexCounts[0] - 1);
+			std::vector<Triangulation::Triangle> triangulation;
+			Triangulate(triangulation, vertices, partVertexCounts[0]);
 
-			//delete[] indices;
-			//indexCount = triangulation.size() * 3;
-			//indices = new GLuint[triangulation.size() * 3];
+			delete[] indices;
+			indexCount = triangulation.size() * 3;
+			indices = new GLuint[triangulation.size() * 3];
 
-			//for (int i = 0; i < triangulation.size(); i++) {
-			//	indices[i * 3] = triangulation[i].a.index;
-			//	indices[i * 3 + 1] = triangulation[i].b.index;
-			//	indices[i * 3 + 2] = triangulation[i].c.index;
-			//}
+			for (int i = 0; i < triangulation.size(); i++) {
+				indices[i * 3] = triangulation[i].a;
+				indices[i * 3 + 1] = triangulation[i].b;
+				indices[i * 3 + 2] = triangulation[i].c;
+			}
+			std::cout << triangulation.size();
 		}
 		else {
 			for (size_t i = 0; i < vertexCount; ++i) {
@@ -102,7 +99,7 @@ public:
 	}
 
 	void render() {
-		if (false) { // type == 5
+		if (partCount == 1) { // type == 5
 			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 			if (partCount > 1) {
