@@ -12,9 +12,14 @@ struct SHPPoint {
 	double y;
 };
 
+struct VertexFLT {
+	float x, y, z;
+};
+
 class Object {
 public:
-	Triangulation::Vertex* vertices = nullptr;
+	Triangulation::Vertex* verticesDBL = nullptr;
+	VertexFLT* vertices = nullptr;
 	GLuint* indices = nullptr;
 	int indexCount = 0;
 	int32_t* partVertexCounts = nullptr;
@@ -25,28 +30,27 @@ public:
 	static int type;
 
 public:
-	float min[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
-	float max[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
-	//double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
-	//double max[3]{ DBL_MIN, DBL_MIN, DBL_MIN };
+	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
+	double max[3]{ DBL_MIN, DBL_MIN, DBL_MIN };
 
 	Object(SHPPoint* _vertices, int _vertexCount, int32_t* _parts, int _partCount) : vertexCount(_vertexCount), partCount(_partCount) {
-		vertices = new Triangulation::Vertex[vertexCount];
-		indices = new GLuint[vertexCount];
+		verticesDBL = new Triangulation::Vertex[vertexCount];
+		vertices = new VertexFLT[vertexCount];
 		partVertexCounts = new int32_t[partCount];
 		partStartIndex = new int32_t[partCount];
 
 		for (size_t i = 0; i < vertexCount; ++i) {
-			float x = _vertices[i].x;
-			float y = _vertices[i].y;
-			float z = 0.0f;
+			double x = _vertices[i].x;
+			double y = _vertices[i].y;
+			double z = 0.0f;
 
 			min[0] = std::min(min[0], x);
 			max[0] = std::max(max[0], x);
 			min[1] = std::min(min[1], y);
 			max[1] = std::max(max[1], y);
 
-			vertices[i] = { x, y, z };
+			verticesDBL[i] = { x, y, z };
+			vertices[i] = { (float)x, (float)y, (float)z };
 		}
 
 		for (size_t i = 0; i < partCount; ++i) {
@@ -71,27 +75,32 @@ public:
 
 	// Set index with triangulation
 	void setIndex() {
-		if (partCount == 1) { // type == 5 && partCount == 1
+		static int c = 0;
+		if (partCount >= 1) { // type == 5 && partCount == 1
 			// loop를 고려해서, 맨 마지막 점은 빼고 넣을 것
 			//for (size_t i = 0; i < partVertexCounts[0]; ++i) {
 
 			//}
+			if (c != 0) {
+				int a = 0;
+			}
 
 			std::vector<Triangulation::Triangle> triangulation;
-			Triangulate(triangulation, vertices, partVertexCounts[0]);
+			Triangulate(triangulation, verticesDBL, vertexCount, partVertexCounts, partCount);
 
-			delete[] indices;
 			indexCount = triangulation.size() * 3;
-			indices = new GLuint[triangulation.size() * 3];
+			indices = new GLuint[indexCount];
 
 			for (int i = 0; i < triangulation.size(); i++) {
 				indices[i * 3] = triangulation[i].a;
 				indices[i * 3 + 1] = triangulation[i].b;
 				indices[i * 3 + 2] = triangulation[i].c;
 			}
-			std::cout << triangulation.size();
+			c++;
 		}
 		else {
+			indices = new GLuint[vertexCount];
+
 			for (size_t i = 0; i < vertexCount; ++i) {
 				indices[i] = i;
 			}
@@ -99,10 +108,10 @@ public:
 	}
 
 	void render() {
-		if (partCount == 1) { // type == 5
+		if (partCount >= 2) { // type == 5
 			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-			if (partCount > 1) {
+			if (false) {
 				glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 			}
 			else {
@@ -112,7 +121,7 @@ public:
 			}
 		}
 		else {
-			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), verticesDBL, GL_STATIC_DRAW);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 			for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
 				glDrawElements(GL_LINE_LOOP, partVertexCounts[currentPart], GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
@@ -127,6 +136,7 @@ public:
 	}
 
 	~Object() {
+		delete[] verticesDBL;
 		delete[] vertices;
 		delete[] indices;
 		delete[] partVertexCounts;

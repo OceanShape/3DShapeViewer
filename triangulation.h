@@ -74,24 +74,24 @@ namespace Triangulation {
         return cross(p, q).z < 0;
     }
 
-    void Triangulate(std::vector<Triangle> &result, Vertex vertices[], int verticesLength)
+    void Triangulate(std::vector<Triangle> &result, Vertex vertices[], int verticesLength, int32_t* partVertexCounts, int partCount)
     {
         std::vector<IndexVertex> v;
-        v.reserve(verticesLength - 1);
-        for (unsigned int i = 0; i < verticesLength - 1; ++i)
+        v.reserve(verticesLength);
+        //for (unsigned int idx = 0; idx < verticesLength - 1; ++idx)
+        //{
+        //    v.push_back(IndexVertex(vertices[idx], idx));
+        //}
+        for (unsigned int idx = 0; idx < verticesLength; ++idx)
         {
-            v.push_back(IndexVertex(vertices[i], i));
+            v.push_back(IndexVertex(vertices[idx], idx));
         }
 
-        result.reserve(verticesLength - 1 - 2);
-        for (int i = 0; i < verticesLength - 1 - 2; i++)
+        result.reserve(verticesLength - 2);
+        for (int i = 0; i < verticesLength  - 2; i++)
         {
             for (int j = 0; j < v.size() - 2; ++j)
             {
-                if (result.size() == 2)
-                {
-                    int a = 0;
-                }
                 bool cw = isCW(v[j].vertex, v[j + 1].vertex, v[j + 2].vertex);
                 bool cross = isVerticesInsideTriangle(v, j);
 
@@ -111,16 +111,16 @@ int main()
     // Vertex points[] = {{0, 1, .0f}, {-1,0, .0f},{1,0, .0f},{0,-1, .0f}};
     // Vertex points[] = { {0, 2, .0f}, {-1,0, .0f},{1,0, .0f},{2,2, .0f},{-2,2, .0f},{0, 3, .0f} };
     // Vertex points[] = { {1, .0f, .0f}, {1, -1, .0f}, {-1, -1, .0f}, {-1, 1, .0f}, {0, 1, .0f}, {.0f, .0f, .0f}, {1, .0f, .0f} };
-    Triangulation::Vertex points[] = { {1144668.03, 1688422.46, .0}, {1144684.23, 1688381.42, .0}, {1144672.0, 1688376.26, .0}, {1144667.235, 1688390.08680, .0}, {1144667.2335, 1688390.0906, .0}, {1144662.144, 1688401.688, .0}, {1144656.1, 1688417.6, .0}, {1144668.03, 1688422.46, .0} };
+    //Triangulation::Vertex points[] = { {1144668.03, 1688422.46, .0}, {1144684.23, 1688381.42, .0}, {1144672.0, 1688376.26, .0}, {1144667.235, 1688390.08680, .0}, {1144667.2335, 1688390.0906, .0}, {1144662.144, 1688401.688, .0}, {1144656.1, 1688417.6, .0}, {1144668.03, 1688422.46, .0} };
 
     // ///
     // float a = .707107f;
     // Vertex points[] = { {1, 0, 0}, { a, -a, .0}, {0, -1, 0}, {-a, -a, 0}, {-1, 0, 0}, {-a, a, 0},{0, 1, 0}, {a, a, 0}, {1, 0, 0} };
-    std::vector<Triangulation::Triangle> triangulation;
-    Triangulate(triangulation, points, 8);
-    int *indices = new int[triangulation.size() * 3];
+    //std::vector<Triangulation::Triangle> triangulation;
+    //Triangulate(triangulation, points, 8);
+    //int *indices = new int[triangulation.size() * 3];
 
-    std::cout << "tri " << triangulation.size() << std::endl;
+    //std::cout << "tri " << triangulation.size() << std::endl;
     ///
     // for (int i = 0; i < triangulation.size(); i++) {
     //     std::cout << "(\t" << triangulation[i].a << ",\t" << triangulation[i].b << ",\t" << triangulation[i].c << ")" << std::endl;
