@@ -185,6 +185,7 @@ public:
 
 	void setRenderOpiton(const RenderOption& renderOption) {
 		std::copy(&renderOption, &renderOption + 1, &qtNode::renderOption);
+		Object::program = renderOption.program[0];
 	}
 
 	void store(const shared_ptr<Object> obj, int& maxLevel) {

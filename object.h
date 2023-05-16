@@ -27,6 +27,7 @@ public:
 	int vertexCount = 0;
 	int partCount = 0;
 	static int type;
+	static GLuint program;
 
 public:
 	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
@@ -122,6 +123,8 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
+		glUniform1i(glGetUniformLocation(program, "color"), 0);
+
 		if (true) {
 			glDrawElements(GL_TRIANGLES, indexCount - (vertexCount - 1) * 6, GL_UNSIGNED_INT, 0);
 		}
@@ -131,7 +134,7 @@ public:
 			}
 		}
 
-		//glUniform1i(glGetUniformLocation(0, "color"), 0);
+		glUniform1i(glGetUniformLocation(program, "color"), 1);
 
 		for (size_t pos = indexCount - (vertexCount - 1) * 6; pos < indexCount; pos += 2) {
 			glDrawElements(GL_LINE_LOOP, 2, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
@@ -148,3 +151,4 @@ public:
 };
 
 int Object::type = 0;
+GLuint Object::program = 0;
