@@ -26,7 +26,6 @@ public:
 	int32_t* partStartIndex = nullptr;
 	int vertexCount = 0;
 	int partCount = 0;
-
 	static int type;
 
 public:
@@ -35,14 +34,14 @@ public:
 
 	Object(SHPPoint* _vertices, int _vertexCount, int32_t* _parts, int _partCount) : vertexCount(_vertexCount), partCount(_partCount) {
 		verticesDBL = new Triangulation::Vertex[vertexCount];
-		vertices = new VertexFLT[vertexCount];
+		vertices = new VertexFLT[vertexCount * 2];
 		partVertexCounts = new int32_t[partCount];
 		partStartIndex = new int32_t[partCount];
 
 		for (size_t i = 0; i < vertexCount; ++i) {
 			double x = _vertices[i].x;
 			double y = _vertices[i].y;
-			double z = 0.0f;
+			double z = 0.01f;
 
 			min[0] = std::min(min[0], x);
 			max[0] = std::max(max[0], x);
@@ -51,6 +50,12 @@ public:
 
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
+		}
+
+		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(VertexFLT));
+
+		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
+			vertices[i].z = .0f;
 		}
 
 		for (size_t i = 0; i < partCount; ++i) {
@@ -75,63 +80,61 @@ public:
 
 	// Set index with triangulation
 	void setIndex() {
-		static int c = 0;
-		if (partCount >= 1) { // type == 5 && partCount == 1
-			// loop를 고려해서, 맨 마지막 점은 빼고 넣을 것
-			//for (size_t i = 0; i < partVertexCounts[0]; ++i) {
+		std::vector<Triangulation::Triangle> triangulation;
+		Triangulate(triangulation, verticesDBL, vertexCount, partVertexCounts, partCount);
 
-			//}
-			if (c != 0) {
-				int a = 0;
-			}
+		indexCount = triangulation.size() * 3 + (vertexCount - 1) * 6 + (vertexCount - 1) * 2 * 3;
+		indices = new GLuint[indexCount];
 
-			std::vector<Triangulation::Triangle> triangulation;
-			Triangulate(triangulation, verticesDBL, vertexCount, partVertexCounts, partCount);
-
-			indexCount = triangulation.size() * 3;
-			indices = new GLuint[indexCount];
-
-			for (int i = 0; i < triangulation.size(); i++) {
-				indices[i * 3] = triangulation[i].a;
-				indices[i * 3 + 1] = triangulation[i].b;
-				indices[i * 3 + 2] = triangulation[i].c;
-			}
-			c++;
+		for (int i = 0; i < triangulation.size(); i++) {
+			indices[i * 3] = triangulation[i].a;
+			indices[i * 3 + 1] = triangulation[i].b;
+			indices[i * 3 + 2] = triangulation[i].c;
 		}
-		else {
-			indices = new GLuint[vertexCount];
 
-			for (size_t i = 0; i < vertexCount; ++i) {
-				indices[i] = i;
-			}
+
+		int startIdx = triangulation.size() * 3;
+		for (int i = 0; i < vertexCount - 1; ++i) {
+			indices[startIdx + i * 6] = i;
+			indices[startIdx + i * 6 + 1] = i + 1;
+			indices[startIdx + i * 6 + 2] = vertexCount + i;
+
+			indices[startIdx + i * 6 + 3] = i + 1;
+			indices[startIdx + i * 6 + 4] = vertexCount + i + 1;
+			indices[startIdx + i * 6 + 5] = vertexCount + i;
 		}
+
+		startIdx = triangulation.size() * 3 + (vertexCount - 1) * 6;
+		for (int i = 0; i < vertexCount - 1; ++i) {
+			indices[startIdx + i * 6] = i;
+			indices[startIdx + i * 6 + 1] = i + 1;
+			
+			indices[startIdx + i * 6 + 2] = i;
+			indices[startIdx + i * 6 + 3] = vertexCount + i;
+			
+			indices[startIdx + i * 6 + 4] = vertexCount + i;
+			indices[startIdx + i * 6 + 5] = vertexCount + i + 1;
+		}
+
 	}
 
 	void render() {
-		if (partCount >= 2) { // type == 5
-			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-			if (false) {
-				glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-			}
-			else {
-				for (size_t pos = 0; pos < indexCount; pos += 3) {
-					glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
-				}
-			}
+		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
+
+		if (true) {
+			glDrawElements(GL_TRIANGLES, indexCount - (vertexCount - 1) * 6, GL_UNSIGNED_INT, 0);
 		}
 		else {
-			glBufferData(GL_ARRAY_BUFFER, vertexCount * 3 * sizeof(float), verticesDBL, GL_STATIC_DRAW);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-			for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
-				glDrawElements(GL_LINE_LOOP, partVertexCounts[currentPart], GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
-				pos += partVertexCounts[currentPart];
+			for (size_t pos = 0; pos < indexCount; pos += 3) {
+				glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 			}
+		}
 
-			//for (size_t currentPart = 0, pos = 0; currentPart < partCount; ++currentPart) {
-			//	glDrawArrays(GL_LINE_STRIP, pos, partVertexCounts[currentPart]);
-			//	pos += partVertexCounts[currentPart];
-			//}
+		//glUniform1i(glGetUniformLocation(0, "color"), 0);
+
+		for (size_t pos = indexCount - (vertexCount - 1) * 6; pos < indexCount; pos += 2) {
+			glDrawElements(GL_LINE_LOOP, 2, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
 	}
 
