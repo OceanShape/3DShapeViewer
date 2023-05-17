@@ -32,7 +32,6 @@ bool compileShader(GLuint shader, const char* source);
 bool initialize();
 void render();
 void cleanUp();
-void updateCameraVec();
 void setLevelAndViewBoundary();
 
 string readShader(const string& filepath);

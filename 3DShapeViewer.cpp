@@ -50,8 +50,9 @@ GLfloat delTotal[3];
 float boundaryX[2];
 float boundaryY[2];
 
-float yaw = -90.0f;
-float pitch = 0.0f;
+float pitch = .0f;	// x-axis
+float yaw = .0f;	// y-axis
+float roll = .0f;	// z-axis
 float rotDel = 1.0f;
 
 bool mouseClicked = false;
@@ -146,14 +147,18 @@ bool initialize()
 	return true;
 }
 
-void updateCameraVec() {
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	cameraFront = glm::normalize(direction);
-	cameraRight = glm::normalize(glm::cross(cameraFront, glm::vec3(.0f, 1.0f, .0f)));
-	cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
+glm::vec3 upVector;
+glm::vec3 cameraDirection;
+
+void updateCameraVectors()
+{
+	glm::vec3 front;
+	front.x = cos(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
+	cameraDirection = glm::normalize(front);
+	glm::vec3 Right = glm::normalize(glm::cross(cameraDirection, glm::vec3(.0f, 1.0f, .0f)));
+	upVector = glm::normalize(glm::cross(Right, cameraDirection));
 }
 
 void render()
@@ -165,7 +170,22 @@ void render()
 
 	// view
 	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
-	glm::mat4 view = glm::lookAt(position, position + cameraFront, cameraUp);
+	//glm::quat cameraRotation = glm::quat(glm::vec3(glm::radians(pitch), glm::radians(yaw), glm::radians(roll)));	// 쿼터니언 정의
+	//glm::quat cameraQuat(0.0f, cameraDirection);
+	//glm::vec3 rotatedCameraDirection = cameraRotation * glm::normalize(glm::vec3(0.0f, 0.0f, 0.0f) - position);	// 카메라의 방향 변경(target - position)
+	///////////////////
+	std::cout << "(" << yaw << "," << pitch << "," << roll << ")" << std::endl;
+	glm::quat rotationQuatX = glm::angleAxis(glm::radians(yaw), glm::vec3(1.0f, 0.0f, 0.0f)); // X축 회전에 대한 쿼터니언
+	glm::quat rotationQuatY = glm::angleAxis(glm::radians(pitch), glm::vec3(0.0f, 1.0f, 0.0f)); // Y축 회전에 대한 쿼터니언
+	glm::quat rotationQuatZ = glm::angleAxis(glm::radians(roll), glm::vec3(0.0f, 0.0f, 1.0f)); // Z축 회전에 대한 쿼터니언
+
+	glm::quat cameraQuat(0.0f, cameraDirection); // 스칼라와 벡터를 이용하여 쿼터니언 생성
+
+	glm::quat rotatedCameraQuat = rotationQuatX * rotationQuatY * rotationQuatZ * cameraQuat;
+	glm::vec3 rotatedCameraDirection = glm::vec3(rotatedCameraQuat.x, rotatedCameraQuat.y, rotatedCameraQuat.z);
+
+	glm::mat4 viewMatrix = glm::lookAt(position, position + rotatedCameraDirection, upVector);	// 뷰 행렬 생성
+	///////////////////
 
 	// projection
 	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
@@ -173,13 +193,12 @@ void render()
 	for (int i = 0; i < 2; ++i) {
 		glUseProgram(renderOption.program[i]);
 		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	}
 
 	objectData->render(currentLevel, boundaryX, boundaryY);
 }
-
 void cleanUp()
 {
 	glDeleteVertexArrays(2, renderOption.vao);
@@ -236,7 +255,7 @@ void setLevelAndViewBoundary() {
 		// set boundary
 		float centerX = (maxTotal[0] + minTotal[0]) / 2 + delTotal[0] * cameraX;
 		float centerY = (maxTotal[1] + minTotal[1]) / 2 + delTotal[0] * cameraY;
-		float delBoundary = delTotal[0] * distance * (tan(fov / 2)) / 1.41f;
+		float delBoundary = delTotal[0] * distance * (tan(fov / 2)) / 1.1f;
 		boundaryX[0] = centerX - delBoundary; boundaryX[1] = centerX + delBoundary;
 		boundaryY[0] = centerY - delBoundary; boundaryY[1] = centerY + delBoundary;
 	}
@@ -296,20 +315,22 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'J' || wParam == 'j') {
-			yaw = (yaw < -175.0f) ? -175.0f : yaw - rotDel;
-			updateCameraVec();
+			yaw += rotDel; updateCameraVectors();
 		}
 		else if (wParam == 'L' || wParam == 'l') {
-			yaw = (yaw > 5.0f) ? 5.0f: yaw + rotDel;
-			updateCameraVec();
+			yaw -= rotDel; updateCameraVectors();
 		}
 		else if (wParam == 'I' || wParam == 'i') {
-			pitch = (pitch > 85.0f) ? 85.0f : pitch + rotDel;
-			updateCameraVec();
+			pitch += rotDel; updateCameraVectors();
 		}
 		else if (wParam == 'K' || wParam == 'k') {
-			pitch = (pitch < -85.0f) ? -85.0f : pitch - rotDel;
-			updateCameraVec();
+			pitch -= rotDel; updateCameraVectors();
+		}
+		else if (wParam == 'O' || wParam == 'o') {
+			roll += rotDel; updateCameraVectors();
+		}
+		else if (wParam == 'U' || wParam == 'u') {
+			roll -= rotDel; updateCameraVectors();
 		}
 		else if (wParam == 'G' || wParam == 'g') {
 			drawGrid = !drawGrid;
