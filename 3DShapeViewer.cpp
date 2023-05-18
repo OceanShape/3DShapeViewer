@@ -147,18 +147,19 @@ bool initialize()
 	return true;
 }
 
-glm::vec3 upVector;
-glm::vec3 cameraDirection;
-
 void updateCameraVectors()
 {
 	glm::vec3 front;
 	front.x = cos(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
 	front.y = sin(glm::radians(pitch));
 	front.z = sin(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
-	cameraDirection = glm::normalize(front);
-	glm::vec3 Right = glm::normalize(glm::cross(cameraDirection, glm::vec3(.0f, 1.0f, .0f)));
-	upVector = glm::normalize(glm::cross(Right, cameraDirection));
+	cameraFront = glm::normalize(front);
+	glm::vec3 Right = glm::normalize(glm::cross(cameraFront, glm::vec3(.0f, 1.0f, .0f)));
+	cameraUp = glm::normalize(glm::cross(Right, cameraFront));
+
+	glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), front);
+	Right = glm::normalize(glm::vec3(rollMatrix * glm::vec4(Right, 0.0f)));
+	cameraUp = glm::normalize(glm::vec3(rollMatrix * glm::vec4(cameraUp, 0.0f)));
 }
 
 void render()
@@ -167,26 +168,9 @@ void render()
 
 	// model
 	glm::mat4 model = glm::mat4(1.0f);// glm::scale(glm::mat4(1.0f), { 1.0f, 1.0f, 0.0f });//glm::mat4(1.0f);
-
 	// view
 	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
-	//glm::quat cameraRotation = glm::quat(glm::vec3(glm::radians(pitch), glm::radians(yaw), glm::radians(roll)));	// 쿼터니언 정의
-	//glm::quat cameraQuat(0.0f, cameraDirection);
-	//glm::vec3 rotatedCameraDirection = cameraRotation * glm::normalize(glm::vec3(0.0f, 0.0f, 0.0f) - position);	// 카메라의 방향 변경(target - position)
-	///////////////////
-	std::cout << "(" << yaw << "," << pitch << "," << roll << ")" << std::endl;
-	glm::quat rotationQuatX = glm::angleAxis(glm::radians(yaw), glm::vec3(1.0f, 0.0f, 0.0f)); // X축 회전에 대한 쿼터니언
-	glm::quat rotationQuatY = glm::angleAxis(glm::radians(pitch), glm::vec3(0.0f, 1.0f, 0.0f)); // Y축 회전에 대한 쿼터니언
-	glm::quat rotationQuatZ = glm::angleAxis(glm::radians(roll), glm::vec3(0.0f, 0.0f, 1.0f)); // Z축 회전에 대한 쿼터니언
-
-	glm::quat cameraQuat(0.0f, cameraDirection); // 스칼라와 벡터를 이용하여 쿼터니언 생성
-
-	glm::quat rotatedCameraQuat = rotationQuatX * rotationQuatY * rotationQuatZ * cameraQuat;
-	glm::vec3 rotatedCameraDirection = glm::vec3(rotatedCameraQuat.x, rotatedCameraQuat.y, rotatedCameraQuat.z);
-
-	glm::mat4 viewMatrix = glm::lookAt(position, position + rotatedCameraDirection, upVector);	// 뷰 행렬 생성
-	///////////////////
-
+	glm::mat4 viewMatrix = glm::lookAt(position, position + cameraFront, cameraUp);
 	// projection
 	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
 
@@ -315,10 +299,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			setLevelAndViewBoundary();
 		}
 		else if (wParam == 'J' || wParam == 'j') {
-			yaw += rotDel; updateCameraVectors();
+			yaw -= rotDel; updateCameraVectors();
 		}
 		else if (wParam == 'L' || wParam == 'l') {
-			yaw -= rotDel; updateCameraVectors();
+			yaw += rotDel; updateCameraVectors();
 		}
 		else if (wParam == 'I' || wParam == 'i') {
 			pitch += rotDel; updateCameraVectors();
