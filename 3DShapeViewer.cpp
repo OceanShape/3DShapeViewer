@@ -34,6 +34,7 @@ bool isShapeLoaded = false;
 int32_t recordCount = 0;
 float aspectRatio = 1.0f;
 
+bool keyPressed[256] = { false, };
 
 float fov = 45.0f;
 float cameraX = 0.0f;
@@ -160,6 +161,67 @@ void updateCameraVectors()
 	cameraUp = glm::normalize(glm::vec3(rollMatrix * glm::vec4(cameraUp, 0.0f)));
 }
 
+bool isKeyPressed(char ch) {
+	return (65 <= ch && ch <= 90) ? keyPressed[ch] : (97 <= ch && ch <= 122) ? keyPressed[ch - 32] : keyPressed[ch];
+}
+
+void update() {
+	if (isShapeLoaded == false) return;
+
+	if (isKeyPressed('A')) {
+		cameraX -= delta;
+		setLevelAndViewBoundary();
+	}
+	else if (isKeyPressed('D')) {
+		cameraX += delta;
+		setLevelAndViewBoundary();
+	}
+	else if (isKeyPressed('W')) {
+		cameraY += delta;
+		setLevelAndViewBoundary();
+	}
+	else if (isKeyPressed('S')) {
+		cameraY -= delta;
+		setLevelAndViewBoundary();
+	}
+	else if (isKeyPressed('Q')) {
+		cameraZ += deltaZ;
+		setLevelAndViewBoundary();
+	}
+	else if (isKeyPressed('E')) {
+		cameraZ -= deltaZ;
+		setLevelAndViewBoundary();
+	}
+	else if (isKeyPressed('J')) {
+		yaw -= rotDel; updateCameraVectors();
+	}
+	else if (isKeyPressed('L')) {
+		yaw += rotDel; updateCameraVectors();
+	}
+	else if (isKeyPressed('I')) {
+		pitch += rotDel; updateCameraVectors();
+	}
+	else if (isKeyPressed('K')) {
+		pitch -= rotDel; updateCameraVectors();
+	}
+	else if (isKeyPressed('O')) {
+		roll += rotDel; updateCameraVectors();
+	}
+	else if (isKeyPressed('U')) {
+		roll -= rotDel; updateCameraVectors();
+	}
+	else if (isKeyPressed('G')) {
+		drawGrid = !drawGrid;
+	}
+
+	for (int i = 9; i >= 0; i--) {
+		if (isKeyPressed('0' + i)) {
+			currentLevel = (i > maxLevel) ? maxLevel : i;
+			break;
+		}
+	}
+}
+
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -276,58 +338,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		std::cout << "fov: " << fov << endl;
 		break;
 	case WM_KEYDOWN:
-		if (wParam == 'E' || wParam == 'e') {
-			cameraZ -= deltaZ;
-			setLevelAndViewBoundary();
-		}
-		else if (wParam == 'Q' || wParam == 'q') {
-			cameraZ += deltaZ;
-			setLevelAndViewBoundary();
-		}
-		else if (wParam == 'A' || wParam == 'a') {
-			cameraX -= delta;
-			setLevelAndViewBoundary();
-		}
-		else if (wParam == 'D' || wParam == 'd') {
-			cameraX += delta;
-			setLevelAndViewBoundary();
-		}
-		else if (wParam == 'W' || wParam == 'w') {
-			cameraY += delta;
-			setLevelAndViewBoundary();
-		}
-		else if (wParam == 'S' || wParam == 's') {
-			cameraY -= delta;
-			setLevelAndViewBoundary();
-		}
-		else if (wParam == 'J' || wParam == 'j') {
-			yaw -= rotDel; updateCameraVectors();
-		}
-		else if (wParam == 'L' || wParam == 'l') {
-			yaw += rotDel; updateCameraVectors();
-		}
-		else if (wParam == 'I' || wParam == 'i') {
-			pitch += rotDel; updateCameraVectors();
-		}
-		else if (wParam == 'K' || wParam == 'k') {
-			pitch -= rotDel; updateCameraVectors();
-		}
-		else if (wParam == 'O' || wParam == 'o') {
-			roll += rotDel; updateCameraVectors();
-		}
-		else if (wParam == 'U' || wParam == 'u') {
-			roll -= rotDel; updateCameraVectors();
-		}
-		else if (wParam == 'G' || wParam == 'g') {
-			drawGrid = !drawGrid;
-		}
-		else if ('0' <= wParam && wParam <= '9') {
-			int num = wParam - '0';
-			if (num > maxLevel) {
-				num = maxLevel;
-			}
-			currentLevel = num;
-		}
+		keyPressed[wParam] = true;
+		break;
+	case WM_KEYUP:
+		keyPressed[wParam] = false;
 		break;
 	case WM_DESTROY:
 		closeShapefile();
@@ -653,7 +667,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DispatchMessage(&msg);
 		}
 		else {
-			// update()
+			update();
 			render();
 		}
 	}
