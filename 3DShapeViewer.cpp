@@ -4,6 +4,7 @@
 #include "quadtree.h"
 #include "object.h"
 #include "renderoption.h"
+#include "camera.h"
 
 EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
@@ -34,42 +35,20 @@ bool isShapeLoaded = false;
 int32_t recordCount = 0;
 float aspectRatio = 1.0f;
 
+Camera camera(.0f, .0f, CAMERA_START_Z);
+
 bool keyPressed[256] = { false, };
 
-float fov = 45.0f;
-float cameraX = 0.0f;
-float cameraY = 0.0f;
-float cameraZ = CAMERA_START_Z;
-float moveX = 0.0f;
-float moveY = 0.0f;
-float moveZ = 3.0f;
-const float delta = 0.01f;
-const float deltaZ = 0.1f;
 GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
 GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
 GLfloat delTotal[3];
-float boundaryX[2];
-float boundaryY[2];
-
-float pitch = .0f;	// x-axis
-float yaw = .0f;	// y-axis
-float roll = .0f;	// z-axis
-float rotDel = 1.0f;
 
 bool mouseClicked = false;
 float lastX = 450.0f;
 float lastY = 450.0f;
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-glm::vec3 cameraRight = glm::vec3(1.0f, .0f, .0f);
-
 shared_ptr<ObjectData> objectData;
 std::vector<shared_ptr<Object>> objects;
-
-int maxLevel = 0;
-int currentLevel = 0;
 
 typedef unsigned char uchar;
 
@@ -146,20 +125,20 @@ bool initialize()
 	return true;
 }
 
-void updateCameraVectors()
-{
-	glm::vec3 front;
-	front.x = cos(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
-	front.y = sin(glm::radians(pitch));
-	front.z = sin(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
-	cameraFront = glm::normalize(front);
-	glm::vec3 Right = glm::normalize(glm::cross(cameraFront, glm::vec3(.0f, 1.0f, .0f)));
-	cameraUp = glm::normalize(glm::cross(Right, cameraFront));
-
-	glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), front);
-	Right = glm::normalize(glm::vec3(rollMatrix * glm::vec4(Right, 0.0f)));
-	cameraUp = glm::normalize(glm::vec3(rollMatrix * glm::vec4(cameraUp, 0.0f)));
-}
+//void updateCameraVectors()
+//{
+//	glm::vec3 front;
+//	front.x = cos(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
+//	front.y = sin(glm::radians(pitch));
+//	front.z = sin(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
+//	cameraFront = glm::normalize(front);
+//	glm::vec3 Right = glm::normalize(glm::cross(cameraFront, glm::vec3(.0f, 1.0f, .0f)));
+//	cameraUp = glm::normalize(glm::cross(Right, cameraFront));
+//
+//	glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), front);
+//	Right = glm::normalize(glm::vec3(rollMatrix * glm::vec4(Right, 0.0f)));
+//	cameraUp = glm::normalize(glm::vec3(rollMatrix * glm::vec4(cameraUp, 0.0f)));
+//}
 
 bool isKeyPressed(char ch) {
 	return (65 <= ch && ch <= 90) ? keyPressed[ch] : (97 <= ch && ch <= 122) ? keyPressed[ch - 32] : keyPressed[ch];
@@ -169,54 +148,48 @@ void update() {
 	if (isShapeLoaded == false) return;
 
 	if (isKeyPressed('A')) {
-		cameraX -= delta;
-		setLevelAndViewBoundary();
+		camera.moveRight(-1);
 	}
 	else if (isKeyPressed('D')) {
-		cameraX += delta;
-		setLevelAndViewBoundary();
+		camera.moveRight(1);
 	}
 	else if (isKeyPressed('W')) {
-		cameraY += delta;
-		setLevelAndViewBoundary();
+		camera.moveUp(1);
 	}
 	else if (isKeyPressed('S')) {
-		cameraY -= delta;
-		setLevelAndViewBoundary();
+		camera.moveUp(-1);
 	}
 	else if (isKeyPressed('Q')) {
-		cameraZ += deltaZ;
-		setLevelAndViewBoundary();
+		camera.moveForward(-1);
 	}
 	else if (isKeyPressed('E')) {
-		cameraZ -= deltaZ;
-		setLevelAndViewBoundary();
+		camera.moveForward(1);
 	}
-	else if (isKeyPressed('J')) {
-		yaw -= rotDel; updateCameraVectors();
-	}
-	else if (isKeyPressed('L')) {
-		yaw += rotDel; updateCameraVectors();
-	}
-	else if (isKeyPressed('I')) {
-		pitch += rotDel; updateCameraVectors();
-	}
-	else if (isKeyPressed('K')) {
-		pitch -= rotDel; updateCameraVectors();
-	}
-	else if (isKeyPressed('O')) {
-		roll += rotDel; updateCameraVectors();
-	}
-	else if (isKeyPressed('U')) {
-		roll -= rotDel; updateCameraVectors();
-	}
+	//else if (isKeyPressed('J')) {
+	//	yaw -= rotDel;
+	//}
+	//else if (isKeyPressed('L')) {
+	//	yaw += rotDel;
+	//}
+	//else if (isKeyPressed('I')) {
+	//	pitch += rotDel;
+	//}
+	//else if (isKeyPressed('K')) {
+	//	pitch -= rotDel;
+	//}
+	//else if (isKeyPressed('O')) {
+	//	roll += rotDel; updateCameraVectors();
+	//}
+	//else if (isKeyPressed('U')) {
+	//	roll -= rotDel; updateCameraVectors();
+	//}
 	else if (isKeyPressed('G')) {
 		drawGrid = !drawGrid;
 	}
 
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
-			currentLevel = (i > maxLevel) ? maxLevel : i;
+			camera.setLevel(i);
 			break;
 		}
 	}
@@ -227,22 +200,18 @@ void render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (isShapeLoaded == true) {
-		// model
-		glm::mat4 model = glm::mat4(1.0f);// glm::scale(glm::mat4(1.0f), { 1.0f, 1.0f, 0.0f });//glm::mat4(1.0f);
-		// view
-		glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
-		glm::mat4 viewMatrix = glm::lookAt(position, position + cameraFront, cameraUp);
-		// projection
-		glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 view = camera.getView();
+		glm::mat4 projection = camera.getProj();
 
 		for (int i = 0; i < 2; ++i) {
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
-			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		}
 
-		objectData->render(currentLevel, boundaryX, boundaryY);
+		objectData->render(camera.currentLevel, camera.boundaryX, camera.boundaryY);
 	}
 
 	eglSwapBuffers(eglDisplay, eglSurface);
@@ -292,24 +261,6 @@ void closeShapefile() {
 	}
 }
 
-void setLevelAndViewBoundary() {
-	
-	if (0.0f < cameraZ <= CAMERA_START_Z) {
-		float deltaLevel = CAMERA_START_Z / (maxLevel + 1.0f);
-		currentLevel = (int)((3.0f - cameraZ) / deltaLevel);
-		std::cout << "current level: [" << currentLevel << "]" << endl;
-
-		float distance = cameraZ;
-
-		// set boundary
-		float centerX = (maxTotal[0] + minTotal[0]) / 2 + delTotal[0] * cameraX;
-		float centerY = (maxTotal[1] + minTotal[1]) / 2 + delTotal[0] * cameraY;
-		float delBoundary = delTotal[0] * distance * (tan(fov / 2)) / 1.1f;
-		boundaryX[0] = centerX - delBoundary; boundaryX[1] = centerX + delBoundary;
-		boundaryY[0] = centerY - delBoundary; boundaryY[1] = centerY + delBoundary;
-	}
-}
-
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wDel;
@@ -331,12 +282,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 	}
 	break;
-	case WM_MOUSEWHEEL:
-		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
-		fov -= wDel * .1f;
-		fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
-		std::cout << "fov: " << fov << endl;
-		break;
+	//case WM_MOUSEWHEEL:
+	//	wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+	//	fov -= wDel * .1f;
+	//	fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
+	//	std::cout << "fov: " << fov << endl;
+	//	break;
 	case WM_KEYDOWN:
 		keyPressed[wParam] = true;
 		break;
@@ -453,34 +404,33 @@ bool readShapefile() {
 	float zMin = shpHeaderData.Zmin;
 	float zMax = shpHeaderData.Zmax;
 
-	minTotal[0] = xMin;
-	minTotal[1] = yMin;
-	minTotal[2] = zMin;
-	maxTotal[0] = xMax;
-	maxTotal[1] = yMax;
-	maxTotal[2] = zMax;
+	minTotal[0] = xMin; minTotal[1] = yMin; minTotal[2] = zMin;
+	maxTotal[0] = xMax; maxTotal[1] = yMax; maxTotal[2] = zMax;
+	camera.minTotal[0] = xMin; camera.minTotal[1] = yMin; camera.minTotal[2] = zMin;
+	camera.maxTotal[0] = xMax; camera.maxTotal[1] = yMax; camera.maxTotal[2] = zMax;
 
 	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
 	delTotal[0] = (xMax - xMin) / 2.0f;
 	delTotal[1] = (yMax - yMin) / 2.0f;
 	delTotal[2] = (zMax - zMin) / 2.0f;
+	camera.delTotal[0] = (xMax - xMin) / 2.0f;
+	camera.delTotal[1] = (yMax - yMin) / 2.0f;
+	camera.delTotal[2] = (zMax - zMin) / 2.0f;
+	
 
 	{
 		float yTop = (yMin + yMax) / 2 + delTotal[0];
 		float yBot = (yMin + yMax) / 2 - delTotal[0];
 
-		boundaryX[0] = xMin;
-		boundaryX[1] = xMax;
-
-		boundaryY[0] = yBot;
-		boundaryY[1] = yTop;
+		camera.setBoundary(xMin, xMax, yBot, yTop);
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
 		float max[2] = { shpHeaderData.Xmax , yTop };
 		objectData = make_shared<ObjectData>(min, max);
 	}
 
+	int maxLevel = 0;
 	SHPPoint* points;
 	double* Zpoints;
 	int32_t* parts;
@@ -548,6 +498,7 @@ bool readShapefile() {
 
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
+	camera.maxLevel = maxLevel;
 
 	delete[] data;
 
@@ -578,11 +529,7 @@ bool openShapefile() {
 	if (isShapeLoaded) {
 		objectData.reset();
 		recordCount = 0;
-		cameraX = 0.0f;
-		cameraY = 0.0f;
 	}
-
-	
 
 	if (readShapefile() == false) {
 		return false;
