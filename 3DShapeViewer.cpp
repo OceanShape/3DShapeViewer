@@ -141,9 +141,7 @@ bool initialize()
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	eglSwapBuffers(eglDisplay, eglSurface);
-
+	
 	return true;
 }
 
@@ -166,22 +164,27 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// model
-	glm::mat4 model = glm::mat4(1.0f);// glm::scale(glm::mat4(1.0f), { 1.0f, 1.0f, 0.0f });//glm::mat4(1.0f);
-	// view
-	glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
-	glm::mat4 viewMatrix = glm::lookAt(position, position + cameraFront, cameraUp);
-	// projection
-	glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
+	if (isShapeLoaded == true) {
+		// model
+		glm::mat4 model = glm::mat4(1.0f);// glm::scale(glm::mat4(1.0f), { 1.0f, 1.0f, 0.0f });//glm::mat4(1.0f);
+		// view
+		glm::vec3 position = glm::vec3(cameraX, cameraY, cameraZ);
+		glm::mat4 viewMatrix = glm::lookAt(position, position + cameraFront, cameraUp);
+		// projection
+		glm::mat4 projection = glm::perspective(glm::radians(fov), 1.0f, 0.1f, 10.0f);
 
-	for (int i = 0; i < 2; ++i) {
-		glUseProgram(renderOption.program[i]);
-		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		for (int i = 0; i < 2; ++i) {
+			glUseProgram(renderOption.program[i]);
+			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		}
+
+		objectData->render(currentLevel, boundaryX, boundaryY);
 	}
 
-	objectData->render(currentLevel, boundaryX, boundaryY);
+	eglSwapBuffers(eglDisplay, eglSurface);
+	return;
 }
 void cleanUp()
 {
@@ -259,7 +262,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			openShapefile();
 			break;
 		case IDM_EXIT:
-			closeShapefile();
 			DestroyWindow(hWnd);
 			break;
 		default:
@@ -327,24 +329,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			currentLevel = num;
 		}
 		break;
-	case WM_MOUSEMOVE:
-		if (mouseClicked) {
-			
-		}
-		break;
-	case WM_LBUTTONDOWN:
-		mouseClicked = true;
-		break;
 	case WM_DESTROY:
 		closeShapefile();
-		PostQuitMessage(0);
-		break;
-	case WM_PAINT:
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		if (isShapeLoaded) {
-			render();
-			eglSwapBuffers(eglDisplay, eglSurface);
-		}
+		::PostQuitMessage(0);
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -658,7 +645,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (!initialize()) {
 		return -1;
 	}
-
+	
 	MSG msg = {};
 	while (WM_QUIT != msg.message) {
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -667,7 +654,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		else {
 			// update()
-			// render()
+			render();
 		}
 	}
 
