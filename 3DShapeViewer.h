@@ -72,16 +72,16 @@ public:
 	}
 };
 
-bool checkShaderCompileStatus(GLuint shader);
-bool compileShader(GLuint shader, const char* source);
-
-bool initialize();
-void render();
-void cleanUp();
-
-string readShader(const string& filepath);
-bool openShapefile();
-
-bool readShapefile();
-void closeShapefile();
+//bool checkShaderCompileStatus(GLuint shader);
+//bool compileShader(GLuint shader, const char* source);
+//
+//bool initialize();
+//void render();
+//void cleanUp();
+//
+//string readShader(const string& filepath);
+//bool openShapefile();
+//
+//bool readShapefile();
+//void closeShapefile();
 
