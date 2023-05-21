@@ -28,6 +28,12 @@ using namespace std;
 
 class ShapeViewer {
 public:
+	HWND hWnd;
+	HINSTANCE hInst;
+	TCHAR szFileName[MAX_PATH];
+	bool keyPressed[256] = { false, };
+
+
 	LRESULT msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		int wDel;
@@ -70,18 +76,19 @@ public:
 		}
 		return 0;
 	}
+
+	bool initialize();
+	void render();
+	void cleanUp();
+
+	bool openShapefile();
+	bool readShapefile();
+	void closeShapefile();
+
+	bool isKeyPressed(char ch);
+	void update();
 };
 
-//bool checkShaderCompileStatus(GLuint shader);
-//bool compileShader(GLuint shader, const char* source);
-//
-//bool initialize();
-//void render();
-//void cleanUp();
-//
-//string readShader(const string& filepath);
-//bool openShapefile();
-//
-//bool readShapefile();
-//void closeShapefile();
-
+bool checkShaderCompileStatus(GLuint shader);
+bool compileShader(GLuint shader, const char* source);
+string readShader(const string& filepath);

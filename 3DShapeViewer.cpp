@@ -25,9 +25,7 @@ EGLint contextAttribs[] = {
 	EGL_NONE
 };
 
-HWND hWnd;
-HINSTANCE hInst;
-TCHAR szFileName[MAX_PATH];
+
 
 RenderOption renderOption;
 bool drawGrid = false;
@@ -38,8 +36,6 @@ int32_t recordCount = 0;
 float aspectRatio = 1.0f;
 
 Camera camera(.0f, .0f, CAMERA_START_Z);
-
-bool keyPressed[256] = { false, };
 
 GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
 GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
@@ -77,7 +73,7 @@ bool compileShader(GLuint shader, const char* source)
 	return checkShaderCompileStatus(shader);
 }
 
-bool initialize()
+bool ShapeViewer::initialize()
 {
 	EGLint numConfigs;
 	EGLint majorVersion;
@@ -142,11 +138,11 @@ bool initialize()
 //	cameraUp = glm::normalize(glm::vec3(rollMatrix * glm::vec4(cameraUp, 0.0f)));
 //}
 
-bool isKeyPressed(char ch) {
+bool ShapeViewer::isKeyPressed(char ch) {
 	return (65 <= ch && ch <= 90) ? keyPressed[ch] : (97 <= ch && ch <= 122) ? keyPressed[ch - 32] : keyPressed[ch];
 }
 
-void update() {
+void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
 	if (isKeyPressed('A')) {
@@ -197,7 +193,7 @@ void update() {
 	}
 }
 
-void render()
+void ShapeViewer::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -219,7 +215,8 @@ void render()
 	eglSwapBuffers(eglDisplay, eglSurface);
 	return;
 }
-void cleanUp()
+
+void ShapeViewer::cleanUp()
 {
 	glDeleteVertexArrays(2, renderOption.vao);
 	glDeleteBuffers(2, renderOption.vbo);
@@ -256,7 +253,7 @@ string readShader(const string& filepath) {
 	return shader_code;
 }
 
-void closeShapefile() {
+void ShapeViewer::closeShapefile() {
 	if (isShapeLoaded) {
 		//objectData.reset();
 		fclose(SHPFile);
@@ -279,7 +276,7 @@ void memSwap(void* const data, size_t size) {
 	}
 }
 
-bool readShapefile() {
+bool ShapeViewer::readShapefile() {
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	int progressWidth = 440;
@@ -471,7 +468,7 @@ bool readShapefile() {
 	return true;
 }
 
-bool openShapefile() {
+bool ShapeViewer::openShapefile() {
 	OPENFILENAME ofn;
 
 	std::ZeroMemory(&ofn, sizeof(ofn));
@@ -558,16 +555,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	RegisterClassEx(&wcex);
 
-	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
+
+	shapeViewer.hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
 		WINDOW_POS_X, WINDOW_POS_Y, WINDOW_WIDTH, WINDOW_HEIGHT,
 		NULL, NULL, hInstance, NULL);
 
-	hInst = hInstance;
+	shapeViewer.hInst = hInstance;
 
-	ShowWindow(hWnd, nCmdShow);
+	ShowWindow(shapeViewer.hWnd, nCmdShow);
 
 
-	if (!initialize()) {
+	if (!shapeViewer.initialize()) {
 		return -1;
 	}
 	
@@ -578,12 +576,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DispatchMessage(&msg);
 		}
 		else {
-			update();
-			render();
+			shapeViewer.update();
+			shapeViewer.render();
 		}
 	}
 
-	cleanUp();
+	shapeViewer.cleanUp();
 
 	FreeConsole();
 
