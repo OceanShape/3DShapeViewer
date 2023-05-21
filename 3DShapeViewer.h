@@ -4,6 +4,12 @@
 // #include "shapefil.h"
 #include "framework.h"
 #include "resource.h"
+#include "shapefile.h"
+#include "shapedata.h"
+#include "quadtree.h"
+#include "object.h"
+#include "renderoption.h"
+#include "camera.h"
 
 #include <Commdlg.h>
 #include <Windows.h>
@@ -26,58 +32,61 @@
 
 using namespace std;
 
+struct EGLOptions {
+	EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
+	EGLDisplay eglDisplay;
+	EGLSurface eglSurface;
+	EGLContext eglContext;
+	EGLConfig eglConfig;
+	EGLint contextAttribs[3] = {
+		EGL_CONTEXT_CLIENT_VERSION, 3,
+		EGL_NONE
+	};
+};
+
 class ShapeViewer {
 public:
 	HWND hWnd;
 	HINSTANCE hInst;
 	TCHAR szFileName[MAX_PATH];
 	bool keyPressed[256] = { false, };
+	EGLOptions eglOptions;
+
+	const int WINDOW_POS_X = 500;
+	const int WINDOW_POS_Y = 0;
+	const int WINDOW_WIDTH = 913;
+	const int WINDOW_HEIGHT = 959;
+	const float CAMERA_START_Z = 3.0f;
+
+	RenderOption renderOption;
+	bool drawGrid = false;
+
+	FILE* SHPFile;
+	bool isShapeLoaded = false;
+	int32_t recordCount = 0;
+	float aspectRatio = 1.0f;
+
+	shared_ptr<Camera> camera;
+
+	GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
+	GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
+	GLfloat delTotal[3];
+
+	bool mouseClicked = false;
+	float lastX = 450.0f;
+	float lastY = 450.0f;
+
+	shared_ptr<ObjectData> objectData;
+	std::vector<shared_ptr<Object>> objects;
 
 
-	LRESULT msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-	{
-		int wDel;
-		switch (message)
-		{
-		case WM_COMMAND:
-		{
-			int wmId = LOWORD(wParam);
-			switch (wmId)
-			{
-			case IDM_OPEN:
-				openShapefile();
-				break;
-			case IDM_EXIT:
-				DestroyWindow(hWnd);
-				break;
-			default:
-				return DefWindowProc(hWnd, message, wParam, lParam);
-			}
-		}
-		break;
-		//case WM_MOUSEWHEEL:
-		//	wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
-		//	fov -= wDel * .1f;
-		//	fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
-		//	std::cout << "fov: " << fov << endl;
-		//	break;
-		case WM_KEYDOWN:
-			keyPressed[wParam] = true;
-			break;
-		case WM_KEYUP:
-			keyPressed[wParam] = false;
-			break;
-		case WM_DESTROY:
-			closeShapefile();
-			::PostQuitMessage(0);
-			break;
-		default:
-			return DefWindowProc(hWnd, message, wParam, lParam);
-		}
-		return 0;
-	}
+	ShapeViewer() {
+		camera = make_shared<Camera>(0.0f, 0.0f, 3.0f);
+	};
 
-	bool initialize();
+	LRESULT msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	bool initialize(HINSTANCE hInstance, int nCmdShow);
 	void render();
 	void cleanUp();
 

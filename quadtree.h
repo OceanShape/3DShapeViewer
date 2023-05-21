@@ -87,7 +87,7 @@ private:
 	void store(const shared_ptr<Object> obj, int level, int& maxLevel) {
 		if (Xmax - Xmin < 120) {
 			objects.push_back(obj);
-			maxLevel = std::max(maxLevel, level);
+			maxLevel = max(maxLevel, level);
 			return;
 		}
 
@@ -118,7 +118,7 @@ private:
 		}
 		else {
 			objects.push_back(obj);
-			maxLevel = std::max(maxLevel, level);
+			maxLevel = max(maxLevel, level);
 		}
 	}
 

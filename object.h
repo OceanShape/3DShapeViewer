@@ -44,10 +44,10 @@ public:
 			double y = _vertices[i].y;
 			double z = 0.01f;
 
-			min[0] = std::min(min[0], x);
-			max[0] = std::max(max[0], x);
-			min[1] = std::min(min[1], y);
-			max[1] = std::max(max[1], y);
+			min[0] = min(min[0], x);
+			max[0] = max(max[0], x);
+			min[1] = min(min[1], y);
+			max[1] = max(max[1], y);
 
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };

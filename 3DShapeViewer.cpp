@@ -1,52 +1,6 @@
 #include "3DShapeViewer.h"
-#include "shapefile.h"
-#include "shapedata.h"
-#include "quadtree.h"
-#include "object.h"
-#include "renderoption.h"
-#include "camera.h"
-
-EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 
 ShapeViewer shapeViewer;
-
-const int WINDOW_POS_X = 500;
-const int WINDOW_POS_Y = 0;
-const int WINDOW_WIDTH = 913;
-const int WINDOW_HEIGHT = 959;
-const float CAMERA_START_Z = 3.0f;
-
-EGLDisplay eglDisplay;
-EGLSurface eglSurface;
-EGLContext eglContext;
-EGLConfig eglConfig;
-EGLint contextAttribs[] = {
-	EGL_CONTEXT_CLIENT_VERSION, 3,
-	EGL_NONE
-};
-
-
-
-RenderOption renderOption;
-bool drawGrid = false;
-
-FILE* SHPFile;
-bool isShapeLoaded = false;
-int32_t recordCount = 0;
-float aspectRatio = 1.0f;
-
-Camera camera(.0f, .0f, CAMERA_START_Z);
-
-GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
-GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
-GLfloat delTotal[3];
-
-bool mouseClicked = false;
-float lastX = 450.0f;
-float lastY = 450.0f;
-
-shared_ptr<ObjectData> objectData;
-std::vector<shared_ptr<Object>> objects;
 
 typedef unsigned char uchar;
 
@@ -73,11 +27,17 @@ bool compileShader(GLuint shader, const char* source)
 	return checkShaderCompileStatus(shader);
 }
 
-bool ShapeViewer::initialize()
+bool ShapeViewer::initialize(HINSTANCE hInstance, int nCmdShow)
 {
-	EGLint numConfigs;
-	EGLint majorVersion;
-	EGLint minorVersion;
+	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
+		WINDOW_POS_X, WINDOW_POS_Y, WINDOW_WIDTH, WINDOW_HEIGHT,
+		NULL, NULL, hInstance, NULL);
+
+	hInst = hInstance;
+
+	ShowWindow(hWnd, nCmdShow);
+
+	EGLint numConfigs, majorVersion, minorVersion;
 	EGLint attribs[] = {
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 	EGL_RED_SIZE, 8,
@@ -86,15 +46,15 @@ bool ShapeViewer::initialize()
 	EGL_ALPHA_SIZE, 8,
 	EGL_DEPTH_SIZE, 24,
 	EGL_STENCIL_SIZE, 8,
-	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR,
+	EGL_RENDERABLE_TYPE, eglOptions.EGL_OPENGL_ES3_BIT_KHR,
 	EGL_NONE
 	};
-	eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-	eglInitialize(eglDisplay, &majorVersion, &minorVersion);
-	eglChooseConfig(eglDisplay, attribs, &eglConfig, 1, &numConfigs);
-	eglSurface = eglCreateWindowSurface(eglDisplay, eglConfig, hWnd, NULL);
-	eglContext = eglCreateContext(eglDisplay, eglConfig, EGL_NO_CONTEXT, contextAttribs);
-	eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
+	eglOptions.eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(eglOptions.eglDisplay, &majorVersion, &minorVersion);
+	eglChooseConfig(eglOptions.eglDisplay, attribs, &eglOptions.eglConfig, 1, &numConfigs);
+	eglOptions.eglSurface = eglCreateWindowSurface(eglOptions.eglDisplay, eglOptions.eglConfig, hWnd, NULL);
+	eglOptions.eglContext = eglCreateContext(eglOptions.eglDisplay, eglOptions.eglConfig, EGL_NO_CONTEXT, eglOptions.contextAttribs);
+	eglMakeCurrent(eglOptions.eglDisplay, eglOptions.eglSurface, eglOptions.eglSurface, eglOptions.eglContext);
 
 	string shaderFileName[] = { "object.vert", "object.frag", "grid.vert", "grid.frag" };
 	for (size_t i = 0; i < 2; ++i) {
@@ -146,22 +106,22 @@ void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
 	if (isKeyPressed('A')) {
-		camera.moveRight(-1);
+		camera->moveRight(-1);
 	}
 	else if (isKeyPressed('D')) {
-		camera.moveRight(1);
+		camera->moveRight(1);
 	}
 	else if (isKeyPressed('W')) {
-		camera.moveUp(1);
+		camera->moveUp(1);
 	}
 	else if (isKeyPressed('S')) {
-		camera.moveUp(-1);
+		camera->moveUp(-1);
 	}
 	else if (isKeyPressed('Q')) {
-		camera.moveForward(-1);
+		camera->moveForward(-1);
 	}
 	else if (isKeyPressed('E')) {
-		camera.moveForward(1);
+		camera->moveForward(1);
 	}
 	//else if (isKeyPressed('J')) {
 	//	yaw -= rotDel;
@@ -187,7 +147,7 @@ void ShapeViewer::update() {
 
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
-			camera.setLevel(i);
+			camera->setLevel(i);
 			break;
 		}
 	}
@@ -199,8 +159,8 @@ void ShapeViewer::render()
 
 	if (isShapeLoaded == true) {
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 view = camera.getView();
-		glm::mat4 projection = camera.getProj();
+		glm::mat4 view = camera->getView();
+		glm::mat4 projection = camera->getProj();
 
 		for (int i = 0; i < 2; ++i) {
 			glUseProgram(renderOption.program[i]);
@@ -209,10 +169,10 @@ void ShapeViewer::render()
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		}
 
-		objectData->render(camera.currentLevel, camera.boundaryX, camera.boundaryY);
+		objectData->render(camera->currentLevel, camera->boundaryX, camera->boundaryY);
 	}
 
-	eglSwapBuffers(eglDisplay, eglSurface);
+	eglSwapBuffers(eglOptions.eglDisplay, eglOptions.eglSurface);
 	return;
 }
 
@@ -232,10 +192,10 @@ void ShapeViewer::cleanUp()
 		glDeleteProgram(renderOption.program[i]);
 	}
 
-	eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-	eglDestroyContext(eglDisplay, eglContext);
-	eglDestroySurface(eglDisplay, eglSurface);
-	eglTerminate(eglDisplay);
+	eglMakeCurrent(eglOptions.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglDestroyContext(eglOptions.eglDisplay, eglOptions.eglContext);
+	eglDestroySurface(eglOptions.eglDisplay, eglOptions.eglSurface);
+	eglTerminate(eglOptions.eglDisplay);
 }
 
 string readShader(const string& filepath) {
@@ -367,24 +327,24 @@ bool ShapeViewer::readShapefile() {
 
 	minTotal[0] = xMin; minTotal[1] = yMin; minTotal[2] = zMin;
 	maxTotal[0] = xMax; maxTotal[1] = yMax; maxTotal[2] = zMax;
-	camera.minTotal[0] = xMin; camera.minTotal[1] = yMin; camera.minTotal[2] = zMin;
-	camera.maxTotal[0] = xMax; camera.maxTotal[1] = yMax; camera.maxTotal[2] = zMax;
+	camera->minTotal[0] = xMin; camera->minTotal[1] = yMin; camera->minTotal[2] = zMin;
+	camera->maxTotal[0] = xMax; camera->maxTotal[1] = yMax; camera->maxTotal[2] = zMax;
 
 	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
 	delTotal[0] = (xMax - xMin) / 2.0f;
 	delTotal[1] = (yMax - yMin) / 2.0f;
 	delTotal[2] = (zMax - zMin) / 2.0f;
-	camera.delTotal[0] = (xMax - xMin) / 2.0f;
-	camera.delTotal[1] = (yMax - yMin) / 2.0f;
-	camera.delTotal[2] = (zMax - zMin) / 2.0f;
+	camera->delTotal[0] = (xMax - xMin) / 2.0f;
+	camera->delTotal[1] = (yMax - yMin) / 2.0f;
+	camera->delTotal[2] = (zMax - zMin) / 2.0f;
 	
 
 	{
 		float yTop = (yMin + yMax) / 2 + delTotal[0];
 		float yBot = (yMin + yMax) / 2 - delTotal[0];
 
-		camera.setBoundary(xMin, xMax, yBot, yTop);
+		camera->setBoundary(xMin, xMax, yBot, yTop);
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
 		float max[2] = { shpHeaderData.Xmax , yTop };
@@ -459,7 +419,7 @@ bool ShapeViewer::readShapefile() {
 
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
-	camera.maxLevel = maxLevel;
+	camera->maxLevel = maxLevel;
 
 	delete[] data;
 
@@ -532,6 +492,49 @@ bool ShapeViewer::openShapefile() {
 	return true;
 }
 
+LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	int wDel;
+	switch (message)
+	{
+	case WM_COMMAND:
+	{
+		int wmId = LOWORD(wParam);
+		switch (wmId)
+		{
+		case IDM_OPEN:
+			openShapefile();
+			break;
+		case IDM_EXIT:
+			DestroyWindow(hWnd);
+			break;
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+	}
+	break;
+	//case WM_MOUSEWHEEL:
+	//	wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+	//	fov -= wDel * .1f;
+	//	fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
+	//	std::cout << "fov: " << fov << endl;
+	//	break;
+	case WM_KEYDOWN:
+		keyPressed[wParam] = true;
+		break;
+	case WM_KEYUP:
+		keyPressed[wParam] = false;
+		break;
+	case WM_DESTROY:
+		closeShapefile();
+		::PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	AllocConsole();
@@ -556,16 +559,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RegisterClassEx(&wcex);
 
 
-	shapeViewer.hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
-		WINDOW_POS_X, WINDOW_POS_Y, WINDOW_WIDTH, WINDOW_HEIGHT,
-		NULL, NULL, hInstance, NULL);
-
-	shapeViewer.hInst = hInstance;
-
-	ShowWindow(shapeViewer.hWnd, nCmdShow);
-
-
-	if (!shapeViewer.initialize()) {
+	if (!shapeViewer.initialize(hInstance, nCmdShow)) {
 		return -1;
 	}
 	
@@ -587,3 +581,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	return static_cast<int>(msg.wParam);
 }
+
+
