@@ -137,7 +137,6 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="quadtree.h" />
-    <ClInclude Include="renderoption.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="utility.h" />
     <ClInclude Include="shapedata.h" />

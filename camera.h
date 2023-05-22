@@ -87,5 +87,20 @@ void Camera::updateMouse(float mouseNdcX, float mouseNdcY) {
 }
 
 void Camera::updateKey(float rotX, float rotY, float rotZ) {
+	pitch += rotX * rotDel;
+	yaw += rotY * rotDel;
+	roll += rotZ * rotDel;
 
+	glm::quat qX = glm::angleAxis(glm::radians(pitch), glm::vec3(1, 0, 0));
+	glm::quat qY = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0));
+	glm::quat qZ = glm::angleAxis(glm::radians(roll), glm::vec3(0, 0, 1));
+	qX = glm::normalize(qX);
+	qY = glm::normalize(qY);
+	qZ = glm::normalize(qZ);
+
+	direction = glm::normalize(qZ * qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
+	up = glm::normalize(qZ * qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
+	right = glm::normalize(glm::cross(direction, up));
+
+	updateLevelAndBoundary();
 }

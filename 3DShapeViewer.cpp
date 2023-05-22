@@ -61,21 +61,6 @@ bool ShapeViewer::initialize(HINSTANCE hInstance, int nCmdShow)
 	return true;
 }
 
-//void updateCameraVectors()
-//{
-//	glm::vec3 front;
-//	front.x = cos(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
-//	front.y = sin(glm::radians(pitch));
-//	front.z = sin(glm::radians(yaw - 90)) * cos(glm::radians(pitch));
-//	cameraFront = glm::normalize(front);
-//	glm::vec3 Right = glm::normalize(glm::cross(cameraFront, glm::vec3(.0f, 1.0f, .0f)));
-//	cameraUp = glm::normalize(glm::cross(Right, cameraFront));
-//
-//	glm::mat4 rollMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(roll), front);
-//	Right = glm::normalize(glm::vec3(rollMatrix * glm::vec4(Right, 0.0f)));
-//	cameraUp = glm::normalize(glm::vec3(rollMatrix * glm::vec4(cameraUp, 0.0f)));
-//}
-
 bool ShapeViewer::isKeyPressed(char ch) {
 	return (65 <= ch && ch <= 90) ? keyPressed[ch] : (97 <= ch && ch <= 122) ? keyPressed[ch - 32] : keyPressed[ch];
 }
@@ -101,24 +86,24 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('E')) {
 		camera->moveForward(1);
 	}
-	//else if (isKeyPressed('J')) {
-	//	yaw -= rotDel;
-	//}
-	//else if (isKeyPressed('L')) {
-	//	yaw += rotDel;
-	//}
-	//else if (isKeyPressed('I')) {
-	//	pitch += rotDel;
-	//}
-	//else if (isKeyPressed('K')) {
-	//	pitch -= rotDel;
-	//}
-	//else if (isKeyPressed('O')) {
-	//	roll += rotDel; updateCameraVectors();
-	//}
-	//else if (isKeyPressed('U')) {
-	//	roll -= rotDel; updateCameraVectors();
-	//}
+	else if (isKeyPressed('J')) {
+		camera->updateKey(0, 1, 0);
+	}
+	else if (isKeyPressed('L')) {
+		camera->updateKey(0, -1, 0);
+	}
+	else if (isKeyPressed('I')) {
+		camera->updateKey(1, 0, 0);
+	}
+	else if (isKeyPressed('K')) {
+		camera->updateKey(-1, 0, 0);
+	}
+	else if (isKeyPressed('O')) {
+		camera->updateKey(0, 0, -1);
+	}
+	else if (isKeyPressed('U')) {
+		camera->updateKey(0, 0, 1);
+	}
 	else if (isKeyPressed('G')) {
 		drawGrid = !drawGrid;
 	}
