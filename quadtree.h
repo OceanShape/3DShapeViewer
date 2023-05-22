@@ -6,7 +6,7 @@
 
 #include "shapedata.h"
 #include "object.h"
-#include "renderoption.h"
+#include "utility.h"
 
 using namespace std;
 

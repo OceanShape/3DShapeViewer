@@ -139,6 +139,7 @@
     <ClInclude Include="quadtree.h" />
     <ClInclude Include="renderoption.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="utility.h" />
     <ClInclude Include="shapedata.h" />
     <ClInclude Include="shapefile.h" />
     <ClInclude Include="ShpLibraryTest\shapefil.h" />

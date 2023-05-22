@@ -5,29 +5,6 @@ ShapeViewer::ShapeViewer() {
 	g_shapeViewer = this;
 }
 
-bool checkShaderCompileStatus(GLuint shader)
-{
-	GLint compileStatus;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &compileStatus);
-	if (compileStatus == GL_FALSE)
-	{
-		GLint infoLogLength;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-		vector<char> infoLog(infoLogLength);
-		glGetShaderInfoLog(shader, infoLogLength, nullptr, infoLog.data());
-		cerr << "Shader compile error: " << infoLog.data() << endl;
-		return false;
-	}
-	return true;
-}
-
-bool compileShader(GLuint shader, const char* source)
-{
-	glShaderSource(shader, 1, &source, nullptr);
-	glCompileShader(shader);
-	return checkShaderCompileStatus(shader);
-}
-
 bool ShapeViewer::initialize(HINSTANCE hInstance, int nCmdShow)
 {
 	hWnd = CreateWindowEx(0, L"OpenGLWindowClass", L"3D Shape Viewer", WS_OVERLAPPEDWINDOW,
@@ -199,36 +176,10 @@ void ShapeViewer::cleanUp()
 	eglTerminate(eglOptions.eglDisplay);
 }
 
-string readShader(const string& filepath) {
-	ifstream file(filepath);
-	if (!file.is_open()) {
-		return "";
-	}
-
-	string shader_code;
-	string line;
-	while (getline(file, line)) {
-		shader_code += line + "\n";
-	}
-
-	return shader_code;
-}
-
 void ShapeViewer::closeShapefile() {
 	if (isShapeLoaded) {
 		//objectData.reset();
 		fclose(SHPFile);
-	}
-}
-
-void memSwap(void* const data, size_t size) {
-	uint8_t* start = (uint8_t*)data;
-	uint8_t* end = (uint8_t*)data + size - 1;
-	while (start < end) {
-		uint8_t tmp = *start;
-		*start = *end;
-		*end = tmp;
-		start++, end--;
 	}
 }
 
@@ -584,5 +535,3 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	return static_cast<int>(msg.wParam);
 }
-
-

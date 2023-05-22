@@ -1,15 +1,14 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
 
-// #include "shapefil.h"
 #include "framework.h"
 #include "resource.h"
 #include "shapefile.h"
 #include "shapedata.h"
 #include "quadtree.h"
 #include "object.h"
-#include "renderoption.h"
 #include "camera.h"
+#include "utility.h"
 
 #include <Commdlg.h>
 #include <Windows.h>
@@ -29,18 +28,6 @@
 #include <cstdint>
 #include <stdarg.h>
 #include <CommCtrl.h>
-
-struct EGLOptions {
-	EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
-	EGLDisplay eglDisplay;
-	EGLSurface eglSurface;
-	EGLContext eglContext;
-	EGLConfig eglConfig;
-	EGLint contextAttribs[3] = {
-		EGL_CONTEXT_CLIENT_VERSION, 3,
-		EGL_NONE
-	};
-};
 
 class ShapeViewer {
 public:
@@ -96,7 +83,3 @@ public:
 ShapeViewer* g_shapeViewer;
 typedef unsigned char uchar;
 using namespace std;
-
-bool checkShaderCompileStatus(GLuint shader);
-bool compileShader(GLuint shader, const char* source);
-string readShader(const string& filepath);
