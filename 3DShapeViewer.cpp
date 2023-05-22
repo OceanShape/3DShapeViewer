@@ -1,8 +1,9 @@
 #include "3DShapeViewer.h"
 
-ShapeViewer shapeViewer;
-
-typedef unsigned char uchar;
+ShapeViewer::ShapeViewer() {
+	camera = make_shared<Camera>(0.0f, 0.0f, 3.0f);
+	g_shapeViewer = this;
+}
 
 bool checkShaderCompileStatus(GLuint shader)
 {
@@ -218,11 +219,6 @@ void ShapeViewer::closeShapefile() {
 		//objectData.reset();
 		fclose(SHPFile);
 	}
-}
-
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	return shapeViewer.msgProc(hWnd, message, wParam, lParam);
 }
 
 void memSwap(void* const data, size_t size) {
@@ -535,6 +531,11 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	return g_shapeViewer->msgProc(hWnd, message, wParam, lParam);
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	AllocConsole();
@@ -558,6 +559,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	RegisterClassEx(&wcex);
 
+
+	ShapeViewer shapeViewer;
 
 	if (!shapeViewer.initialize(hInstance, nCmdShow)) {
 		return -1;

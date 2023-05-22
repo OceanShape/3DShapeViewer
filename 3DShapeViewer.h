@@ -30,8 +30,6 @@
 #include <stdarg.h>
 #include <CommCtrl.h>
 
-using namespace std;
-
 struct EGLOptions {
 	EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 	EGLDisplay eglDisplay;
@@ -79,10 +77,7 @@ public:
 	shared_ptr<ObjectData> objectData;
 	std::vector<shared_ptr<Object>> objects;
 
-
-	ShapeViewer() {
-		camera = make_shared<Camera>(0.0f, 0.0f, 3.0f);
-	};
+	ShapeViewer();
 
 	LRESULT msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -97,6 +92,10 @@ public:
 	bool isKeyPressed(char ch);
 	void update();
 };
+
+ShapeViewer* g_shapeViewer;
+typedef unsigned char uchar;
+using namespace std;
 
 bool checkShaderCompileStatus(GLuint shader);
 bool compileShader(GLuint shader, const char* source);
