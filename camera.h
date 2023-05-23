@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 class Camera {
 
@@ -32,7 +33,7 @@ public:
 	void updateZoom(float dt);
 
 	void moveUp(float dt) { position += up * delta * dt; updateLevelAndBoundary(); };
-	void moveForward(float dt) { position += direction * deltaZ * dt; updateLevelAndBoundary(); };
+	void moveForward(float dt) { position += direction * delta * dt; updateLevelAndBoundary(); };
 	void moveRight(float dt) { position += right * delta * dt; updateLevelAndBoundary(); };
 
 	void setAspectRatio(float _aspect) { aspect = _aspect; };
@@ -93,15 +94,24 @@ void Camera::updateKey(float rotX, float rotY, float rotZ) {
 	roll += rotZ * rotDel;
 
 	glm::quat qX = glm::angleAxis(glm::radians(pitch), glm::vec3(1, 0, 0));
-	glm::quat qY = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0));
-	glm::quat qZ = glm::angleAxis(glm::radians(roll), glm::vec3(0, 0, 1));
+	glm::quat qY = glm::angleAxis(glm::radians(yaw), glm::vec3(0, -1, 0));
 	qX = glm::normalize(qX);
 	qY = glm::normalize(qY);
+
+	direction = glm::normalize(qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
+	up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
+
+	glm::quat qZ = glm::angleAxis(glm::radians(roll), direction);
 	qZ = glm::normalize(qZ);
 
-	direction = glm::normalize(qZ * qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
-	up = glm::normalize(qZ * qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
+	direction = glm::normalize(qZ * direction);
+	up = glm::normalize(qZ * up);
+
 	right = glm::normalize(glm::cross(direction, up));
+
+	std::cout << glm::to_string(direction) << std::endl;
+	std::cout << glm::to_string(up) << std::endl;
+	std::cout << glm::to_string(right) << std::endl;
 
 	updateLevelAndBoundary();
 }

@@ -87,10 +87,10 @@ void ShapeViewer::update() {
 		camera->moveForward(1);
 	}
 	else if (isKeyPressed('J')) {
-		camera->updateKey(0, 1, 0);
+		camera->updateKey(0, -1, 0);
 	}
 	else if (isKeyPressed('L')) {
-		camera->updateKey(0, -1, 0);
+		camera->updateKey(0, 1, 0);
 	}
 	else if (isKeyPressed('I')) {
 		camera->updateKey(1, 0, 0);
