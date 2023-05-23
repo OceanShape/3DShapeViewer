@@ -427,6 +427,7 @@ bool ShapeViewer::openShapefile() {
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wDel;
+	RECT rt;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -446,7 +447,8 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 	break;
 	case WM_LBUTTONDOWN:
-		std::cout << GET_X_LPARAM(lParam) << "," << GET_Y_LPARAM(lParam) << std::endl;
+		GetClientRect(hWnd, &rt);
+		std::cout << GET_X_LPARAM(lParam) << "," << rt.bottom - rt.top  - GET_Y_LPARAM(lParam) << std::endl;
 	break;
 	case WM_MOUSEWHEEL:
 		camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
