@@ -29,6 +29,7 @@ public:
 
 	void updateMouse(float mouseNdcX, float mouseNdcY);
 	void updateKey(float rotX, float rotY, float rotZ);
+	void updateZoom(float dt);
 
 	void moveUp(float dt) { position += up * delta * dt; updateLevelAndBoundary(); };
 	void moveForward(float dt) { position += direction * deltaZ * dt; updateLevelAndBoundary(); };
@@ -103,4 +104,10 @@ void Camera::updateKey(float rotX, float rotY, float rotZ) {
 	right = glm::normalize(glm::cross(direction, up));
 
 	updateLevelAndBoundary();
+}
+
+void Camera::updateZoom(float dt) {
+	fov -= rotDel * dt;
+	fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
+	std::cout << fov << std::endl;
 }

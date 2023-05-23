@@ -12,6 +12,7 @@
 
 #include <Commdlg.h>
 #include <Windows.h>
+#include <Windowsx.h>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include <iostream>
@@ -40,7 +41,7 @@ public:
 	const int WINDOW_POS_X = 500;
 	const int WINDOW_POS_Y = 0;
 	const int WINDOW_WIDTH = 913;
-	const int WINDOW_HEIGHT = 959;
+	const int WINDOW_HEIGHT = 956;
 	const float CAMERA_START_Z = 3.0f;
 
 	RenderOption renderOption;

@@ -445,12 +445,12 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
-	//case WM_MOUSEWHEEL:
-	//	wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
-	//	fov -= wDel * .1f;
-	//	fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
-	//	std::cout << "fov: " << fov << endl;
-	//	break;
+	case WM_LBUTTONDOWN:
+		std::cout << GET_X_LPARAM(lParam) << "," << GET_Y_LPARAM(lParam) << std::endl;
+	break;
+	case WM_MOUSEWHEEL:
+		camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
+		break;
 	case WM_KEYDOWN:
 		keyPressed[wParam] = true;
 		break;
