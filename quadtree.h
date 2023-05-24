@@ -124,8 +124,6 @@ private:
 
 	void render(int level, int selectLevel) {
 		if (level > selectLevel) return;
-			return;
-		}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
@@ -133,7 +131,7 @@ private:
 			}
 		}
 
-			drawBorder();
+		drawBorder();
 		drawObject();
 	}
 

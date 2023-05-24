@@ -36,7 +36,7 @@ public:
 	void setAspectRatio(float _aspect) { aspect = _aspect; };
 
 	void setLevel(int lev) {
-		currentLevel = (lev > maxLevel) ? maxLevel : lev;
+		currentLevel = (lev > maxLevel) ? maxLevel : (0 > lev) ? 0 : lev;
 	}
 
 	void updateLevelAndBoundary();
@@ -58,21 +58,15 @@ private:
 	// projection option
 	float fov = 45.0f;
 	float nearZ = 0.01f;
-	float farZ = 10.0f;
+	float farZ = 100.0f;
 	float aspect = 1.0f;
 };
 
 void Camera::updateLevelAndBoundary() {
-	if (0.0f < position.z <= startZ) {
+	if (0.0f < position.z && position.z <= startZ) {
 		float deltaLevel = startZ / (maxLevel + 1.0f);
-		currentLevel = (int)((3.0f - position.z) / deltaLevel);
+		setLevel((3.0f - position.z) / deltaLevel);
 		std::cout << "current level: [" << currentLevel << "]" << endl;
-
-		// update boundary
-		float centerX = (maxTotal[0] + minTotal[0]) / 2 + delTotal[0] * position.x;
-		float centerY = (maxTotal[1] + minTotal[1]) / 2 + delTotal[0] * position.y;
-		float delBoundary = delTotal[0] * position.z * (tan(fov / 2)) / 1.1f;
-		setBoundary(centerX - delBoundary, centerX + delBoundary, centerY - delBoundary, centerY + delBoundary);
 	}
 }
 
