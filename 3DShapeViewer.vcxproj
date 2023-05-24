@@ -135,6 +135,7 @@
     <ClInclude Include="3DShapeViewer.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="frustum.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="quadtree.h" />
     <ClInclude Include="Resource.h" />

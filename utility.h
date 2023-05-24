@@ -6,8 +6,6 @@
 #include <fstream>
 #include <iostream>
 
-#include "object.h"
-
 // options
 struct EGLOptions {
 	EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;

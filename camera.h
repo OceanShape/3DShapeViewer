@@ -6,6 +6,8 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include "frustum.h"
+
 class Camera {
 
 public:
@@ -18,8 +20,11 @@ public:
 	GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
 	GLfloat delTotal[3]{};
 
+	shared_ptr<Frustum> frustum;
+
 	Camera(float posX, float posY, float posZ) : startZ(posZ) {
 		position = glm::vec3(posX, posY, posZ);
+		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ);
 	}
 
 	glm::mat4 getView() { return glm::lookAt(position, position + direction, up); };
@@ -29,9 +34,9 @@ public:
 	void updateMouse(float ndcX, float ndcY);
 	void updateZoom(float dt);
 
-	void moveUp(float dt) { position += up * delta * dt; updateLevelAndBoundary(); };
-	void moveForward(float dt) { position += direction * deltaZ * dt; updateLevelAndBoundary(); };
-	void moveRight(float dt) { position += right * delta * dt; updateLevelAndBoundary(); };
+	void moveUp(float dt) { position += up * delta * dt; update(); };
+	void moveForward(float dt) { position += direction * deltaZ * dt; update(); };
+	void moveRight(float dt) { position += right * delta * dt; update(); };
 
 	void setAspectRatio(float _aspect) { aspect = _aspect; };
 
@@ -39,7 +44,7 @@ public:
 		currentLevel = (lev > maxLevel) ? maxLevel : (0 > lev) ? 0 : lev;
 	}
 
-	void updateLevelAndBoundary();
+	void update();
 
 private:
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -62,12 +67,16 @@ private:
 	float aspect = 1.0f;
 };
 
-void Camera::updateLevelAndBoundary() {
+void Camera::update() {
+	// update level
 	if (0.0f < position.z && position.z <= startZ) {
 		float deltaLevel = startZ / (maxLevel + 1.0f);
 		setLevel((3.0f - position.z) / deltaLevel);
 		std::cout << "current level: [" << currentLevel << "]" << endl;
 	}
+
+	// update frustum
+	frustum->update(direction, up, right, position, nearZ, farZ);
 }
 
 void Camera::updateMouse(float ndcX, float ndcY) {
