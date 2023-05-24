@@ -30,7 +30,7 @@ public:
 	void updateZoom(float dt);
 
 	void moveUp(float dt) { position += up * delta * dt; updateLevelAndBoundary(); };
-	void moveForward(float dt) { position += direction * delta * dt; updateLevelAndBoundary(); };
+	void moveForward(float dt) { position += direction * deltaZ * dt; updateLevelAndBoundary(); };
 	void moveRight(float dt) { position += right * delta * dt; updateLevelAndBoundary(); };
 
 	void setAspectRatio(float _aspect) { aspect = _aspect; };
@@ -47,9 +47,9 @@ private:
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 right = glm::vec3(1.0f, .0f, .0f);
 
-	float pitch = .0f;	// x-axis
-	float yaw = .0f;	// y-axis
-	float roll = .0f;	// z-axis
+	float pitch	= .0f;	// x-axis
+	float yaw	= .0f;	// y-axis
+	float roll	= .0f;	// z-axis
 	float rotDel = 1.0f;
 
 	float delta = 0.01f;
@@ -58,7 +58,7 @@ private:
 	// projection option
 	float fov = 45.0f;
 	float nearZ = 0.01f;
-	float farZ = 100.0f;
+	float farZ = 1000.0f;
 	float aspect = 1.0f;
 };
 
