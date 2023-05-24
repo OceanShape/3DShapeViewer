@@ -86,28 +86,9 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('E')) {
 		camera->moveForward(1);
 	}
-	else if (isKeyPressed('J')) {
-		camera->updateKey(0, -1, 0);
-	}
-	else if (isKeyPressed('L')) {
-		camera->updateKey(0, 1, 0);
-	}
-	else if (isKeyPressed('I')) {
-		camera->updateKey(1, 0, 0);
-	}
-	else if (isKeyPressed('K')) {
-		camera->updateKey(-1, 0, 0);
-	}
-	else if (isKeyPressed('O')) {
-		camera->updateKey(0, 0, -1);
-	}
-	else if (isKeyPressed('U')) {
-		camera->updateKey(0, 0, 1);
-	}
 	else if (isKeyPressed('G')) {
 		drawGrid = !drawGrid;
 	}
-
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
 			camera->setLevel(i);
@@ -426,7 +407,8 @@ bool ShapeViewer::openShapefile() {
 
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	int wDel;
+	int wDel, mouseX, mouseY;
+	float ndcX, ndcY;
 	RECT rt;
 	switch (message)
 	{
@@ -446,9 +428,13 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
-	case WM_LBUTTONDOWN:
+	case WM_MOUSEMOVE:
 		GetClientRect(hWnd, &rt);
-		std::cout << GET_X_LPARAM(lParam) << "," << rt.bottom - rt.top  - GET_Y_LPARAM(lParam) << std::endl;
+		mouseX = LOWORD(lParam);
+		mouseY = HIWORD(lParam);
+		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		camera->updateMouse(ndcX, ndcY);
 	break;
 	case WM_MOUSEWHEEL:
 		camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
