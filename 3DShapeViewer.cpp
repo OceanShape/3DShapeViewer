@@ -113,7 +113,7 @@ void ShapeViewer::render()
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		}
 
-		objectData->render(camera->currentLevel, camera->boundaryX, camera->boundaryY);
+		objectData->render(camera->currentLevel);
 	}
 
 	eglSwapBuffers(eglOptions.eglDisplay, eglOptions.eglSurface);
@@ -256,8 +256,6 @@ bool ShapeViewer::readShapefile() {
 	{
 		float yTop = (yMin + yMax) / 2 + delTotal[0];
 		float yBot = (yMin + yMax) / 2 - delTotal[0];
-
-		camera->setBoundary(xMin, xMax, yBot, yTop);
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
 		float max[2] = { shpHeaderData.Xmax , yTop };

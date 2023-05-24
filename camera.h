@@ -14,9 +14,6 @@ public:
 
 	float startZ = .0f;
 
-	float boundaryX[2] = {};
-	float boundaryY[2] = {};
-
 	GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
 	GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
 	GLfloat delTotal[3]{};
@@ -40,11 +37,6 @@ public:
 
 	void setLevel(int lev) {
 		currentLevel = (lev > maxLevel) ? maxLevel : lev;
-	}
-
-	void setBoundary(float xMin, float xMax, float yMin, float yMax) {
-		boundaryX[0] = xMin, boundaryX[1] = xMax;
-		boundaryY[0] = yMin, boundaryY[1] = yMax;
 	}
 
 	void updateLevelAndBoundary();

@@ -123,7 +123,7 @@ private:
 	}
 
 	void render(int level, int selectLevel) {
-		if (level > selectLevel) {
+		if (level > selectLevel) return;
 			return;
 		}
 
@@ -133,11 +133,7 @@ private:
 			}
 		}
 
-		if ((Xmax < boundaryX[0] || Xmin > boundaryX[1] ||
-			Ymax < boundaryY[0] || Ymin > boundaryY[1]) == false) {
 			drawBorder();
-		}
-
 		drawObject();
 	}
 
@@ -147,11 +143,6 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 		for (auto obj : objects) {
-			if (obj->max[0] < boundaryX[0] || obj->min[0] > boundaryX[1] ||
-				obj->max[1] < boundaryY[0] || obj->min[1] > boundaryY[1]) {
-				continue;
-			}
-
 			obj->render();
 		}
 	}
@@ -168,8 +159,6 @@ private:
 } typedef qtNode;
 
 int qtNode::nodeCount = 0;
-float qtNode::boundaryX[2] = { 0.0f, 0.0f };
-float qtNode::boundaryY[2] = { 0.0f, 0.0f };
 RenderOption qtNode::renderOption = { 0, };
 
 class ObjectData {
@@ -192,9 +181,7 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void render(int selectLevel, float boundaryX[], float boundaryY[]) {
-		std::copy(boundaryX, boundaryX + 2, qtNode::boundaryX);
-		std::copy(boundaryY, boundaryY + 2, qtNode::boundaryY);
+	void render(int selectLevel) {
 		root->render(0, selectLevel);
 	}
 };
