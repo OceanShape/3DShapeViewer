@@ -50,6 +50,10 @@ struct Plane {
 	glm::vec3 getNormal() {
 		return glm::normalize(glm::cross(vertices[2] - vertices[0], vertices[1] - vertices[0]));
 	}
+
+	float getD(glm::vec3 v) {
+		return glm::dot(getNormal(), v);
+	}
 };
 
 struct Frustum {
@@ -63,6 +67,8 @@ struct Frustum {
 	float nearZ;
 	float farZ;
 
+	Frustum() {};
+
 	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ) : nearZ(_nearZ), farZ(_farZ) {
 		update(direction, up, right, eyePos);
 		
@@ -75,6 +81,12 @@ struct Frustum {
 		rightPlane = Plane(nv[3], nv[2], fv[3], fv[2]);
 		topPlane = Plane(nv[2], nv[1], fv[1], fv[3]);
 		bottomPlane = Plane(nv[0], nv[3], fv[2], fv[0]);
+	}
+
+	bool inside(glm::vec3 v) {
+		return nearPlane.getD(v) > .0f && farPlane.getD(v) > .0f 
+			&& leftPlane.getD(v) > .0f && rightPlane.getD(v) > .0f
+			&& topPlane.getD(v) > .0f  && bottomPlane.getD(v) > .0f;
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos) {
