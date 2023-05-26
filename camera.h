@@ -76,7 +76,7 @@ void Camera::update() {
 	}
 
 	// update frustum
-	frustum->update(direction, up, right, position, nearZ, farZ);
+	frustum->update(direction, up, right, position);
 }
 
 void Camera::updateMouse(float ndcX, float ndcY) {
@@ -91,6 +91,9 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	direction = glm::normalize(qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
 	up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
 	right = glm::normalize(glm::cross(direction, up));
+
+
+	frustum->update(direction, up, right, position);
 }
 
 void Camera::updateZoom(float dt) {
