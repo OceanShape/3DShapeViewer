@@ -113,7 +113,7 @@ void ShapeViewer::render()
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		}
 
-		objectData->render(camera->currentLevel);
+		objectData->render(camera->currentLevel, camera->frustum);
 	}
 
 	eglSwapBuffers(eglOptions.eglDisplay, eglOptions.eglSurface);

@@ -48,11 +48,13 @@ struct Plane {
 	}
 
 	glm::vec3 getNormal() {
-		return glm::normalize(glm::cross(vertices[2] - vertices[0], vertices[1] - vertices[0]));
+		auto t = glm::normalize(glm::cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
+		return t;
 	}
 
-	float getD(glm::vec3 v) {
-		return glm::dot(getNormal(), v);
+	bool isPointFront(glm::vec3 v) {
+		float d = -glm::dot(getNormal(), vertices[0]);
+		return glm::dot(getNormal(), v) + d > .0f;
 	}
 };
 
@@ -76,17 +78,25 @@ struct Frustum {
 		auto fv = farVertices;
 
 		nearPlane = Plane(nv[0], nv[1], nv[2], nv[3]);
-		farPlane = Plane(fv[0], fv[2], fv[3], fv[1]);
+		farPlane = Plane(fv[0], fv[3], fv[2], fv[1]);
 		leftPlane = Plane(fv[0], fv[1], nv[1], nv[0]);
-		rightPlane = Plane(nv[3], nv[2], fv[3], fv[2]);
-		topPlane = Plane(nv[2], nv[1], fv[1], fv[3]);
-		bottomPlane = Plane(nv[0], nv[3], fv[2], fv[0]);
+		rightPlane = Plane(nv[3], nv[2], fv[2], fv[3]);
+		topPlane = Plane(nv[1], fv[1], fv[2], nv[2]);
+		bottomPlane = Plane(nv[0], nv[3], fv[3], fv[0]);
 	}
 
 	bool inside(glm::vec3 v) {
-		return nearPlane.getD(v) > .0f && farPlane.getD(v) > .0f 
-			&& leftPlane.getD(v) > .0f && rightPlane.getD(v) > .0f
-			&& topPlane.getD(v) > .0f  && bottomPlane.getD(v) > .0f;
+		bool t0, t1, t2, t3, t4, t5;
+		t0 = nearPlane.isPointFront(v);
+		t1 = farPlane.isPointFront(v);
+		t2 = leftPlane.isPointFront(v);
+		t3 = rightPlane.isPointFront(v);
+		t4 = topPlane.isPointFront(v);
+		t5 = bottomPlane.isPointFront(v);
+		/*bool t = nearPlane.isPointFront(v) && farPlane.isPointFront(v)
+			&& leftPlane.isPointFront(v) && rightPlane.isPointFront(v)
+			&& topPlane.isPointFront(v) && bottomPlane.isPointFront(v);*/
+		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos) {

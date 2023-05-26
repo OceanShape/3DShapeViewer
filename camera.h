@@ -92,7 +92,6 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
 	right = glm::normalize(glm::cross(direction, up));
 
-
 	frustum->update(direction, up, right, position);
 }
 

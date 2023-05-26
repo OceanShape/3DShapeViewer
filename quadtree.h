@@ -7,6 +7,7 @@
 #include "shapedata.h"
 #include "object.h"
 #include "utility.h"
+#include "frustum.h"
 
 using namespace std;
 
@@ -47,6 +48,10 @@ public:
 	}
 };
 
+float modelToWorld(float pos, float min, float max) {
+	return (pos - min) / ((max - min) / 2) - 1.0f;
+}
+
 class QuadtreeNode {
 	friend class ObjectData;
 
@@ -56,6 +61,7 @@ class QuadtreeNode {
 	static float boundaryY[2];
 
 	static RenderOption renderOption;
+	static shared_ptr<Frustum> frustum;
 
 	vector<shared_ptr<Object>> objects;
 
@@ -122,8 +128,38 @@ private:
 		}
 	}
 
+	/* for object
+	void AABBOX(glm::vec3 vertices[]) {
+		vertices[0] = glm::vec3{ Xmin, Ymin, .0f };
+		vertices[1] = glm::vec3{ Xmin, Ymax, .0f };
+		vertices[2] = glm::vec3{ Xmax, Ymax, .0f };
+		vertices[3] = glm::vec3{ Xmax, Ymin, .0f };
+
+		vertices[4] = glm::vec3{ Xmin, Ymin, 1.0f };
+		vertices[5] = glm::vec3{ Xmin, Ymax, 1.0f };
+		vertices[6] = glm::vec3{ Xmax, Ymax, 1.0f };
+		vertices[7] = glm::vec3{ Xmax, Ymin, 1.0f };
+	}
+	*/
+
 	void render(int level, int selectLevel) {
 		if (level > selectLevel) return;
+		
+		float xMin = modelToWorld(Xmin, boundaryX[0], boundaryX[1]);
+		float xMax = modelToWorld(Xmax, boundaryX[0], boundaryX[1]);
+		float yMin = modelToWorld(Ymin, boundaryY[0], boundaryY[1]);
+		float yMax = modelToWorld(Ymin, boundaryY[0], boundaryY[1]);
+
+		glm::vec3 box[4]{ glm::vec3{ xMin, yMin, .0f }, glm::vec3{ xMin, yMax, .0f }, glm::vec3{ xMax, yMax, .0f }, glm::vec3{ xMax, yMin, .0f }};
+		bool insideFrustum = false;
+		for (auto v : box) {
+			if (frustum->inside(v)) {
+				insideFrustum = true;
+				break;
+			}
+		}
+
+		if (insideFrustum == false) return;
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
@@ -158,6 +194,9 @@ private:
 
 int qtNode::nodeCount = 0;
 RenderOption qtNode::renderOption = { 0, };
+shared_ptr<Frustum> qtNode::frustum = nullptr;
+float qtNode::boundaryX[]{};
+float qtNode::boundaryY[]{};
 
 class ObjectData {
 	
@@ -167,7 +206,9 @@ class ObjectData {
 public:
 	ObjectData(float min[], float max[]) {
 		root = make_shared<qtNode>(min[0], max[0], min[1], max[1]);
-		ms = make_shared<MeshCollectionMemory>();
+		qtNode::boundaryX[0] = min[0], qtNode::boundaryX[1] = max[0];
+		qtNode::boundaryY[0] = min[1], qtNode::boundaryY[1] = max[1];
+		//ms = make_shared<MeshCollectionMemory>();
 	}
 
 	void setRenderOpiton(const RenderOption& renderOption) {
@@ -179,7 +220,8 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void render(int selectLevel) {
+	void render(int selectLevel, shared_ptr<Frustum> frustum) {
+		qtNode::frustum = frustum;
 		root->render(0, selectLevel);
 	}
 };
