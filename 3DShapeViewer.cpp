@@ -89,6 +89,9 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('G')) {
 		drawGrid = !drawGrid;
 	}
+	else if (isKeyPressed('C')) {
+		camera->capture();
+	}
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
 			camera->setLevel(i);

@@ -21,6 +21,7 @@ public:
 	GLfloat delTotal[3]{};
 
 	shared_ptr<Frustum> frustum;
+	bool frustumCaptured = false;
 
 	Camera(float posX, float posY, float posZ) : startZ(posZ) {
 		position = glm::vec3(posX, posY, posZ);
@@ -45,6 +46,10 @@ public:
 	}
 
 	void update();
+
+	void capture() {
+		frustumCaptured != frustumCaptured;
+	}
 
 private:
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -76,7 +81,9 @@ void Camera::update() {
 	}
 
 	// update frustum
-	frustum->update(direction, up, right, position);
+	if (frustumCaptured == false) {
+		frustum->update(direction, up, right, position);
+	}
 }
 
 void Camera::updateMouse(float ndcX, float ndcY) {
@@ -92,7 +99,9 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
 	right = glm::normalize(glm::cross(direction, up));
 
-	frustum->update(direction, up, right, position);
+	if (frustumCaptured == false) {
+		frustum->update(direction, up, right, position);
+	}
 }
 
 void Camera::updateZoom(float dt) {
