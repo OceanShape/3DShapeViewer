@@ -48,7 +48,8 @@ public:
 	void update();
 
 	void capture() {
-		frustumCaptured != frustumCaptured;
+		frustumCaptured = !frustumCaptured;
+		if (frustumCaptured) std::cout << "capture" << std::endl;
 	}
 
 private:

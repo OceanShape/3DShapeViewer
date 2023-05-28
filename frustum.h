@@ -96,6 +96,7 @@ struct Frustum {
 		/*bool t = nearPlane.isPointFront(v) && farPlane.isPointFront(v)
 			&& leftPlane.isPointFront(v) && rightPlane.isPointFront(v)
 			&& topPlane.isPointFront(v) && bottomPlane.isPointFront(v);*/
+		std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
 		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
 
@@ -103,12 +104,17 @@ struct Frustum {
 		nearVertices[0] = eyePos - up - right + direction * nearZ; 
 		nearVertices[1] = eyePos + up - right + direction * nearZ;
 		nearVertices[2] = eyePos + up + right + direction * nearZ;
-		nearVertices[3] = eyePos - up + right + direction * nearZ; 
+		nearVertices[3] = eyePos - up + right + direction * nearZ;
+		nearVertices[2].x = 0;
+		nearVertices[3].x = 0;
 
 		farVertices[0] = eyePos + (-up - right) * farZ / nearZ + direction * farZ;
 		farVertices[1] = eyePos + (+up - right) * farZ / nearZ + direction * farZ;
 		farVertices[2] = eyePos + (+up + right) * farZ / nearZ + direction * farZ; 
-		farVertices[3] = eyePos + (-up + right) * farZ / nearZ + direction * farZ; 
+		farVertices[3] = eyePos + (-up + right) * farZ / nearZ + direction * farZ;
+		farVertices[2].x = 0;
+		farVertices[3].x = 0;
+		int a = 0;
 	}
 
 	void printFrustumVertex() {

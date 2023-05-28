@@ -8,6 +8,7 @@
 #include "object.h"
 #include "utility.h"
 #include "frustum.h"
+#include "camera.h"
 
 using namespace std;
 
@@ -142,20 +143,23 @@ private:
 	}
 	*/
 
-	void render(int level, int selectLevel) {
+	void render(int level, int selectLevel, shared_ptr<Camera> cam) {
 		if (level > selectLevel) return;
 		
 		float xMin = modelToWorld(Xmin, boundaryX[0], boundaryX[1]);
 		float xMax = modelToWorld(Xmax, boundaryX[0], boundaryX[1]);
 		float yMin = modelToWorld(Ymin, boundaryY[0], boundaryY[1]);
-		float yMax = modelToWorld(Ymin, boundaryY[0], boundaryY[1]);
+		float yMax = modelToWorld(Ymax, boundaryY[0], boundaryY[1]);
 
 		glm::vec3 box[4]{ glm::vec3{ xMin, yMin, .0f }, glm::vec3{ xMin, yMax, .0f }, glm::vec3{ xMax, yMax, .0f }, glm::vec3{ xMax, yMin, .0f }};
+		if (cam->frustumCaptured == true) {
+			int a = 0;
+		}
 		bool insideFrustum = false;
 		for (auto v : box) {
 			if (frustum->inside(v)) {
 				insideFrustum = true;
-				break;
+				//break;
 			}
 		}
 
@@ -163,7 +167,7 @@ private:
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
-				n->render(level + 1, selectLevel);
+				n->render(level + 1, selectLevel, cam);
 			}
 		}
 
@@ -220,8 +224,8 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void render(int selectLevel, shared_ptr<Frustum> frustum) {
+	void render(int selectLevel, shared_ptr<Frustum> frustum, shared_ptr<Camera> cam) {
 		qtNode::frustum = frustum;
-		root->render(0, selectLevel);
+		root->render(0, selectLevel, cam);
 	}
 };
