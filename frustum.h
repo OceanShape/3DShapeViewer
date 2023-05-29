@@ -96,7 +96,7 @@ struct Frustum {
 		/*bool t = nearPlane.isPointFront(v) && farPlane.isPointFront(v)
 			&& leftPlane.isPointFront(v) && rightPlane.isPointFront(v)
 			&& topPlane.isPointFront(v) && bottomPlane.isPointFront(v);*/
-		std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
+		//std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
 		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
 

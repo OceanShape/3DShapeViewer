@@ -49,7 +49,12 @@ public:
 
 	void capture() {
 		frustumCaptured = !frustumCaptured;
-		if (frustumCaptured) std::cout << "capture" << std::endl;
+		if (frustumCaptured) {
+			std::cout << "capture" << std::endl;
+		}
+		else {
+			std::cout << "uncapture" << std::endl;
+		}
 	}
 
 private:
