@@ -92,6 +92,9 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('C')) {
 		camera->capture();
 	}
+	else if (isKeyPressed('U')) {
+		camera->uncapture();
+	}
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
 			camera->setLevel(i);

@@ -48,13 +48,13 @@ public:
 	void update();
 
 	void capture() {
-		frustumCaptured = !frustumCaptured;
-		if (frustumCaptured) {
-			std::cout << "capture" << std::endl;
-		}
-		else {
-			std::cout << "uncapture" << std::endl;
-		}
+		frustumCaptured = true;
+		std::cout << "captured" << std::endl;
+	}
+
+	void uncapture() {
+		std::cout << "uncapture" << std::endl;
+		frustumCaptured = false;
 	}
 
 private:
@@ -73,8 +73,8 @@ private:
 
 	// projection option
 	float fov = 45.0f;
-	float nearZ = 0.01f;
-	float farZ = 1000.0f;
+	float nearZ = 0.1f;
+	float farZ = 5.0f;
 	float aspect = 1.0f;
 };
 
