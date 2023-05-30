@@ -44,6 +44,10 @@ struct Plane {
 	//점은 시계방향으로 순서대로 들어온다고 가정
 	//즉, 들어오는 점만으로 평면의 방정식을 정의할 수 있음
 	Plane(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
+		update(v0, v1, v2, v3);
+	}
+
+	void update(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 		vertices[0] = v0, vertices[1] = v1, vertices[2] = v2, vertices[3] = v3;
 	}
 
@@ -73,16 +77,6 @@ struct Frustum {
 
 	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ) : nearZ(_nearZ), farZ(_farZ) {
 		update(direction, up, right, eyePos);
-		
-		auto nv = nearVertices;
-		auto fv = farVertices;
-
-		nearPlane = Plane(nv[0], nv[1], nv[2], nv[3]);
-		farPlane = Plane(fv[0], fv[3], fv[2], fv[1]);
-		leftPlane = Plane(fv[0], fv[1], nv[1], nv[0]);
-		rightPlane = Plane(nv[3], nv[2], fv[2], fv[3]);
-		topPlane = Plane(nv[1], fv[1], fv[2], nv[2]);
-		bottomPlane = Plane(nv[0], nv[3], fv[3], fv[0]);
 	}
 
 	bool inside(glm::vec3 v) {
@@ -93,9 +87,6 @@ struct Frustum {
 		t3 = rightPlane.isPointFront(v);
 		t4 = topPlane.isPointFront(v);
 		t5 = bottomPlane.isPointFront(v);
-		/*bool t = nearPlane.isPointFront(v) && farPlane.isPointFront(v)
-			&& leftPlane.isPointFront(v) && rightPlane.isPointFront(v)
-			&& topPlane.isPointFront(v) && bottomPlane.isPointFront(v);*/
 		//std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
 		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
@@ -105,16 +96,33 @@ struct Frustum {
 		nearVertices[1] = eyePos + up - right + direction * nearZ;
 		nearVertices[2] = eyePos + up + right + direction * nearZ;
 		nearVertices[3] = eyePos - up + right + direction * nearZ;
-		nearVertices[2].x = 0;
-		nearVertices[3].x = 0;
+		/*nearVertices[2].x = 0;
+		nearVertices[3].x = 0;*/
 
 		farVertices[0] = eyePos + (-up - right) * farZ / nearZ + direction * farZ;
 		farVertices[1] = eyePos + (+up - right) * farZ / nearZ + direction * farZ;
 		farVertices[2] = eyePos + (+up + right) * farZ / nearZ + direction * farZ; 
 		farVertices[3] = eyePos + (-up + right) * farZ / nearZ + direction * farZ;
-		farVertices[2].x = 0;
-		farVertices[3].x = 0;
-		int a = 0;
+		/*farVertices[2].x = 0;
+		farVertices[3].x = 0;*/
+
+		auto nv = nearVertices;
+		auto fv = farVertices;
+
+		nearPlane.update(nv[0], nv[1], nv[2], nv[3]);
+		farPlane.update(fv[0], fv[3], fv[2], fv[1]);
+		leftPlane.update(fv[0], fv[1], nv[1], nv[0]);
+		rightPlane.update(nv[3], nv[2], fv[2], fv[3]);
+		topPlane.update(nv[1], fv[1], fv[2], nv[2]);
+		bottomPlane.update(nv[0], nv[3], fv[3], fv[0]);
+
+		//for (int i = 0; i < 4; ++i) {
+		//	std::cout << glm::to_string(nearVertices[i]) << std::endl;
+		//}
+		//for (int i = 0; i < 4; ++i) {
+		//	std::cout << glm::to_string(farVertices[i]) << std::endl;
+		//}
+		//std::cout << std::endl;
 	}
 
 	void printFrustumVertex() {
