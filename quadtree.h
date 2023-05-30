@@ -49,10 +49,6 @@ public:
 	}
 };
 
-float modelToWorld(float pos, float min, float max) {
-	return (pos - min) / ((max - min) / 2) - 1.0f;
-}
-
 class QuadtreeNode {
 	friend class ObjectData;
 
@@ -143,6 +139,17 @@ private:
 	}
 	*/
 
+	float modelToWorld(float pos, float min, float max) {
+		return (pos - min) / ((max - min) / 2) - 1.0f;
+	}
+
+	void getBorderVertex(glm::vec3* const box, float xMin, float xMax, float yMin, float yMax) {
+		box[0] = glm::vec3{ xMin, yMin, .0f };
+		box[1] = glm::vec3{ xMin, yMax, .0f };
+		box[2] = glm::vec3{ xMax, yMax, .0f };
+		box[3] = glm::vec3{ xMax, yMin, .0f };
+	}
+
 	void render(int level, int selectLevel, shared_ptr<Camera> cam) {
 		if (level > selectLevel) return;
 		
@@ -151,7 +158,9 @@ private:
 		float yMin = modelToWorld(Ymin, boundaryY[0], boundaryY[1]);
 		float yMax = modelToWorld(Ymax, boundaryY[0], boundaryY[1]);
 
-		glm::vec3 box[4]{ glm::vec3{ xMin, yMin, .0f }, glm::vec3{ xMin, yMax, .0f }, glm::vec3{ xMax, yMax, .0f }, glm::vec3{ xMax, yMin, .0f }};
+		glm::vec3 box[4];
+		getBorderVertex(box, xMin, xMax, yMin, yMax);
+
 		if (cam->frustumCaptured == true) {
 			int a = 0;
 		}
@@ -181,7 +190,10 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 		for (auto obj : objects) {
-			obj->render();
+			glm::vec3 center = obj->center();
+			if (frustum->inside(glm::vec3(modelToWorld(center.x, boundaryX[0], boundaryX[1]), modelToWorld(center.y, boundaryY[0], boundaryY[1]), .0f))) {
+				obj->render();
+			}
 		}
 	}
 

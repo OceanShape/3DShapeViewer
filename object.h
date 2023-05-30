@@ -3,6 +3,7 @@
 #include <string>
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
+#include <glm/glm.hpp>
 
 #include "quadtree.h"
 #include "triangulation.h"
@@ -44,10 +45,10 @@ public:
 			double y = _vertices[i].y;
 			double z = 0.01f;
 
-			min[0] = min(min[0], x);
-			max[0] = max(max[0], x);
-			min[1] = min(min[1], y);
-			max[1] = max(max[1], y);
+			min[0] = std::min(min[0], x);
+			max[0] = std::max(max[0], x);
+			min[1] = std::min(min[1], y);
+			max[1] = std::max(max[1], y);
 
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
@@ -77,6 +78,10 @@ public:
 		}
 
 		setIndex();
+	}
+
+	glm::vec3 center() {
+		return glm::vec3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, 0);
 	}
 
 	// Set index with triangulation
