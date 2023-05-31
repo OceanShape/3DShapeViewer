@@ -112,7 +112,7 @@ void ShapeViewer::render()
 		glm::mat4 view = camera->getView();
 		glm::mat4 projection = camera->getProj();
 
-		for (int i = 0; i < 2; ++i) {
+		for (int i = 0; i < 3; ++i) {
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -120,6 +120,7 @@ void ShapeViewer::render()
 		}
 
 		objectData->render(camera->currentLevel, camera->frustum, camera);
+		camera->frustum->render();
 	}
 
 	eglSwapBuffers(eglOptions.eglDisplay, eglOptions.eglSurface);
@@ -384,8 +385,8 @@ bool ShapeViewer::openShapefile() {
 	}
 
 
-	glGenVertexArrays(2, renderOption.vao);
-	glGenBuffers(2, renderOption.vbo);
+	glGenVertexArrays(3, renderOption.vao);
+	glGenBuffers(3, renderOption.vbo);
 	glGenBuffers(1, &renderOption.ebo);
 
 	glUseProgram(renderOption.program[0]);
@@ -398,6 +399,13 @@ bool ShapeViewer::openShapefile() {
 	glUseProgram(renderOption.program[1]);
 	glBindVertexArray(renderOption.vao[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderOption.ebo);
+
+	glUseProgram(renderOption.program[2]);
+	glBindVertexArray(renderOption.vao[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[2]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderOption.ebo);

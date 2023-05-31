@@ -109,10 +109,27 @@ struct Frustum {
 	}
 
 	void render() {
-		//glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
+		GLuint indices[14 * 3] = {
+			1, 0, 4, 
+			1, 4, 5,
+			2, 1, 5,
+			2, 5, 6,
+			3, 2, 7,
+			2, 6, 7,
+			0, 3, 7,
+			0, 7, 4,
+			0, 2, 4,
+			2, 4, 6,
+			1, 5, 3,
+			3, 5, 7,
+			4, 5, 6,
+			4, 6, 7
+		};
 
-		//glUniform4fv(glGetUniformLocation(program, "color"), 1, objectColor);
+
+		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 14 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+		glDrawElements(GL_TRIANGLES, 42, GL_UNSIGNED_INT, 0);
 	}
 
 	//bool inside(glm::vec3 v) {
