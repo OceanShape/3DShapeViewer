@@ -168,9 +168,10 @@ private:
 		for (auto v : box) {
 			if (frustum->inside(v)) {
 				insideFrustum = true;
-				break;
+				//break;
 			}
 		}
+		std::cout << "---" << std::endl;
 
 		if (insideFrustum == false) return;
 

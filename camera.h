@@ -25,7 +25,7 @@ public:
 
 	Camera(float posX, float posY, float posZ) : startZ(posZ) {
 		position = glm::vec3(posX, posY, posZ);
-		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ);
+		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, getProj() * getView());
 	}
 
 	glm::mat4 getView() { return glm::lookAt(position, position + direction, up); };
@@ -68,13 +68,13 @@ private:
 	float roll	= .0f;	// z-axis
 	float rotDel = 1.0f;
 
-	float delta = 0.01f;
+	float delta = 0.05f;
 	float deltaZ = 0.1f;
 
 	// projection option
 	float fov = 45.0f;
-	float nearZ = 0.1f;
-	float farZ = 5.0f;
+	float nearZ = 0.01f;
+	float farZ = 50.0f;
 	float aspect = 1.0f;
 };
 
@@ -88,7 +88,7 @@ void Camera::update() {
 
 	// update frustum
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position);
+		frustum->update(direction, up, right, position, getProj() * getView());
 	}
 }
 
@@ -106,7 +106,7 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	right = glm::normalize(glm::cross(direction, up));
 
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position);
+		frustum->update(direction, up, right, position, getProj() * getView());
 	}
 }
 
