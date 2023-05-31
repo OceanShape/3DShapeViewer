@@ -29,6 +29,8 @@ public:
 	int partCount = 0;
 	static int type;
 	static GLuint program;
+	const float objectColor[4] = { 1.0f, 0.5f, 0.2f, 1.0f };
+	const float objectSideColor[4] = { 1.0f, .0f, .0f, 1.0f };
 
 public:
 	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
@@ -128,7 +130,7 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
-		glUniform1i(glGetUniformLocation(program, "color"), 0);
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, objectColor);
 
 		if (true) {
 			glDrawElements(GL_TRIANGLES, indexCount - (vertexCount - 1) * 6, GL_UNSIGNED_INT, 0);
@@ -139,7 +141,7 @@ public:
 			}
 		}
 
-		glUniform1i(glGetUniformLocation(program, "color"), 1);
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, objectSideColor);
 
 		for (size_t pos = indexCount - (vertexCount - 1) * 6; pos < indexCount; pos += 2) {
 			glDrawElements(GL_LINE_LOOP, 2, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));

@@ -7,7 +7,7 @@ uniform float aspect_ratio;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform int color;
+uniform vec4 color;
 
 out vec4 vertexColor;
 
@@ -23,5 +23,5 @@ void main() {
   gl_Position = projection * view * model * vec4(position.x, position.y, position.z, 1.0f);
   gl_PointSize = 1.0f;
 
-  vertexColor = (color == 0) ? vec4(1.0f, 0.5f, 0.2f, 1.0f) : vec4(1.0f, .0f, .0f, 1.0f);
+  vertexColor = color;
 }

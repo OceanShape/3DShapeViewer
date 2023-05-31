@@ -105,6 +105,10 @@ struct Frustum {
 	//	return t0 && t1 && t2 && t3 && t4 && t5;
 	//}
 
+	void render() {
+
+	}
+
 	bool inside(glm::vec3 v) {
 		bool t0, t1, t2, t3, t4, t5;
 		t0 = nearPlane.getSignedDistanceToPlane(v);
@@ -113,7 +117,7 @@ struct Frustum {
 		t3 = rightPlane.getSignedDistanceToPlane(v);
 		t4 = topPlane.getSignedDistanceToPlane(v);
 		t5 = bottomPlane.getSignedDistanceToPlane(v);
-		std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
+		//std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
 		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
 
