@@ -125,7 +125,7 @@ struct Frustum {
 	//	t5 = bottomPlane.getSignedDistanceToPlane(v);
 	//	//std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
 	//	return t0 && t1 && t2 && t3 && t4 && t5;
-		//}
+	//}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, glm::mat4 viewProj) {
 		auto inv = glm::inverse(viewProj);

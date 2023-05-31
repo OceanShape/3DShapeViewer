@@ -101,5 +101,11 @@
     <None Include="grid.vert">
       <Filter>소스 파일</Filter>
     </None>
+    <None Include="frustum.vert">
+      <Filter>소스 파일</Filter>
+    </None>
+    <None Include="frustum.frag">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>
