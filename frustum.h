@@ -84,6 +84,7 @@ struct Frustum {
 	//[5][6]
 	//[4][7]
 	glm::vec3 vertices[8]{};
+	float vertexFLT[24]{};
 	
 	Plane nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane;
 
@@ -109,7 +110,7 @@ struct Frustum {
 	}
 
 	void render() {
-		GLuint indices[14 * 3] = {
+		GLuint indices[12 * 3] = {
 			1, 0, 4, 
 			1, 4, 5,
 			2, 1, 5,
@@ -122,14 +123,23 @@ struct Frustum {
 			2, 4, 6,
 			1, 5, 3,
 			3, 5, 7,
-			4, 5, 6,
-			4, 6, 7
 		};
 
+		//vertexFLT[0] = -0.5f; vertexFLT[1] = -0.5f; vertexFLT[2] = 1.0f;
+		//vertexFLT[3] = -0.5f; vertexFLT[4] = 0.5f; vertexFLT[5] = 1.0f;
+		//vertexFLT[6] = 0.5f; vertexFLT[7] = 0.5f; vertexFLT[8] = 1.0f;
+		//vertexFLT[9] = 0.5f; vertexFLT[10] = -0.5f; vertexFLT[11] = 1.0f;
+		std::cout << vertexFLT[2] << "," << vertexFLT[5] << "," << vertexFLT[8] << "," << vertexFLT[11] << std::endl;
 
-		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 14 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-		glDrawElements(GL_TRIANGLES, 42, GL_UNSIGNED_INT, 0);
+		//vertexFLT[12] = -0.5f; vertexFLT[13] = -0.5f; vertexFLT[14] = .0f;
+		//vertexFLT[15] = -0.5f; vertexFLT[16] =	0.5f; vertexFLT[17] = .0f;
+		//vertexFLT[18] =	 0.5f; vertexFLT[19] =	0.5f; vertexFLT[20] = .0f;
+		//vertexFLT[21] =	 0.5f; vertexFLT[22] = -0.5f; vertexFLT[23] = .0f;
+		std::cout << vertexFLT[14] << "," << vertexFLT[17] << "," << vertexFLT[20] << "," << vertexFLT[23] << std::endl;
+
+		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+		glDrawElements(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_INT, 0);
 	}
 
 	//bool inside(glm::vec3 v) {
@@ -158,6 +168,26 @@ struct Frustum {
 		vertices[5] = eyePos + (+up - right) * val * farZ + direction * farZ;
 		vertices[6] = eyePos + (+up + right) * val * farZ + direction * farZ;
 		vertices[7] = eyePos + (-up + right) * val * farZ + direction * farZ;
+
+		//vertices[0] = { -1, -1, -1 };
+		//vertices[1] = { -1, 1, -1 };
+		//vertices[2] = { 1, 1, -1 };
+		//vertices[3] = { 1, -1, -1 };
+
+		//vertices[4] = { -1, -1, 1 };
+		//vertices[5] = { -1, 1, 1 };
+		//vertices[6] = { 1, 1, 1 };
+		//vertices[7] = { 1, -1, 1 };
+
+		//for (int i = 0; i < 8; ++i) {
+		//	vertices[i] = inv * glm::vec4{ vertices[i] , 0 };
+		//}
+
+		for (int i = 0; i < 8; ++i) {
+			vertexFLT[i * 3] = vertices[i].x;
+			vertexFLT[i * 3 + 1] = vertices[i].y;
+			vertexFLT[i * 3 + 2] = vertices[i].z;
+		}
 
 		auto v = vertices;
 

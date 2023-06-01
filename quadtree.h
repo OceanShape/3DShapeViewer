@@ -171,7 +171,6 @@ private:
 				//break;
 			}
 		}
-		std::cout << "---" << std::endl;
 
 		if (insideFrustum == false) return;
 

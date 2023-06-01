@@ -34,8 +34,11 @@ bool ShapeViewer::initialize(HINSTANCE hInstance, int nCmdShow)
 	eglOptions.eglContext = eglCreateContext(eglOptions.eglDisplay, eglOptions.eglConfig, EGL_NO_CONTEXT, eglOptions.contextAttribs);
 	eglMakeCurrent(eglOptions.eglDisplay, eglOptions.eglSurface, eglOptions.eglSurface, eglOptions.eglContext);
 
-	string shaderFileName[] = { "object.vert", "object.frag", "grid.vert", "grid.frag" };
-	for (size_t i = 0; i < 2; ++i) {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	string shaderFileName[] = { "object.vert", "object.frag", "grid.vert", "grid.frag", "frustum.vert", "frustum.frag" };
+	for (size_t i = 0; i < 3; ++i) {
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 		if (!compileShader(vertexShader, readShader(shaderFileName[i * 2]).c_str())) {
 			return false;
@@ -120,6 +123,7 @@ void ShapeViewer::render()
 		}
 
 		objectData->render(camera->currentLevel, camera->frustum, camera);
+		glUseProgram(renderOption.program[2]);
 		camera->frustum->render();
 	}
 
@@ -129,11 +133,11 @@ void ShapeViewer::render()
 
 void ShapeViewer::cleanUp()
 {
-	glDeleteVertexArrays(2, renderOption.vao);
-	glDeleteBuffers(2, renderOption.vbo);
+	glDeleteVertexArrays(3, renderOption.vao);
+	glDeleteBuffers(3, renderOption.vbo);
 	glDeleteBuffers(1, &renderOption.ebo);
 
-	for (size_t i = 0; i < 2; ++i) {
+	for (size_t i = 0; i < 3; ++i) {
 		GLuint shaders[2];
 		glGetAttachedShaders(renderOption.program[i], 2, NULL, shaders);
 		for (size_t j = 0; j < 2; ++j) {
