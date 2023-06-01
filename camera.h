@@ -73,8 +73,8 @@ private:
 
 	// projection option
 	float fov = 90.0f;
-	float nearZ = 0.05f;
-	float farZ = 10.0f;
+	float nearZ = 0.01f;
+	float farZ = 50.0f;
 	float aspect = 1.0f;
 };
 

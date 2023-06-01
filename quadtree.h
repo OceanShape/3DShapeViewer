@@ -168,7 +168,7 @@ private:
 		for (auto v : box) {
 			if (frustum->inside(v)) {
 				insideFrustum = true;
-				//break;
+				break;
 			}
 		}
 
