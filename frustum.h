@@ -85,16 +85,26 @@ struct Frustum {
 	//[4][7]
 	glm::vec3 vertices[8]{};
 	float vertexFLT[24]{};
-	
+
 	Plane nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane;
 
 	float nearZ;
 	float farZ;
+	float fov;
+
+	static GLuint indices[];
+	static float frustumColor[][4];
+
+	static GLuint program;
 
 	Frustum() {};
 
-	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, glm::mat4 viewProj) : nearZ(_nearZ), farZ(_farZ) {
-		update(direction, up, right, eyePos, viewProj);
+	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 viewProj) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
+		update(direction, up, right, eyePos, fov, viewProj);
+	}
+
+	void setRenderOption(RenderOption option) {
+		program = option.program[2];
 	}
 
 	bool inside(glm::vec3 v) {
@@ -110,78 +120,33 @@ struct Frustum {
 	}
 
 	void render() {
-		GLuint indices[12 * 3] = {
-			1, 0, 4, 
-			1, 4, 5,
-			2, 1, 5,
-			2, 5, 6,
-			3, 2, 7,
-			2, 6, 7,
-			0, 3, 7,
-			0, 7, 4,
-			0, 2, 4,
-			2, 4, 6,
-			1, 5, 3,
-			3, 5, 7,
-		};
 
-		//vertexFLT[0] = -0.5f; vertexFLT[1] = -0.5f; vertexFLT[2] = 1.0f;
-		//vertexFLT[3] = -0.5f; vertexFLT[4] = 0.5f; vertexFLT[5] = 1.0f;
-		//vertexFLT[6] = 0.5f; vertexFLT[7] = 0.5f; vertexFLT[8] = 1.0f;
-		//vertexFLT[9] = 0.5f; vertexFLT[10] = -0.5f; vertexFLT[11] = 1.0f;
-		std::cout << vertexFLT[2] << "," << vertexFLT[5] << "," << vertexFLT[8] << "," << vertexFLT[11] << std::endl;
-
-		//vertexFLT[12] = -0.5f; vertexFLT[13] = -0.5f; vertexFLT[14] = .0f;
-		//vertexFLT[15] = -0.5f; vertexFLT[16] =	0.5f; vertexFLT[17] = .0f;
-		//vertexFLT[18] =	 0.5f; vertexFLT[19] =	0.5f; vertexFLT[20] = .0f;
-		//vertexFLT[21] =	 0.5f; vertexFLT[22] = -0.5f; vertexFLT[23] = .0f;
-		std::cout << vertexFLT[14] << "," << vertexFLT[17] << "," << vertexFLT[20] << "," << vertexFLT[23] << std::endl;
 
 		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
-		glDrawElements(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_INT, 0);
+
+		for (size_t pos = 0; pos < 12 * 3; pos += 3) {
+			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
+			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+		}
 	}
 
-	//bool inside(glm::vec3 v) {
-	//	bool t0, t1, t2, t3, t4, t5;
-	//	t0 = nearPlane.getSignedDistanceToPlane(v);
-	//	t1 = farPlane.getSignedDistanceToPlane(v);
-	//	t2 = leftPlane.getSignedDistanceToPlane(v);
-	//	t3 = rightPlane.getSignedDistanceToPlane(v);
-	//	t4 = topPlane.getSignedDistanceToPlane(v);
-	//	t5 = bottomPlane.getSignedDistanceToPlane(v);
-	//	//std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
-	//	return t0 && t1 && t2 && t3 && t4 && t5;
-	//}
-
-	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, glm::mat4 viewProj) {
+	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov, glm::mat4 viewProj) {
 		auto inv = glm::inverse(viewProj);
 
-		float val = nearZ;
+
+		float t = tan(glm::radians(fov / 2));
+		float val = nearZ * t;
 		vertices[0] = eyePos + (-up - right) * val + direction * nearZ;
 		vertices[1] = eyePos + (+up - right) * val + direction * nearZ;
 		vertices[2] = eyePos + (+up + right) * val + direction * nearZ;
 		vertices[3] = eyePos + (-up + right) * val + direction * nearZ;
 
-		val = 1.0f;
-		vertices[4] = eyePos + (-up - right) * val * farZ + direction * farZ;
-		vertices[5] = eyePos + (+up - right) * val * farZ + direction * farZ;
-		vertices[6] = eyePos + (+up + right) * val * farZ + direction * farZ;
-		vertices[7] = eyePos + (-up + right) * val * farZ + direction * farZ;
-
-		//vertices[0] = { -1, -1, -1 };
-		//vertices[1] = { -1, 1, -1 };
-		//vertices[2] = { 1, 1, -1 };
-		//vertices[3] = { 1, -1, -1 };
-
-		//vertices[4] = { -1, -1, 1 };
-		//vertices[5] = { -1, 1, 1 };
-		//vertices[6] = { 1, 1, 1 };
-		//vertices[7] = { 1, -1, 1 };
-
-		//for (int i = 0; i < 8; ++i) {
-		//	vertices[i] = inv * glm::vec4{ vertices[i] , 0 };
-		//}
+		val = farZ * t;
+		vertices[4] = eyePos + (-up - right) * val + direction * farZ;
+		vertices[5] = eyePos + (+up - right) * val + direction * farZ;
+		vertices[6] = eyePos + (+up + right) * val + direction * farZ;
+		vertices[7] = eyePos + (-up + right) * val + direction * farZ;
 
 		for (int i = 0; i < 8; ++i) {
 			vertexFLT[i * 3] = vertices[i].x;
@@ -198,17 +163,22 @@ struct Frustum {
 		topPlane.update(v[1], v[5], v[6], v[2]);
 		bottomPlane.update(v[0], v[3], v[7], v[4]);
 		std::cout << std::endl;
-
-
-		const float halfVSide = farZ * tanf(1 * .5f);
-		const float halfHSide = halfVSide * 1.0f;
-		const glm::vec3 frontMultFar = farZ * direction;
-
-		//nearPlane = { eyePos + nearZ * direction, direction };
-		//farPlane = { eyePos + frontMultFar, -direction };
-		//rightPlane = { eyePos, glm::cross(frontMultFar - right * halfHSide, up) };
-		//leftPlane = { eyePos, glm::cross(up, frontMultFar + right * halfHSide) };
-		//topPlane = { eyePos, glm::cross(right, frontMultFar - up * halfVSide) };
-		//bottomPlane = { eyePos, glm::cross(frontMultFar + up * halfVSide, right) };
 	}
 };
+
+GLuint Frustum::program = 0;
+GLuint Frustum::indices[12 * 3] = {
+	1, 0, 4,
+	1, 4, 5,
+	2, 1, 5,
+	2, 5, 6,
+	3, 2, 7,
+	2, 6, 7,
+	0, 3, 7,
+	0, 7, 4,
+	0, 2, 4,
+	2, 4, 6,
+	1, 5, 3,
+	3, 5, 7,
+};
+float Frustum::frustumColor[][4] = { {1, 1, 0, 1}, {0, 1, 1, 1} };

@@ -25,7 +25,7 @@ public:
 
 	Camera(float posX, float posY, float posZ) : startZ(posZ) {
 		position = glm::vec3(posX, posY, posZ);
-		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, getProj() * getView());
+		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, getProj() * getView());
 	}
 
 	glm::mat4 getView() { return glm::lookAt(position, position + direction, up); };
@@ -72,9 +72,9 @@ private:
 	float deltaZ = 0.1f;
 
 	// projection option
-	float fov = 45.0f;
-	float nearZ = 0.01f;
-	float farZ = 50.0f;
+	float fov = 90.0f;
+	float nearZ = 0.05f;
+	float farZ = 10.0f;
 	float aspect = 1.0f;
 };
 
@@ -88,7 +88,7 @@ void Camera::update() {
 
 	// update frustum
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position, getProj() * getView());
+		frustum->update(direction, up, right, position, fov, getProj() * getView());
 	}
 }
 
@@ -106,12 +106,15 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	right = glm::normalize(glm::cross(direction, up));
 
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position, getProj() * getView());
+		frustum->update(direction, up, right, position, fov, getProj() * getView());
 	}
 }
 
 void Camera::updateZoom(float dt) {
 	fov -= rotDel * dt;
-	fov = (fov > 89.0f) ? 89.0f : (fov < 5.0f) ? 5.0f : fov;
+	fov = (fov > 179.0f) ? 179.0f : (fov < 5.0f) ? 5.0f : fov;
+	if (frustumCaptured == false) {
+		frustum->update(direction, up, right, position, fov, getProj() * getView());
+	}
 	std::cout << fov << std::endl;
 }

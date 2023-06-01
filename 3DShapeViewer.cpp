@@ -342,6 +342,7 @@ bool ShapeViewer::readShapefile() {
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
 	camera->maxLevel = maxLevel;
+	//camera->maxLevel = 3;
 
 	delete[] data;
 
@@ -415,6 +416,7 @@ bool ShapeViewer::openShapefile() {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderOption.ebo);
 
 	objectData->setRenderOpiton(renderOption);
+	camera->frustum->setRenderOption(renderOption);
 
 	isShapeLoaded = true;
 
