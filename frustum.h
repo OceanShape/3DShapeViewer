@@ -100,7 +100,7 @@ struct Frustum {
 	Frustum() {};
 
 	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 viewProj) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
-		update(direction, up, right, eyePos, fov, viewProj);
+		update(direction, up, right, eyePos, fov);
 	}
 
 	void setRenderOption(RenderOption option) {
@@ -115,7 +115,6 @@ struct Frustum {
 		t3 = rightPlane.isPointFront(v);
 		t4 = topPlane.isPointFront(v);
 		t5 = bottomPlane.isPointFront(v);
-		//std::cout << t0 << t1 << t2 << t3 << t4 << t5 << std::endl;
 		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
 
@@ -129,8 +128,7 @@ struct Frustum {
 		}
 	}
 
-	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov, glm::mat4 viewProj) {
-		//auto inv = glm::inverse(viewProj);
+	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {
 
 		float t = tan(glm::radians(fov / 2));
 		float val = nearZ * t;

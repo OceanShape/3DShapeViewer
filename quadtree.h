@@ -159,20 +159,16 @@ private:
 		float yMax = modelToWorld(Ymax, boundaryY[0], boundaryY[1]);
 
 		glm::vec3 box[4];
+		bool in[4]{};
 		getBorderVertex(box, xMin, xMax, yMin, yMax);
 
-		if (cam->frustumCaptured == true) {
-			int a = 0;
+		for (size_t i = 0; i < 4; ++i) {
+			in[i] = frustum->inside(box[i]);
+			//std::cout << in[i];
 		}
-		bool insideFrustum = false;
-		for (auto v : box) {
-			if (frustum->inside(v)) {
-				insideFrustum = true;
-				break;
-			}
-		}
+		//std::cout << std::endl;
 
-		if (insideFrustum == false) return;
+		if ((in[0] || in[1] || in[2] || in[3]) == false) return; 
 
 		for (auto n : nodes) {
 			if (n != nullptr) {

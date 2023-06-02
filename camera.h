@@ -88,7 +88,7 @@ void Camera::update() {
 
 	// update frustum
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position, fov, getProj() * getView());
+		frustum->update(direction, up, right, position, fov);
 	}
 }
 
@@ -106,7 +106,7 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	right = glm::normalize(glm::cross(direction, up));
 
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position, fov, getProj() * getView());
+		frustum->update(direction, up, right, position, fov);
 	}
 }
 
@@ -114,7 +114,7 @@ void Camera::updateZoom(float dt) {
 	fov -= rotDel * dt;
 	fov = (fov > 179.0f) ? 179.0f : (fov < 5.0f) ? 5.0f : fov;
 	if (frustumCaptured == false) {
-		frustum->update(direction, up, right, position, fov, getProj() * getView());
+		frustum->update(direction, up, right, position, fov);
 	}
 	std::cout << fov << std::endl;
 }

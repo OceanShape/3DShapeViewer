@@ -68,6 +68,8 @@ bool ShapeViewer::isKeyPressed(char ch) {
 	return (65 <= ch && ch <= 90) ? keyPressed[ch] : (97 <= ch && ch <= 122) ? keyPressed[ch - 32] : keyPressed[ch];
 }
 
+bool stop = false;
+
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
@@ -98,6 +100,9 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('U')) {
 		camera->uncapture();
 	}
+	else if (isKeyPressed('P')) {
+		stop = true;
+	}
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
 			camera->setLevel(i);
@@ -121,7 +126,7 @@ void ShapeViewer::render()
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		}
-
+		
 		objectData->render(camera->currentLevel, camera->frustum, camera);
 		glUseProgram(renderOption.program[2]);
 		camera->frustum->render();
