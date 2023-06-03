@@ -39,6 +39,8 @@ struct Plane {
 	//[1][2]
 	//[0][3]
 	glm::vec3 vertices[4]{};
+	glm::vec3 normal{};
+	float d = .0f;
 
 	Plane() {};
 	//점은 시계방향으로 순서대로 들어온다고 가정
@@ -49,17 +51,20 @@ struct Plane {
 
 	void update(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 		vertices[0] = v0, vertices[1] = v1, vertices[2] = v2, vertices[3] = v3;
-		//std::cout << glm::to_string(getNormal()) << std::endl;
+		normal = getNormal();
+		d = -glm::dot(getNormal(), vertices[0]);
 	}
 
 	glm::vec3 getNormal() {
-		auto t = glm::normalize(glm::cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
-		return t;
+		return glm::normalize(glm::cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
 	}
 
-	bool isPointFront(glm::vec3 v) {
-		float d = -glm::dot(getNormal(), vertices[0]);
-		return glm::dot(getNormal(), v) + d > .0f;
+	float getDistance(glm::vec3 point) {
+		return (glm::dot(getNormal(), point) + d) / glm::length(d);
+	}
+
+	bool isPointFront(glm::vec3 point) {
+		return  getDistance(point) > .0f;
 	}
 };
 
