@@ -59,8 +59,8 @@ struct Plane {
 		return glm::normalize(glm::cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
 	}
 
-	float getDistance(glm::vec3 point) {
-		return (glm::dot(getNormal(), point) + d) / glm::length(d);
+	float getDistance(glm::vec3 point, float _d = 1.0f) {
+		return (glm::dot(getNormal(), point) + d) / (_d == 1.0f ? (1.0f) : glm::length(d));
 	}
 
 	bool isPointFront(glm::vec3 point) {
