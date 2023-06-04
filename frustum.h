@@ -115,7 +115,7 @@ struct Frustum {
 	bool inside(glm::vec3 v) {
 		bool t0, t1, t2, t3, t4, t5;
 		t0 = nearPlane.isPointFront(v);
-		t1 = farPlane.isPointFront(v);
+		t1 = true;//farPlane.isPointFront(v); // always true
 		t2 = leftPlane.isPointFront(v);
 		t3 = rightPlane.isPointFront(v);
 		t4 = topPlane.isPointFront(v);
