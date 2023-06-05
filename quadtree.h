@@ -152,32 +152,18 @@ private:
 
 	void render(int level, int selectLevel, shared_ptr<Camera> cam) {
 		if (level > selectLevel) return;
+		if (level == 1) return;
 		
-		float xMin = modelToWorld(Xmin, boundaryX[0], boundaryX[1]);
-		float xMax = modelToWorld(Xmax, boundaryX[0], boundaryX[1]);
-		float yMin = modelToWorld(Ymin, boundaryY[0], boundaryY[1]);
-		float yMax = modelToWorld(Ymax, boundaryY[0], boundaryY[1]);
+		glm::vec3 center = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
+		float radius = Xmax - Xmid;
 
-		glm::vec3 box[4];
-		bool in[4]{};
-		getBorderVertex(box, xMin, xMax, yMin, yMax);
-
-		for (size_t i = 0; i < 4; ++i) {
-			// 문제점) 예외 상황을 어떻게 처리할 것인가?
-			// 중심이 절두체 안/밖
-			// 중심에서 평면까지 거리가 반지름보다 큰가/작은가
-				// 1. 안이고 반지름보다 크다 => 내부
-				// 2. 안이고 반지름보다 작다 => 내부
-				// 3. 밖이고 평면까지 거리가 반지름보다 크다 => 외부
-					// 예외 상황) 경계구가 절두체를 다 둘러싸는 경우
-				// 4. 밖이고 평면까지 거리가 반지름보다 작다 => 걸침
-				// 1 + 2 => 안이면 전부 출력
-			in[i] = frustum->inside(box[i]);
-			//std::cout << in[i];
+		
+		if (frustum->inSphere(center, radius) == false) {
+			return;
 		}
-		//std::cout << std::endl;
-
-		if ((in[0] || in[1] || in[2] || in[3]) == false) return; 
+		//if (frustum->inside(center) == false) {
+		//	return;
+		//}
 
 		for (auto n : nodes) {
 			if (n != nullptr) {
