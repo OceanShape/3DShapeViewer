@@ -91,7 +91,13 @@ struct Frustum {
 	glm::vec3 vertices[8]{};
 	float vertexFLT[24]{};
 
-	Plane nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane;
+	Plane planes[6];
+	// nearPlane
+	// farPlane
+	// leftPlane
+	// rightPlane
+	// topPlane
+	// bottomPlane
 
 	float nearZ;
 	float farZ;
@@ -114,12 +120,12 @@ struct Frustum {
 
 	bool inside(glm::vec3 v) {
 		bool t0, t1, t2, t3, t4, t5;
-		t0 = nearPlane.isPointFront(v);
-		t1 = true;//farPlane.isPointFront(v); // always true
-		t2 = leftPlane.isPointFront(v);
-		t3 = rightPlane.isPointFront(v);
-		t4 = topPlane.isPointFront(v);
-		t5 = bottomPlane.isPointFront(v);
+		t0 = planes[0].isPointFront(v);
+		t1 = true;//planes[1].isPointFront(v); // always true
+		t2 = planes[2].isPointFront(v);
+		t3 = planes[3].isPointFront(v);
+		t4 = planes[4].isPointFront(v);
+		t5 = planes[5].isPointFront(v);
 		return t0 && t1 && t2 && t3 && t4 && t5;
 	}
 
@@ -156,12 +162,12 @@ struct Frustum {
 
 		auto v = vertices;
 
-		nearPlane.update(v[0], v[1], v[2], v[3]);
-		farPlane.update(v[4], v[7], v[6], v[5]);
-		leftPlane.update(v[4], v[5], v[1], v[0]);
-		rightPlane.update(v[3], v[2], v[6], v[7]);
-		topPlane.update(v[1], v[5], v[6], v[2]);
-		bottomPlane.update(v[0], v[3], v[7], v[4]);
+		planes[0].update(v[0], v[1], v[2], v[3]);
+		planes[1].update(v[4], v[7], v[6], v[5]);
+		planes[2].update(v[4], v[5], v[1], v[0]);
+		planes[3].update(v[3], v[2], v[6], v[7]);
+		planes[4].update(v[1], v[5], v[6], v[2]);
+		planes[5].update(v[0], v[3], v[7], v[4]);
 		//std::cout << std::endl;
 	}
 };
