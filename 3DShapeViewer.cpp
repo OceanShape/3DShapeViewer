@@ -347,7 +347,7 @@ bool ShapeViewer::readShapefile() {
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
 	camera->maxLevel = maxLevel;
-	//camera->maxLevel = 3;
+	camera->maxLevel = 0;
 
 	delete[] data;
 

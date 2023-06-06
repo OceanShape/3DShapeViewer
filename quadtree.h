@@ -156,9 +156,8 @@ private:
 		
 		glm::vec3 center = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
 		float radius = Xmax - Xmid;
-
 		
-		if (frustum->inSphere(center, radius) == false) {
+		if (frustum->inSphere(center, 1.0f) == false) {
 			return;
 		}
 		//if (frustum->inside(center) == false) {

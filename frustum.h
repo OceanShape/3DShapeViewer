@@ -117,16 +117,13 @@ struct Frustum {
 	}
 
 	bool inSphere(glm::vec3 center, float radius) {
-		for (size_t i = 0; i < 6; ++i) {
-			auto t = planes[i].getDistance(center, false) > radius;
-			std::cout << t;
-			if (t) {
-				std::cout << std::endl;
-				return false;
-			}
+		bool res = true;
+		for (size_t i = 2; i < 6; ++i) {
+			res = planes[i].getDistance(center, 200000.0f) > radius;
+			std::cout << res;
 		}
 		std::cout << std::endl;
-		return true;
+		return res; 
 	}
 
 	void render() {
