@@ -154,12 +154,10 @@ private:
 		if (level > selectLevel) return;
 		if (level == 1) return;
 		
-		glm::vec3 center = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
-		float radius = Xmax - Xmid;
-		
-		if (frustum->inSphere(center, 1.0f) == false) {
-			return;
+		if (frustum->inSphere(centerWorld, rootRadiusWorld / (1 << level)) == false) {
+			//return;
 		}
+		
 		//if (frustum->inside(center) == false) {
 		//	return;
 		//}

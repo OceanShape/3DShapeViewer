@@ -105,6 +105,7 @@ struct Frustum {
 		program = option.program[2];
 	}
 
+	// nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane
 	bool inside(glm::vec3 v) {
 		bool t0, t1, t2, t3, t4, t5;
 		t0 = planes[0].isPointFront(v);
@@ -118,9 +119,12 @@ struct Frustum {
 
 	bool inSphere(glm::vec3 center, float radius) {
 		bool res = true;
+		std::cout << radius << ": " << std::endl;
 		for (size_t i = 2; i < 6; ++i) {
-			res = planes[i].getDistance(center, 200000.0f) > radius;
-			std::cout << res;
+			float distance = glm::abs(planes[i].getDistance(center, false));
+			bool r = distance > radius;
+			std::cout << r << " ";
+			if (distance > radius) res = false;
 		}
 		std::cout << std::endl;
 		return res; 
