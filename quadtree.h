@@ -60,19 +60,27 @@ class QuadtreeNode {
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
 
+	static const float rootRadiusWorld;
+
+	const int level;
+	const float radiusWorld;
+
 	vector<shared_ptr<Object>> objects;
 
 	float Xmin, Xmax, Ymin, Ymax;
 	float Xmid, Ymid;
+	glm::vec3 centerWorld;
 	// min max buffer for objects
 	float _min[2] = { FLT_MAX, FLT_MAX };
 	float _max[2] = { FLT_MIN, FLT_MIN };
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
-	QuadtreeNode(const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
+	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(rootRadiusWorld / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
+		centerWorld = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
 		++nodeCount;
 	}
+
 private:
 	bool isLeft() {
 		return Xmin <= _min[0] && Xmin <= _max[0] && _min[0] <= Xmid && _max[0] <= Xmid;
@@ -97,25 +105,25 @@ private:
 		_min[0] = obj->min[0], _min[1] = obj->min[1], _max[0] = obj->max[0], _max[1] = obj->max[1];
 		if (isLeft() && isUp()) {
 			if (nodes[0] == nullptr) {
-				nodes[0] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymid, Ymax);
+				nodes[0] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymid, Ymax);
 			}
 			nodes[0]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isUp()) {
 			if (nodes[1] == nullptr) {
-				nodes[1] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymid, Ymax);
+				nodes[1] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymid, Ymax);
 			}
 			nodes[1]->store(obj, level + 1, maxLevel);
 		}
 		else if (isLeft() && isDown()) {
 			if (nodes[2] == nullptr) {
-				nodes[2] = make_shared<QuadtreeNode>(Xmin, Xmid, Ymin, Ymid);
+				nodes[2] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymin, Ymid);
 			}
 			nodes[2]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isDown()) {
 			if (nodes[3] == nullptr) {
-				nodes[3] = make_shared<QuadtreeNode>(Xmid, Xmax, Ymin, Ymid);
+				nodes[3] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymin, Ymid);
 			}
 			nodes[3]->store(obj, level + 1, maxLevel);
 		}
@@ -157,7 +165,7 @@ private:
 		if (frustum->inSphere(centerWorld, rootRadiusWorld / (1 << level)) == false) {
 			//return;
 		}
-		
+
 		//if (frustum->inside(center) == false) {
 		//	return;
 		//}
@@ -216,6 +224,7 @@ RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 float qtNode::boundaryX[]{};
 float qtNode::boundaryY[]{};
+const float qtNode::rootRadiusWorld = 1.414213562f;
 
 class ObjectData {
 	
@@ -224,9 +233,9 @@ class ObjectData {
 
 public:
 	ObjectData(float min[], float max[]) {
-		root = make_shared<qtNode>(min[0], max[0], min[1], max[1]);
 		qtNode::boundaryX[0] = min[0], qtNode::boundaryX[1] = max[0];
 		qtNode::boundaryY[0] = min[1], qtNode::boundaryY[1] = max[1];
+		root = make_shared<qtNode>(0, min[0], max[0], min[1], max[1]);
 		//ms = make_shared<MeshCollectionMemory>();
 	}
 
