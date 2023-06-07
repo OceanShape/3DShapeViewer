@@ -185,6 +185,21 @@ private:
 		}
 	}
 
+	void drawSphere() {
+		glUseProgram(renderOption.program[2]);
+		glBindVertexArray(renderOption.vao[2]);
+		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[2]);
+
+		const float objectColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
+
+		glUniform4fv(glGetUniformLocation(renderOption.program[2], "color"), 1, objectColor);
+
+		float border[] = { Xmid, Ymid, 0.0f, Xmid, Ymid, 0.0f, Xmid, Ymid, 0.0f };
+		glBufferData(GL_ARRAY_BUFFER, 3 * 3 * sizeof(float), border, GL_STATIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, 0);
+		//glDrawArrays(GL_LINE_LOOP, 0, 4);
+	}
+
 	void drawBorder() {
 		glUseProgram(renderOption.program[1]);
 		glBindVertexArray(renderOption.vao[1]);
