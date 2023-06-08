@@ -3,37 +3,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-/*
-struct Ray {
-	glm::vec3 start;
-	glm::vec3 dir;
+// Frustum culling option
+enum class FRUSTUM_CULLING {
+	_OUT,
+	_COMPLETE,
+	_PARTIAL
 };
-
-	bool isIntersectTriangle(const glm::vec3& orig, const glm::vec3& dir,
-		const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
-
-		glm::vec3 faceNormal = glm::normalize(glm::cross(vertices[2] - vertices[0], vertices[1] - vertices[0]));
-		if (abs(glm::dot(dir, faceNormal)) < 1e-2f) return false;
-
-		float t = (dot(vertices[0], faceNormal) - dot(orig, faceNormal)) / dot(dir, faceNormal);
-
-		if (t < .0f) return false;
-
-		glm::vec3 hitPoint = orig + t * dir;
-
-		const glm::vec3 n0 = glm::normalize(glm::cross(vertices[1] - vertices[2], hitPoint - vertices[2]));
-		const glm::vec3 n1 = glm::normalize(glm::cross(vertices[2] - vertices[0], hitPoint - vertices[0]));
-		const glm::vec3 n2 = glm::normalize(glm::cross(vertices[0] - vertices[1], hitPoint - vertices[1]));
-
-		if (dot(n0, faceNormal) < .0f || dot(n1, faceNormal) < .0f || dot(n2, faceNormal) < .0f) return false;
-
-		return true;
-	}
-
-	bool isIntersect(const Ray& ray) {
-		return isIntersectTriangle(ray.start, ray.dir, vertices[0], vertices[1], vertices[2]) && isIntersectTriangle(ray.start, ray.dir, vertices[0], vertices[2], vertices[3]);
-	}
-*/
 
 struct Plane {
 	//[1][2]

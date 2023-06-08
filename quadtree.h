@@ -60,6 +60,8 @@ class QuadtreeNode {
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
 
+	bool culled;
+
 	const int level;
 	static const float halfRadiusRatio;
 	const float radiusWorld;
@@ -168,22 +170,31 @@ private:
 		if (level > selectLevel) return;
 		if (level == 0) drawSphere();
 		
-		// FRUSTUM_OUT
-		if (frustum->inSphere(centerWorld, radiusWorld) == false) {
-			return;
-		}
+		auto res = FRUSTUM_CULLING::_OUT;
 
-		// FRUSTUM_COMPLETE or FRUSTUM_PARTIAL
-		bool isCompleteCulled = true;
-		glm::vec3 box[4];
-		getBorderVertex(box);
-		for (auto b : box) {
-			if (frustum->inside(b) == false) {
-				isCompleteCulled = false;
-				break;
+		if (frustum->inSphere(centerWorld, radiusWorld)) { // FRUSTUM_COMPLETE or FRUSTUM_PARTIAL
+			res = FRUSTUM_CULLING::_COMPLETE;
+
+			glm::vec3 box[4];
+			getBorderVertex(box);
+			for (auto b : box) {
+				if (frustum->inside(b) == false) {
+					res = FRUSTUM_CULLING::_PARTIAL;
+					break;
+				}
 			}
 		}
-		std::cout << isCompleteCulled << std::endl;
+
+		switch (res) {
+			case FRUSTUM_CULLING::_COMPLETE:
+				culled = false; break;
+			case FRUSTUM_CULLING::_PARTIAL:
+				culled = false; break;
+			case FRUSTUM_CULLING::_OUT:
+				culled = true;
+		}
+
+		if (culled) return;
 
 		glClear(GL_DEPTH_BUFFER_BIT);
 		for (auto n : nodes) {
