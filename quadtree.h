@@ -60,9 +60,8 @@ class QuadtreeNode {
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
 
-	static const float rootRadiusWorld;
-
 	const int level;
+	static const float halfRadiusRatio;
 	const float radiusWorld;
 
 	vector<shared_ptr<Object>> objects;
@@ -79,7 +78,7 @@ class QuadtreeNode {
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
-	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(rootRadiusWorld / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
+	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		centerWorld = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
 		++nodeCount;
 		if (level <= 0) makeSphere();
@@ -166,7 +165,8 @@ private:
 		if (level > selectLevel) return;
 		if (level == 0) drawSphere();
 		
-		if (frustum->inSphere(centerWorld, rootRadiusWorld / (1 << level)) == false) {
+		// FRUSTUM_OUT
+		if (frustum->inSphere(centerWorld, radiusWorld) == false) {
 			return;
 		}
 
@@ -268,7 +268,7 @@ RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 float qtNode::boundaryX[]{};
 float qtNode::boundaryY[]{};
-const float qtNode::rootRadiusWorld = 1.414213562f;
+const float qtNode::halfRadiusRatio = 1.414213562f;
 
 class ObjectData {
 	
