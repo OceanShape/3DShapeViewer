@@ -48,13 +48,13 @@ public:
 	void update();
 
 	void capture() {
-		frustumCaptured = true;
+		if (frustumCaptured) return; else frustumCaptured = true;
 		std::cout << "captured" << std::endl;
 	}
 
 	void uncapture() {
+		if (frustumCaptured == false) return; else frustumCaptured = false;
 		std::cout << "uncapture" << std::endl;
-		frustumCaptured = false;
 	}
 
 private:
