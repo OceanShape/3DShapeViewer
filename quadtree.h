@@ -243,9 +243,9 @@ private:
 		glBindVertexArray(renderOption.vao[2]);
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[2]);
 
-		const float objectColor[4] = { 0.5f, 1.0f, 0.5f, 1.0f };
+		const float color[4] = { 0.5f, 1.0f, 0.5f, .5f };
 
-		glUniform4fv(glGetUniformLocation(renderOption.program[2], "color"), 1, objectColor);
+		glUniform4fv(glGetUniformLocation(renderOption.program[2], "color"), 1, color);
 
 		glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(GLuint), sphereIndices.data(), GL_STATIC_DRAW);
