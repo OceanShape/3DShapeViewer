@@ -164,16 +164,17 @@ private:
 
 	void render(int level, int selectLevel, shared_ptr<Camera> cam) {
 		if (level > selectLevel) return;
-		if (level == 1) return;
+		if (level == 0) drawSphere();
 		
 		if (frustum->inSphere(centerWorld, rootRadiusWorld / (1 << level)) == false) {
-			//return;
+			return;
 		}
 
 		//if (frustum->inside(center) == false) {
 		//	return;
 		//}
 
+		glClear(GL_DEPTH_BUFFER_BIT);
 		for (auto n : nodes) {
 			if (n != nullptr) {
 				n->render(level + 1, selectLevel, cam);
@@ -182,9 +183,6 @@ private:
 
 		drawBorder();
 		drawObject();
-		if (level == 0) {
-			drawSphere();
-		}
 	}
 
 	void drawObject() {
@@ -239,6 +237,8 @@ private:
 	}
 
 	void drawSphere() {
+		glClear(GL_DEPTH_BUFFER_BIT);
+
 		glUseProgram(renderOption.program[2]);
 		glBindVertexArray(renderOption.vao[2]);
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[2]);
