@@ -67,6 +67,9 @@ class QuadtreeNode {
 
 	vector<shared_ptr<Object>> objects;
 
+	vector<float> sphereVertices;
+	vector<GLuint> sphereIndices;
+
 	float Xmin, Xmax, Ymin, Ymax;
 	float Xmid, Ymid;
 	glm::vec3 centerWorld;
@@ -79,6 +82,7 @@ public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(rootRadiusWorld / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		centerWorld = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
 		++nodeCount;
+		if (level <= 0) makeSphere();
 	}
 
 private:
@@ -178,6 +182,9 @@ private:
 
 		drawBorder();
 		drawObject();
+		if (level == 0) {
+			drawSphere();
+		}
 	}
 
 	void drawObject() {
@@ -193,6 +200,44 @@ private:
 		}
 	}
 
+	void makeSphere() {
+		sphereVertices.reserve(1323);
+		sphereIndices.reserve(2400);
+
+		int numSlices = 20;
+		int numStacks = 20;
+		const float dTheta = glm::pi<float>() * 2 / float(numSlices);
+		const float dPhi = glm::pi<float>() / float(numStacks);
+
+		for (int j = 0; j <= numStacks; j++) {
+
+			glm::mat4 transformX = glm::rotate(glm::mat4(1.0), dPhi * float(j), glm::vec3(1, 0, 0));
+			glm::vec3 stackStartPoint = transformX * glm::vec4(0, -radiusWorld, 0, 1);
+
+			for (int i = 0; i <= numSlices; i++) {
+				glm::mat4 transformY = glm::rotate(glm::mat4(1.0), dTheta * float(i), glm::vec3(0, 1, 0));
+				glm::vec3 res = transformY * glm::vec4(stackStartPoint, 1.0f);
+				sphereVertices.push_back(res.x + centerWorld.x);
+				sphereVertices.push_back(res.y + centerWorld.y);
+				sphereVertices.push_back(res.z + centerWorld.z);
+			}
+		}
+
+		for (int j = 0; j < numStacks; j++) {
+			const int offset = (numSlices + 1) * j;
+			for (int i = 0; i < numSlices; i++) {
+
+				sphereIndices.push_back(offset + i);
+				sphereIndices.push_back(offset + i + numSlices + 1);
+				sphereIndices.push_back(offset + i + 1 + numSlices + 1);
+
+				sphereIndices.push_back(offset + i);
+				sphereIndices.push_back(offset + i + 1 + numSlices + 1);
+				sphereIndices.push_back(offset + i + 1);
+			}
+		}
+	}
+
 	void drawSphere() {
 		glUseProgram(renderOption.program[2]);
 		glBindVertexArray(renderOption.vao[2]);
@@ -202,10 +247,9 @@ private:
 
 		glUniform4fv(glGetUniformLocation(renderOption.program[2], "color"), 1, objectColor);
 
-		float border[] = { Xmid, Ymid, 0.0f, Xmid, Ymid, 0.0f, Xmid, Ymid, 0.0f };
-		glBufferData(GL_ARRAY_BUFFER, 3 * 3 * sizeof(float), border, GL_STATIC_DRAW);
-		glDrawArrays(GL_TRIANGLES, 0, 0);
-		//glDrawArrays(GL_LINE_LOOP, 0, 4);
+		glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(float), sphereVertices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(GLuint), sphereIndices.data(), GL_STATIC_DRAW);
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, 0);
 	}
 
 	void drawBorder() {
