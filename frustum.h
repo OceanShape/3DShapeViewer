@@ -56,15 +56,11 @@ struct Plane {
 	}
 
 	glm::vec3 getNormal() {
-		return glm::normalize(glm::cross(vertices[1] - vertices[0], vertices[2] - vertices[0]));
+		return glm::normalize(glm::cross(vertices[2] - vertices[0], vertices[1] - vertices[0]));
 	}
 
 	float getDistance(glm::vec3 point, bool justCheckFront = true) {
 		return (glm::dot(getNormal(), point) + d) / (justCheckFront ? (1.0f) : glm::length(normal));
-	}
-
-	bool isPointFront(glm::vec3 point) {
-		return getDistance(point) > .0f;
 	}
 };
 
@@ -108,26 +104,20 @@ struct Frustum {
 	// nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane
 	bool inside(glm::vec3 v) {
 		bool t0, t1, t2, t3, t4, t5;
-		t0 = planes[0].isPointFront(v);
-		t1 = true;//planes[1].isPointFront(v); // always true
-		t2 = planes[2].isPointFront(v);
-		t3 = planes[3].isPointFront(v);
-		t4 = planes[4].isPointFront(v);
-		t5 = planes[5].isPointFront(v);
-		return t0 && t1 && t2 && t3 && t4 && t5;
+		t0 = planes[0].getDistance(v) < 0;
+		t1 = true;
+		t2 = planes[2].getDistance(v) < 0;
+		t3 = planes[3].getDistance(v) < 0;
+		t4 = planes[4].getDistance(v) < 0;
+		t5 = planes[5].getDistance(v) < 0;
+		return t2 && t3 && t4 && t5;
 	}
 
 	bool inSphere(glm::vec3 center, float radius) {
-		bool res = true;
-		std::cout << radius << ": " << std::endl;
 		for (size_t i = 2; i < 6; ++i) {
-			float distance = glm::abs(planes[i].getDistance(center, false));
-			bool r = distance > radius;
-			std::cout << r << " ";
-			if (distance > radius) res = false;
+			if (planes[i].getDistance(center, false) > radius) return false;
 		}
-		std::cout << std::endl;
-		return res; 
+		return true;
 	}
 
 	void render() {
