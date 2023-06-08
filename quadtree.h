@@ -154,11 +154,14 @@ private:
 		return (pos - min) / ((max - min) / 2) - 1.0f;
 	}
 
-	void getBorderVertex(glm::vec3* const box, float xMin, float xMax, float yMin, float yMax) {
-		box[0] = glm::vec3{ xMin, yMin, .0f };
-		box[1] = glm::vec3{ xMin, yMax, .0f };
-		box[2] = glm::vec3{ xMax, yMax, .0f };
-		box[3] = glm::vec3{ xMax, yMin, .0f };
+	void getBorderVertex(glm::vec3* const box) {
+		float half = 1 / (1 << level);
+		float x = centerWorld.x;
+		float y = centerWorld.y;
+		box[0] = glm::vec3{ x - half, y - half, .0f };
+		box[1] = glm::vec3{ x - half, y + half, .0f };
+		box[2] = glm::vec3{ x + half, y + half, .0f };
+		box[3] = glm::vec3{ x + half, y - half, .0f };
 	}
 
 	void render(int level, int selectLevel, shared_ptr<Camera> cam) {
@@ -170,9 +173,17 @@ private:
 			return;
 		}
 
-		//if (frustum->inside(center) == false) {
-		//	return;
-		//}
+		// FRUSTUM_COMPLETE or FRUSTUM_PARTIAL
+		bool isCompleteCulled = true;
+		glm::vec3 box[4];
+		getBorderVertex(box);
+		for (auto b : box) {
+			if (frustum->inside(b) == false) {
+				isCompleteCulled = false;
+				break;
+			}
+		}
+		std::cout << isCompleteCulled << std::endl;
 
 		glClear(GL_DEPTH_BUFFER_BIT);
 		for (auto n : nodes) {
