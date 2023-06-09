@@ -76,8 +76,8 @@ struct Frustum {
 		program = option.program[2];
 	}
 
-	// nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane
 	bool inside(glm::vec3 v) {
+		// nearPlane, farPlane, leftPlane, rightPlane, topPlane, bottomPlane
 		bool t0, t1, t2, t3, t4, t5;
 		t0 = planes[0].getDistance(v) < 0;
 		t1 = true;
@@ -86,6 +86,15 @@ struct Frustum {
 		t4 = planes[4].getDistance(v) < 0;
 		t5 = planes[5].getDistance(v) < 0;
 		return t2 && t3 && t4 && t5;
+	}
+
+	bool inside(const std::shared_ptr<Object> obj) {
+		// sphere check
+
+		// each point
+
+
+		return true;
 	}
 
 	bool inSphere(glm::vec3 center, float radius) {

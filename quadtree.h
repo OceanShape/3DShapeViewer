@@ -45,7 +45,7 @@ class QuadtreeNode {
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
-		centerWorld = glm::vec3(modelToWorld(Xmid, boundaryX[0], boundaryX[1]), modelToWorld(Ymid, boundaryY[0], boundaryY[1]), 0);
+		centerWorld = glm::vec3(modelToWorldPos(Xmid, boundaryX[0], boundaryX[1]), modelToWorldPos(Ymid, boundaryY[0], boundaryY[1]), 0);
 		++nodeCount;
 		if (level <= 0) makeSphere();
 	}
@@ -116,9 +116,7 @@ private:
 	}
 	*/
 
-	float modelToWorld(float pos, float min, float max) {
-		return (pos - min) / ((max - min) / 2) - 1.0f;
-	}
+
 
 	void getBorderVertex(glm::vec3* const box) {
 		float half = 1 / (1 << level);
@@ -190,10 +188,7 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 		for (auto obj : objects) {
-			glm::vec3 center = obj->center();
-			if (frustum->inside(glm::vec3(modelToWorld(center.x, boundaryX[0], boundaryX[1]), modelToWorld(center.y, boundaryY[0], boundaryY[1]), .0f))) {
-				obj->render();
-			}
+			if (frustum->inside(obj)) obj->render();
 		}
 	}
 

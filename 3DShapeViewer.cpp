@@ -71,23 +71,25 @@ bool ShapeViewer::isKeyPressed(char ch) {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
+	float del = 0.1f;
+
 	if (isKeyPressed('A')) {
-		camera->moveRight(-1);
+		camera->moveRight(-del);
 	}
 	else if (isKeyPressed('D')) {
-		camera->moveRight(1);
+		camera->moveRight(del);
 	}
 	else if (isKeyPressed('W')) {
-		camera->moveUp(1);
+		camera->moveUp(del);
 	}
 	else if (isKeyPressed('S')) {
-		camera->moveUp(-1);
+		camera->moveUp(-del);
 	}
 	else if (isKeyPressed('Q')) {
-		camera->moveForward(-1);
+		camera->moveForward(-del);
 	}
 	else if (isKeyPressed('E')) {
-		camera->moveForward(1);
+		camera->moveForward(del);
 	}
 	else if (isKeyPressed('G')) {
 		drawGrid = !drawGrid;
@@ -265,6 +267,7 @@ bool ShapeViewer::readShapefile() {
 	camera->delTotal[1] = (yMax - yMin) / 2.0f;
 	camera->delTotal[2] = (zMax - zMin) / 2.0f;
 	
+	std::cout << "|" << delTotal[0] << "|" << delTotal[1] << std::endl;
 
 	{
 		float yTop = (yMin + yMax) / 2 + delTotal[0];
@@ -272,6 +275,7 @@ bool ShapeViewer::readShapefile() {
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
 		float max[2] = { shpHeaderData.Xmax , yTop };
+		
 		objectData = make_shared<ObjectData>(min, max);
 	}
 

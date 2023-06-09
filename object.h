@@ -51,10 +51,13 @@ public:
 			max[0] = std::max(max[0], x);
 			min[1] = std::min(min[1], y);
 			max[1] = std::max(max[1], y);
+			//min[2] = std::min(min[2], z);
+			//max[2] = std::max(max[3], z);
 
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
 		}
+		min[2] = .0f; max[2] = .01f;
 
 		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(VertexFLT));
 
