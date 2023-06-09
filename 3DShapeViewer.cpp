@@ -267,14 +267,11 @@ bool ShapeViewer::readShapefile() {
 	camera->delTotal[1] = (yMax - yMin) / 2.0f;
 	camera->delTotal[2] = (zMax - zMin) / 2.0f;
 	
-	std::cout << "|" << delTotal[0] << "|" << delTotal[1] << std::endl;
-
 	{
-		float yTop = (yMin + yMax) / 2 + delTotal[0];
 		float yBot = (yMin + yMax) / 2 - delTotal[0];
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
-		float max[2] = { shpHeaderData.Xmax , yTop };
+		float max[2] = { shpHeaderData.Xmax , yBot + delTotal[0] * 2 };
 		
 		objectData = make_shared<ObjectData>(min, max);
 	}
