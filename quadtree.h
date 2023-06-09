@@ -180,7 +180,6 @@ private:
 			if (n != nullptr) n->render(level + 1);
 		}
 
-		glClear(GL_DEPTH_BUFFER_BIT);
 		drawBorder();
 		drawObject();
 	}
