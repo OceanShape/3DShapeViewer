@@ -54,6 +54,7 @@ class QuadtreeNode {
 
 	static int nodeCount;
 
+	static int selectLevel;
 	static float boundaryX[2];
 	static float boundaryY[2];
 
@@ -166,43 +167,57 @@ private:
 		box[3] = glm::vec3{ x + half, y - half, .0f };
 	}
 
-	void render(int level, int selectLevel, shared_ptr<Camera> cam) {
-		if (level > selectLevel) return;
-		if (level == 0) drawSphere();
-		
-		auto res = FRUSTUM_CULLING::_OUT;
+	FRUSTUM_CULLING insideFrustum() {
+		auto cullingState = FRUSTUM_CULLING::_OUT;
 
 		if (frustum->inSphere(centerWorld, radiusWorld)) { // FRUSTUM_COMPLETE or FRUSTUM_PARTIAL
-			res = FRUSTUM_CULLING::_COMPLETE;
+			cullingState = FRUSTUM_CULLING::_COMPLETE;
 
 			glm::vec3 box[4];
 			getBorderVertex(box);
 			for (auto b : box) {
 				if (frustum->inside(b) == false) {
-					res = FRUSTUM_CULLING::_PARTIAL;
+					cullingState = FRUSTUM_CULLING::_PARTIAL;
 					break;
 				}
 			}
 		}
 
-		switch (res) {
+		return cullingState;
+	}
+
+	void update(int level) {
+		if (level > selectLevel) {
+			culled = true;
+		}
+		else {
+			// Frustum culling
+			auto cullingState = insideFrustum();
+
+			switch (cullingState) {
 			case FRUSTUM_CULLING::_COMPLETE:
 				culled = false; break;
 			case FRUSTUM_CULLING::_PARTIAL:
 				culled = false; break;
 			case FRUSTUM_CULLING::_OUT:
-				culled = true;
-		}
-
-		if (culled) return;
-
-		glClear(GL_DEPTH_BUFFER_BIT);
-		for (auto n : nodes) {
-			if (n != nullptr) {
-				n->render(level + 1, selectLevel, cam);
+				culled = true; break;
 			}
 		}
 
+		for (auto n : nodes) {
+			if (n != nullptr) n->update(level + 1);
+		}
+	}
+
+	void render(int level) {
+		if (culled) return;
+		//if (level == 0) drawSphere();
+
+		for (auto n : nodes) {
+			if (n != nullptr) n->render(level + 1);
+		}
+
+		glClear(GL_DEPTH_BUFFER_BIT);
 		drawBorder();
 		drawObject();
 	}
@@ -287,9 +302,10 @@ private:
 
 int qtNode::nodeCount = 0;
 RenderOption qtNode::renderOption = { 0, };
-shared_ptr<Frustum> qtNode::frustum = nullptr;
+int qtNode::selectLevel = 0;
 float qtNode::boundaryX[]{};
 float qtNode::boundaryY[]{};
+shared_ptr<Frustum> qtNode::frustum = nullptr;
 const float qtNode::halfRadiusRatio = 1.414213562f;
 
 class ObjectData {
@@ -314,8 +330,14 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void render(int selectLevel, shared_ptr<Frustum> frustum, shared_ptr<Camera> cam) {
+	void update(int selectLevel, shared_ptr<Frustum> frustum) {
 		qtNode::frustum = frustum;
-		root->render(0, selectLevel, cam);
+		qtNode::selectLevel = selectLevel;
+		root->update(0);
+	}
+
+	void render(int selectLevel) {
+		qtNode::selectLevel = selectLevel;
+		root->render(0);
 	}
 };
