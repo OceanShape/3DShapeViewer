@@ -12,43 +12,6 @@
 
 using namespace std;
 
-// MeshCollection(prototype)
-class MeshCollectionMemory {
-public:
-	float* objectVertices;
-	int32_t* objectVertexCount;
-	int currentObjectCount = 0;
-	int currentVertexCount = 0;
-	int allVertexCount = 0;
-
-	float* allGridVertices;
-	int borderCount = 0;
-
-	~MeshCollectionMemory() {
-		delete[] objectVertices;
-		delete[] objectVertexCount;
-		delete[] allGridVertices;
-	}
-
-	void clearMemory() {
-		currentObjectCount = 0;
-		currentVertexCount = 0;
-		borderCount = 0;
-	}
-
-	// set allObjectVertices / allObjectIndices
-	void allocateObjectMemory(int _allObjectCount, int _allVertexCount, int32_t _vertexCount[]) {
-		allVertexCount = _allVertexCount;
-		objectVertices = new float[_allVertexCount * 3];
-		objectVertexCount = new int32_t[_allObjectCount];
-		std::memcpy(objectVertexCount, _vertexCount, sizeof(int32_t) * _allObjectCount);
-	}
-
-	void allocateGridMemory(int nodeCount) {
-		allGridVertices = new float[nodeCount * 3 * 4];
-	}
-};
-
 class QuadtreeNode {
 	friend class ObjectData;
 
@@ -311,14 +274,12 @@ const float qtNode::halfRadiusRatio = 1.414213562f;
 class ObjectData {
 	
 	shared_ptr<qtNode> root;
-	shared_ptr<MeshCollectionMemory> ms;
 
 public:
 	ObjectData(float min[], float max[]) {
 		qtNode::boundaryX[0] = min[0], qtNode::boundaryX[1] = max[0];
 		qtNode::boundaryY[0] = min[1], qtNode::boundaryY[1] = max[1];
 		root = make_shared<qtNode>(0, min[0], max[0], min[1], max[1]);
-		//ms = make_shared<MeshCollectionMemory>();
 	}
 
 	void setRenderOpiton(const RenderOption& renderOption) {
