@@ -18,8 +18,6 @@ class QuadtreeNode {
 	static int nodeCount;
 
 	static int selectLevel;
-	static float boundaryX[2];
-	static float boundaryY[2];
 
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
@@ -45,7 +43,7 @@ class QuadtreeNode {
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
-		centerWorld = glm::vec3(modelToWorldPos(Xmid, boundaryX[0], boundaryX[1]), modelToWorldPos(Ymid, boundaryY[0], boundaryY[1]), 0);
+		centerWorld = glm::vec3(modelToWorldPos(Xmid, Xmin, Xmax), modelToWorldPos(Ymid, Ymin, Ymax), 0);
 		++nodeCount;
 		if (level <= 0) makeSphere();
 	}
@@ -260,8 +258,6 @@ private:
 int qtNode::nodeCount = 0;
 RenderOption qtNode::renderOption = { 0, };
 int qtNode::selectLevel = 0;
-float qtNode::boundaryX[]{};
-float qtNode::boundaryY[]{};
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 const float qtNode::halfRadiusRatio = 1.414213562f;
 
@@ -271,8 +267,6 @@ class ObjectData {
 
 public:
 	ObjectData(float min[], float max[]) {
-		qtNode::boundaryX[0] = min[0], qtNode::boundaryX[1] = max[0];
-		qtNode::boundaryY[0] = min[1], qtNode::boundaryY[1] = max[1];
 		root = make_shared<qtNode>(0, min[0], max[0], min[1], max[1]);
 	}
 

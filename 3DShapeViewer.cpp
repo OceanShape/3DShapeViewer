@@ -246,6 +246,7 @@ bool ShapeViewer::readShapefile() {
 
 	Object::type = shpHeaderData.SHPType;
 
+	// warning: A discrepancy occurs during the conversion from double to float
 	float xMin = shpHeaderData.Xmin;
 	float yMin = shpHeaderData.Ymin;
 	float xMax = shpHeaderData.Xmax;
@@ -263,9 +264,9 @@ bool ShapeViewer::readShapefile() {
 	delTotal[0] = (xMax - xMin) / 2.0f;
 	delTotal[1] = (yMax - yMin) / 2.0f;
 	delTotal[2] = (zMax - zMin) / 2.0f;
-	camera->delTotal[0] = (xMax - xMin) / 2.0f;
-	camera->delTotal[1] = (yMax - yMin) / 2.0f;
-	camera->delTotal[2] = (zMax - zMin) / 2.0f;
+	camera->delTotal[0] = delTotal[0];
+	camera->delTotal[1] = delTotal[1];
+	camera->delTotal[2] = delTotal[2];
 	
 	{
 		float yBot = (yMin + yMax) / 2 - delTotal[0];
