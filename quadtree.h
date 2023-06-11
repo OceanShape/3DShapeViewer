@@ -16,11 +16,11 @@ class QuadtreeNode {
 	friend class ObjectData;
 
 	static int nodeCount;
-
 	static int selectLevel;
 
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
+	static vector<shared_ptr<QuadtreeNode>> nodeList;
 
 	bool culled;
 
@@ -73,24 +73,28 @@ private:
 		if (isLeft() && isUp()) {
 			if (nodes[0] == nullptr) {
 				nodes[0] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymid, Ymax);
+				qtNode::nodeList.push_back(nodes[0]);
 			}
 			nodes[0]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isUp()) {
 			if (nodes[1] == nullptr) {
 				nodes[1] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymid, Ymax);
+				qtNode::nodeList.push_back(nodes[1]);
 			}
 			nodes[1]->store(obj, level + 1, maxLevel);
 		}
 		else if (isLeft() && isDown()) {
 			if (nodes[2] == nullptr) {
 				nodes[2] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymin, Ymid);
+				qtNode::nodeList.push_back(nodes[2]);
 			}
 			nodes[2]->store(obj, level + 1, maxLevel);
 		}
 		else if (isRight() && isDown()) {
 			if (nodes[3] == nullptr) {
 				nodes[3] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymin, Ymid);
+				qtNode::nodeList.push_back(nodes[3]);
 			}
 			nodes[3]->store(obj, level + 1, maxLevel);
 		}
@@ -151,6 +155,8 @@ private:
 		}
 		else {
 			// Frustum culling
+			// 피킹할 경우, 해당 오브젝트 색상을 변경해야 하기 때문
+			// 노드의 오브젝트를 확인할 때에도, 나중에 확인
 			auto cullingState = insideFrustum();
 
 			switch (cullingState) {
@@ -259,6 +265,7 @@ int qtNode::nodeCount = 0;
 RenderOption qtNode::renderOption = { 0, };
 int qtNode::selectLevel = 0;
 shared_ptr<Frustum> qtNode::frustum = nullptr;
+vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
 const float qtNode::halfRadiusRatio = 1.414213562f;
 
 class ObjectData {
@@ -268,6 +275,7 @@ class ObjectData {
 public:
 	ObjectData(float min[], float max[]) {
 		root = make_shared<qtNode>(0, min[0], max[0], min[1], max[1]);
+		qtNode::nodeList.push_back(root);
 	}
 
 	void setRenderOpiton(const RenderOption& renderOption) {
