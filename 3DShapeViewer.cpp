@@ -71,7 +71,7 @@ bool ShapeViewer::isKeyPressed(char ch) {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = 0.1f;
+	float del = 1.0f;
 
 	if (isKeyPressed('A')) {
 		camera->moveRight(-del);
@@ -346,7 +346,7 @@ bool ShapeViewer::readShapefile() {
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
 	camera->maxLevel = maxLevel;
-	camera->maxLevel = 0;
+	camera->maxLevel = 2;
 
 	delete[] data;
 
