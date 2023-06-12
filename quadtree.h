@@ -47,7 +47,7 @@ public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		centerWorld = modelToWorldPos(Xmid, Ymid);
 		++nodeCount;
-		if (level <= 0) makeSphere();
+		if (level <= 0) makeSphere(centerWorld, radiusWorld);
 	}
 
 private:
@@ -189,7 +189,6 @@ private:
 			if (n != nullptr) n->render(level + 1);
 		}
 
-		glClear(GL_DEPTH_BUFFER_BIT);
 		drawBorder();
 		drawObject();
 	}
@@ -199,14 +198,17 @@ private:
 		glBindVertexArray(renderOption.vao[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
+		int count = 0;
+
 		for (auto obj : objects) {
-			if (frustum->inSphere(modelToWorldPos(obj->center.x, obj->center.y), modelToWorldLen(obj->radius))) obj->render();
+			if (frustum->inSphere(modelToWorldPos(obj->center.x, obj->center.y), modelToWorldLen(obj->radius))) obj->render(count);
+			count++;
 		}
 	}
 
-	void makeSphere() {
-		sphereVertices.reserve(1323);
-		sphereIndices.reserve(2400);
+	void makeSphere(const glm::vec3& cw, const float& rw) {
+		/*sphereVertices.reserve(1323);
+		sphereIndices.reserve(2400);*/
 
 		int numSlices = 20;
 		int numStacks = 20;
@@ -216,14 +218,14 @@ private:
 		for (int j = 0; j <= numStacks; j++) {
 
 			glm::mat4 transformX = glm::rotate(glm::mat4(1.0), dPhi * float(j), glm::vec3(1, 0, 0));
-			glm::vec3 stackStartPoint = transformX * glm::vec4(0, -radiusWorld, 0, 1);
+			glm::vec3 stackStartPoint = transformX * glm::vec4(0, -rw, 0, 1);
 
 			for (int i = 0; i <= numSlices; i++) {
 				glm::mat4 transformY = glm::rotate(glm::mat4(1.0), dTheta * float(i), glm::vec3(0, 1, 0));
 				glm::vec3 res = transformY * glm::vec4(stackStartPoint, 1.0f);
-				sphereVertices.push_back(res.x + centerWorld.x);
-				sphereVertices.push_back(res.y + centerWorld.y);
-				sphereVertices.push_back(res.z + centerWorld.z);
+				sphereVertices.push_back(res.x + cw.x);
+				sphereVertices.push_back(res.y + cw.y);
+				sphereVertices.push_back(res.z + cw.z);
 			}
 		}
 
