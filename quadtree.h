@@ -27,6 +27,8 @@ class QuadtreeNode {
 	const int level;
 	static const float halfRadiusRatio;
 	const float radiusWorld;
+	static float boundaryX[2];
+	static float boundaryY[2];
 
 	vector<shared_ptr<Object>> objects;
 
@@ -43,7 +45,7 @@ class QuadtreeNode {
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
-		centerWorld = glm::vec3(modelToWorldPos(Xmid, Xmin, Xmax), modelToWorldPos(Ymid, Ymin, Ymax), 0);
+		centerWorld = getCenterWorld();
 		++nodeCount;
 		if (level <= 0) makeSphere();
 	}
@@ -118,7 +120,14 @@ private:
 	}
 	*/
 
+	glm::vec3 getCenterWorld() {
+		float res[3];
+		res[0] = 2 * (Xmid - boundaryX[0]) / (boundaryX[1] - boundaryX[0]) - 1;
+		res[1] = 2 * (Ymid - boundaryY[0]) / (boundaryY[1] - boundaryY[0]) - 1;
+		res[2] = 0.005f;
 
+		return glm::vec3(res[0], res[1], res[2]);
+	}
 
 	void getBorderVertex(glm::vec3* const box) {
 		float half = 1 / (1 << level);
@@ -133,18 +142,12 @@ private:
 	FRUSTUM_CULLING insideFrustum() {
 		auto cullingState = FRUSTUM_CULLING::_OUT;
 
-		if (frustum->inSphere(centerWorld, radiusWorld)) { // FRUSTUM_COMPLETE or FRUSTUM_PARTIAL
-			cullingState = FRUSTUM_CULLING::_COMPLETE;
+		glm::vec3 box[4];
+		getBorderVertex(box);
+		int count = 0;
+		for (size_t i = 0; i < 4; ++i) if (frustum->inside(box[i])) count++;
 
-			glm::vec3 box[4];
-			getBorderVertex(box);
-			for (auto b : box) {
-				if (frustum->inside(b) == false) {
-					cullingState = FRUSTUM_CULLING::_PARTIAL;
-					break;
-				}
-			}
-		}
+		cullingState = (count == 4) ? FRUSTUM_CULLING::_COMPLETE : (count > 0) ? FRUSTUM_CULLING::_PARTIAL : frustum->inSphere(centerWorld, radiusWorld) ? FRUSTUM_CULLING::_PARTIAL : FRUSTUM_CULLING::_OUT;
 
 		return cullingState;
 	}
@@ -182,6 +185,7 @@ private:
 			if (n != nullptr) n->render(level + 1);
 		}
 
+		glClear(GL_DEPTH_BUFFER_BIT);
 		drawBorder();
 		drawObject();
 	}
@@ -235,7 +239,6 @@ private:
 	}
 
 	void drawSphere() {
-		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(renderOption.program[2]);
 		glBindVertexArray(renderOption.vao[2]);
@@ -266,6 +269,8 @@ RenderOption qtNode::renderOption = { 0, };
 int qtNode::selectLevel = 0;
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
+float qtNode::boundaryX[]{};
+float qtNode::boundaryY[]{};
 const float qtNode::halfRadiusRatio = 1.414213562f;
 
 class ObjectData {
@@ -274,6 +279,8 @@ class ObjectData {
 
 public:
 	ObjectData(float min[], float max[]) {
+		qtNode::boundaryX[0] = min[0], qtNode::boundaryX[1] = max[0];
+		qtNode::boundaryY[0] = min[1], qtNode::boundaryY[1] = max[1];
 		root = make_shared<qtNode>(0, min[0], max[0], min[1], max[1]);
 		qtNode::nodeList.push_back(root);
 	}
