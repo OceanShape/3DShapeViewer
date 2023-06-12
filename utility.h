@@ -20,7 +20,7 @@ struct EGLOptions {
 };
 
 struct RenderOption {
-	GLuint program[3];
+	GLuint program[3]; 
 	GLuint vao[3];
 	GLuint vbo[3];
 	GLuint ebo;

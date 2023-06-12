@@ -71,7 +71,7 @@ bool ShapeViewer::isKeyPressed(char ch) {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = 1.0f;
+	float del = .2f;
 
 	if (isKeyPressed('A')) {
 		camera->moveRight(-del);
@@ -85,12 +85,12 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('S')) {
 		camera->moveUp(-del);
 	}
-	else if (isKeyPressed('Q')) {
-		camera->moveForward(-del);
-	}
-	else if (isKeyPressed('E')) {
-		camera->moveForward(del);
-	}
+	//else if (isKeyPressed('Q')) {
+	//	camera->moveForward(-del);
+	//}
+	//else if (isKeyPressed('E')) {
+	//	camera->moveForward(del);
+	//}
 	else if (isKeyPressed('G')) {
 		drawGrid = !drawGrid;
 	}
@@ -459,7 +459,9 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		camera->updateMouse(ndcX, ndcY);
 	break;
 	case WM_MOUSEWHEEL:
-		camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
+		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
+		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		camera->moveForward(wDel);
 		break;
 	case WM_KEYDOWN:
 		keyPressed[wParam] = true;
