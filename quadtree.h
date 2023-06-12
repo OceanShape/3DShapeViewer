@@ -271,16 +271,19 @@ private:
 } typedef qtNode;
 
 int qtNode::nodeCount = 0;
-RenderOption qtNode::renderOption = { 0, };
 int qtNode::selectLevel = 0;
-shared_ptr<Frustum> qtNode::frustum = nullptr;
-vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
 float qtNode::boundaryX[]{};
 float qtNode::boundaryY[]{};
 const float qtNode::halfRadiusRatio = 1.414213562f;
+RenderOption qtNode::renderOption = { 0, };
+shared_ptr<Frustum> qtNode::frustum = nullptr;
+vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
+
+int ObjectData::selectObject = 0;
 
 class ObjectData {
 	
+	static int selectObject;
 	shared_ptr<qtNode> root;
 
 public:
