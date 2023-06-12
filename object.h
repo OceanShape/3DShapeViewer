@@ -31,6 +31,8 @@ public:
 	static GLuint program;
 	const float objectColor[4] = { 1.0f, 0.5f, 0.2f, 1.0f };
 	const float objectSideColor[4] = { 1.0f, .0f, .0f, 1.0f };
+	glm::vec3 center;
+	float radius = 0;
 
 public:
 	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
@@ -52,7 +54,7 @@ public:
 			min[1] = std::min(min[1], y);
 			max[1] = std::max(max[1], y);
 			//min[2] = std::min(min[2], z);
-			//max[2] = std::max(max[3], z);
+			//max[2] = std::max(max[2], z);
 
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
@@ -82,11 +84,15 @@ public:
 			cout << endl;
 		}
 
-		setIndex();
-	}
+		center = glm::vec3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, 0);
+		
+		for (size_t i = 0; i < 3; ++i) {
+			float d = (max[i] - min[i]) / 2;
+			radius += d * d;
+		}
+		radius = sqrt(radius);
 
-	glm::vec3 center() {
-		return glm::vec3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, 0);
+		setIndex();
 	}
 
 	// Set index with triangulation

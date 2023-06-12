@@ -26,11 +26,6 @@ struct RenderOption {
 	GLuint ebo;
 };
 
-// Translate the model to world coordinates
-float modelToWorldLen(float len, float min, float max) {
-	return len / ((max - min) / 2);
-}
-
 // shader compile functions
 bool checkShaderCompileStatus(GLuint shader)
 {
