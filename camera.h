@@ -61,8 +61,8 @@ public:
 
 	void updateRay(float ndcX, float ndcY) {
 		ray.orig = position;
-		ray.dir = glm::normalize(right * ndcX + up * ndcY + direction * nearZ - position);
-		//std::cout << "RAY: " << to_string(ray.dir) << std::endl;
+		ray.dir = glm::normalize(right * ndcX / 30.0f + up * ndcY / 30.0f + direction * nearZ - position);
+		std::cout << "RAY: " << to_string(ray.dir) << std::endl;
 	}
 
 private:

@@ -74,7 +74,7 @@ struct Frustum {
 	float nearZ;
 	float farZ;
 	float fov;
-
+	
 	static GLuint indices[];
 	static float frustumColor[][4];
 
@@ -126,9 +126,6 @@ struct Frustum {
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
-		//float line[] = { .0f, .0f, 2.98999f, .003333f, .0f, 2.98999f };
-		//glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
-		//glDrawArrays(GL_LINE_STRIP, 0, 2);
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {
