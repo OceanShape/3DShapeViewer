@@ -116,7 +116,7 @@ struct Frustum {
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {
 
-		float t = tan(glm::radians(fov / 2));
+		float t = tan(glm::radians(fov / 2)); // fov default: 90.0f
 		float val = nearZ * t;
 		vertices[0] = eyePos + (-up - right) * val + direction * nearZ;
 		vertices[1] = eyePos + (+up - right) * val + direction * nearZ;

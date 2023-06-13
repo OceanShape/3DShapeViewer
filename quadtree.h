@@ -279,7 +279,6 @@ RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
 
-int ObjectData::selectObject = 0;
 
 class ObjectData {
 	
@@ -314,3 +313,5 @@ public:
 		root->render(0);
 	}
 };
+
+int ObjectData::selectObject = 0;
