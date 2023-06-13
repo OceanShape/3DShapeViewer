@@ -10,6 +10,11 @@ enum class FRUSTUM_CULLING {
 	_PARTIAL
 };
 
+struct Ray {
+	glm::vec3 orig;
+	glm::vec3 dir;
+};
+
 struct Plane {
 	//[1][2]
 	//[0][3]

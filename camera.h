@@ -23,6 +23,8 @@ public:
 	shared_ptr<Frustum> frustum;
 	bool frustumCaptured = false;
 
+	Ray ray{};
+
 	Camera(float posX, float posY, float posZ) : startZ(posZ) {
 		position = glm::vec3(posX, posY, posZ);
 		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, getProj() * getView());
@@ -57,6 +59,12 @@ public:
 		std::cout << "uncapture" << std::endl;
 	}
 
+	void setRay(float ndcX, float ndcY) {
+		ray.orig = position;
+		ray.dir = glm::normalize(right * ndcX + up * ndcY + direction * nearZ - position);
+		std::cout << "RAY: " << to_string(ray.dir) << std::endl;
+	}
+
 private:
 	glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
 	glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -76,7 +84,10 @@ private:
 	float nearZ = 0.01f;
 	float farZ = 50.0f;
 	float aspect = 1.0f;
+
+
 };
+
 
 void Camera::update() {
 	// update level

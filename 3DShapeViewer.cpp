@@ -456,6 +456,8 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mouseY = HIWORD(lParam);
 		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		std::cout << "{" << ndcX << ", " << ndcY << "}" << std::endl;
+		camera->setRay(ndcX, ndcY);
 		camera->updateMouse(ndcX, ndcY);
 	break;
 	case WM_MOUSEWHEEL:
