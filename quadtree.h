@@ -21,6 +21,7 @@ class QuadtreeNode {
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
 	static vector<shared_ptr<QuadtreeNode>> nodeList;
+	static Ray ray;
 
 	bool culled;
 
@@ -41,12 +42,22 @@ class QuadtreeNode {
 	// min max buffer for objects
 	float _min[2] = { FLT_MAX, FLT_MAX };
 	float _max[2] = { FLT_MIN, FLT_MIN };
+	glm::vec3 box[4];
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		centerWorld = modelToWorldPos(Xmid, Ymid);
 		++nodeCount;
+
+		float half = 1 / (1 << level);
+		float x = centerWorld.x;
+		float y = centerWorld.y;
+		box[0] = glm::vec3{ x - half, y - half, .0f };
+		box[1] = glm::vec3{ x - half, y + half, .0f };
+		box[2] = glm::vec3{ x + half, y + half, .0f };
+		box[3] = glm::vec3{ x + half, y - half, .0f };
+
 		if (level <= 0) makeSphere(centerWorld, radiusWorld);
 	}
 
@@ -133,21 +144,8 @@ private:
 		return len / (boundaryX[1] - boundaryX[0]);
 	}
 
-	void getBorderVertex(glm::vec3* const box) {
-		float half = 1 / (1 << level);
-		float x = centerWorld.x;
-		float y = centerWorld.y;
-		box[0] = glm::vec3{ x - half, y - half, .0f };
-		box[1] = glm::vec3{ x - half, y + half, .0f };
-		box[2] = glm::vec3{ x + half, y + half, .0f };
-		box[3] = glm::vec3{ x + half, y - half, .0f };
-	}
-	 
 	FRUSTUM_CULLING insideFrustum() {
 		auto cullingState = FRUSTUM_CULLING::_OUT;
-
-		glm::vec3 box[4];
-		getBorderVertex(box);
 		int count = 0;
 		for (size_t i = 0; i < 4; ++i) if (frustum->inside(box[i])) count++;
 
@@ -183,6 +181,10 @@ private:
 
 	void render(int level) {
 		if (culled) return;
+		if (level == 0) {
+			Plane p(box);
+			//std::cout << "inter: " << to_string(p.getIntersecPoint(ray)) << std::endl;
+		}
 		//if (level == 0) drawSphere();
 
 		for (auto n : nodes) {
@@ -278,6 +280,7 @@ const float qtNode::halfRadiusRatio = 1.414213562f;
 RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
+Ray qtNode::ray;
 
 
 class ObjectData {
@@ -302,9 +305,10 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void update(int selectLevel, shared_ptr<Frustum> frustum) {
+	void update(int selectLevel, shared_ptr<Frustum> frustum, Ray ray) {
 		qtNode::frustum = frustum;
 		qtNode::selectLevel = selectLevel;
+		qtNode::ray = ray;
 		root->update(0);
 	}
 

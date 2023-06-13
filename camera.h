@@ -59,10 +59,10 @@ public:
 		std::cout << "uncapture" << std::endl;
 	}
 
-	void setRay(float ndcX, float ndcY) {
+	void updateRay(float ndcX, float ndcY) {
 		ray.orig = position;
 		ray.dir = glm::normalize(right * ndcX + up * ndcY + direction * nearZ - position);
-		std::cout << "RAY: " << to_string(ray.dir) << std::endl;
+		//std::cout << "RAY: " << to_string(ray.dir) << std::endl;
 	}
 
 private:
@@ -85,7 +85,8 @@ private:
 	float farZ = 50.0f;
 	float aspect = 1.0f;
 
-
+	float ndcX = .0f;
+	float ndcY = .0f;
 };
 
 
@@ -100,12 +101,14 @@ void Camera::update() {
 	// update frustum
 	if (frustumCaptured == false) {
 		frustum->update(direction, up, right, position, fov);
+		updateRay(ndcX, ndcY);
 	}
 }
 
-void Camera::updateMouse(float ndcX, float ndcY) {
-	yaw = ndcX * glm::pi<float>() * 2;
-	pitch = ndcY * glm::pi<float>() / 2;
+void Camera::updateMouse(float _ndcX, float _ndcY) {
+	
+	yaw = _ndcX * glm::pi<float>() * 2;
+	pitch = _ndcY * glm::pi<float>() / 2;
 
 	glm::quat qX = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
 	glm::quat qY = glm::angleAxis(yaw, glm::vec3(0, -1, 0));
@@ -115,9 +118,10 @@ void Camera::updateMouse(float ndcX, float ndcY) {
 	direction = glm::normalize(qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
 	up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
 	right = glm::normalize(glm::cross(direction, up));
-
+	
 	if (frustumCaptured == false) {
 		frustum->update(direction, up, right, position, fov);
+		updateRay(_ndcX, _ndcY);
 	}
 }
 

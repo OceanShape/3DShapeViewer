@@ -29,6 +29,15 @@ struct Plane {
 		update(v0, v1, v2, v3);
 	}
 
+	Plane(const glm::vec3 v[]) {
+		update(v[0], v[1], v[2], v[3]);
+	}
+
+	glm::vec3 getIntersecPoint(Ray ray) {
+		return ray.orig - (ray.orig.z + d) * ray.dir / ray.dir.z;
+		//return ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / glm::dot(normal, ray.dir);
+	}
+
 	void update(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 		vertices[0] = v0, vertices[1] = v1, vertices[2] = v2, vertices[3] = v3;
 		normal = getNormal();
@@ -117,6 +126,9 @@ struct Frustum {
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
+		//float line[] = { .0f, .0f, 2.98999f, .003333f, .0f, 2.98999f };
+		//glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
+		//glDrawArrays(GL_LINE_STRIP, 0, 2);
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {
