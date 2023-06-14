@@ -128,6 +128,20 @@ struct Frustum {
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
+
+		glm::vec3 v[4] = { {-1, -1, 0}, {-1, 1, 0}, {1, 1, 0}, {1, -1, 0} };
+		Plane plane(v);
+		Ray r{ glm::vec3(0, 0, 3), glm::vec3(.162, .162, -.97) };
+		//std::cout << "inter: " << to_string(plane.getIntersecPoint(r)) << std::endl;
+		glm::vec3 res;
+		plane.getIntersecPoint(r, res);
+
+		//float line[] = { .75, .75, 0, res.x, res.y, 0 };
+		float line[] = { ray.orig.x, ray.orig.y, ray.orig.z - 1, ray.dir.x, ray.dir.y, ray.dir.z };
+		//std::cout << "[" << ndcX << "," << ndcY << "]" << std::endl;
+		//line[3] = ndcX; line[4] = ndcY;
+		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
+		glDrawArrays(GL_LINE_STRIP, 0, 2);
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {
