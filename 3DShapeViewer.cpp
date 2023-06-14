@@ -128,7 +128,7 @@ void ShapeViewer::render()
 		
 		objectData->render(camera->currentLevel);
 		glUseProgram(renderOption.program[2]);
-		camera->frustum->render();
+		camera->renderFrustum();
 	}
 
 	eglSwapBuffers(eglOptions.eglDisplay, eglOptions.eglSurface);
@@ -430,7 +430,6 @@ bool ShapeViewer::openShapefile() {
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wDel, mouseX, mouseY;
-	float ndcX, ndcY;
 	RECT rt;
 	switch (message)
 	{
@@ -457,6 +456,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
 		//std::cout << "{" << ndcX << ", " << ndcY << "}" << std::endl;
+
 		camera->updateMouse(ndcX, ndcY);
 	break;
 	case WM_MOUSEWHEEL:

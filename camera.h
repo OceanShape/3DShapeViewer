@@ -62,7 +62,15 @@ public:
 	void updateRay(float ndcX, float ndcY) {
 		ray.orig = position;
 		ray.dir = glm::normalize(right * ndcX / 30.0f + up * ndcY / 30.0f + direction * nearZ - position);
-		std::cout << "RAY: " << to_string(ray.dir) << std::endl;
+		//std::cout << "RAY: " << to_string(ray.dir) << std::endl;
+	}
+
+	void renderFrustum() {
+		Ray test;
+		test.orig = position;
+		test.dir = glm::vec3(direction.x + .5f, direction.y + .5f, direction.z);
+
+		frustum->render(ndcX, ndcY, test);
 	}
 
 private:

@@ -61,6 +61,7 @@ public:
 	bool mouseClicked = false;
 	float lastX = 450.0f;
 	float lastY = 450.0f;
+	float ndcX, ndcY;
 
 	shared_ptr<ObjectData> objectData;
 	std::vector<shared_ptr<Object>> objects;

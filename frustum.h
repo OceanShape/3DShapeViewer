@@ -118,7 +118,7 @@ struct Frustum {
 		return true;
 	}
 
-	void render() {
+	void render(float ndcX, float ndcY, Ray ray) {
 		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 8 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
