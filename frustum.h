@@ -33,9 +33,11 @@ struct Plane {
 		update(v[0], v[1], v[2], v[3]);
 	}
 
-	glm::vec3 getIntersecPoint(Ray ray) {
-		return ray.orig - (ray.orig.z + d) * ray.dir / ray.dir.z;
-		//return ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / glm::dot(normal, ray.dir);
+	bool getIntersecPoint(Ray ray, glm::vec3& answer) {
+		float dotTmp = glm::dot(normal, ray.dir);
+		if (std::abs(dotTmp) < 0.0001f) return false;
+		answer = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
+		return true;
 	}
 
 	void update(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
