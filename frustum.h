@@ -37,7 +37,20 @@ struct Plane {
 		float dotTmp = glm::dot(normal, ray.dir);
 		if (std::abs(dotTmp) < 0.0001f) return false;
 		answer = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
-		return true;
+		return isVertexInsidePlane(answer);
+	}
+
+	bool isVertexInsideTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& p) {
+		auto m = cross(p - v0, v1 - v0);
+		auto n = cross(p - v1, v2 - v1);
+		auto o = cross(p - v2, v0 - v2);
+
+		return m.z > 0 && n.z > 0 && o.z > 0;
+	}
+
+	bool isVertexInsidePlane(const glm::vec3& p) {
+		return isVertexInsideTriangle(vertices[0], vertices[1], vertices[2], p) 
+			|| isVertexInsideTriangle(vertices[0], vertices[2], vertices[3], p);
 	}
 
 	void update(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
