@@ -49,6 +49,7 @@ public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		centerWorld = modelToWorldPos(Xmid, Ymid);
 		++nodeCount;
+		culled = true;
 
 		float half = 1 / (1 << level);
 		float x = centerWorld.x;
@@ -181,11 +182,6 @@ private:
 
 	void render(int level) {
 		if (culled) return;
-		if (level == 0) {
-			Plane p(box);
-			//std::cout << "inter: " << to_string(p.getIntersecPoint(ray)) << std::endl;
-		}
-		//if (level == 0) drawSphere();
 
 		for (auto n : nodes) {
 			if (n != nullptr) n->render(level + 1);
@@ -203,7 +199,19 @@ private:
 		int count = 0;
 
 		for (auto obj : objects) {
-			if (frustum->inSphere(modelToWorldPos(obj->center.x, obj->center.y), modelToWorldLen(obj->radius))) obj->render(count);
+			auto cenW = modelToWorldPos(obj->center.x, obj->center.y);
+			auto radW = modelToWorldLen(obj->radius);
+			if (frustum->inSphere(cenW, radW)) {
+				Plane p(box);
+				glm::vec3 res;
+				p.getIntersecPoint(ray, res);
+				auto x = res.x - cenW.x;
+				auto y = res.y - cenW.y;
+				if ((x * x + y * y) < radW * radW) {
+					std::cout << level;
+				}
+				obj->render(count, (x * x + y * y) < radW * radW);
+			}
 			count++;
 		}
 	}

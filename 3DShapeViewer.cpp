@@ -346,7 +346,7 @@ bool ShapeViewer::readShapefile() {
 	std::cout << "Total record count: " << objects.size() << endl;
 	std::cout << "max level: " << maxLevel << endl;
 	camera->maxLevel = maxLevel;
-	camera->maxLevel = 2;
+	camera->maxLevel = 0;
 
 	delete[] data;
 
@@ -448,6 +448,10 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 	}
+	break;
+	case WM_LBUTTONDOWN:
+	break;
+	case WM_LBUTTONUP:
 	break;
 	case WM_MOUSEMOVE:
 		GetClientRect(hWnd, &rt);
