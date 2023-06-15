@@ -133,7 +133,7 @@ struct Frustum {
 		return true;
 	}
 
-	void render(float ndcX, float ndcY, Ray ray) {
+	void render(const float& ndcX, const float& ndcY, const Ray& ray) {
 		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 8 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
@@ -144,10 +144,9 @@ struct Frustum {
 
 		glm::vec3 v[4] = { {-1, -1, 0}, {-1, 1, 0}, {1, 1, 0}, {1, -1, 0} };
 		Plane plane(v);
-		Ray r{ glm::vec3(0, 0, 3), glm::vec3(.162, .162, -.97) };
 		//std::cout << "inter: " << to_string(plane.getIntersecPoint(r)) << std::endl;
 		glm::vec3 res;
-		plane.getIntersecPoint(ray, res);
+		if (plane.getIntersecPoint(ray, res) == false) return;
 		//std::cout << to_string(res) << std::endl;
 
 		float line[] = { .0f, .0f, .0f, res.x, res.y, res.z };
