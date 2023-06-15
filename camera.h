@@ -59,16 +59,27 @@ public:
 		std::cout << "uncapture" << std::endl;
 	}
 
-	void updateRay(float ndcX, float ndcY) {
+	void updateRay(float _ndcX, float _ndcY) {
 		ray.orig = position;
-		ray.dir = glm::normalize(right * ndcX / 30.0f + up * ndcY / 30.0f + direction * nearZ - position);
+		ray.dir = glm::normalize(right * _ndcX / 30.0f + up * _ndcY / 30.0f + direction * nearZ - position);
+		ndcX = _ndcX; ndcY = _ndcY;
 		//std::cout << "RAY: " << to_string(ray.dir) << std::endl;
 	}
 
 	void renderFrustum() {
 		Ray test;
+
+		//auto t1 = nearZ * 1.001f;
+		//auto t2 = nearZ * 1.001f;
+		//auto t3 = nearZ * 1.001f;
+		//test.orig = position + direction * t1;
+
+		//std::cout << ndcX << "," << ndcY << std::endl;
+		//test.dir = position + (up * t2) * ndcY + (right * t3) * ndcX + direction * t1;
+		//std::cout << to_string(test.dir) << std::endl;
+
 		test.orig = position;
-		test.dir = glm::vec3(direction.x + .5f, direction.y + .5f, direction.z);
+		test.dir = glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ);
 
 		frustum->render(ndcX, ndcY, test);
 	}

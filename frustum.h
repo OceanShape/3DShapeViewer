@@ -134,12 +134,11 @@ struct Frustum {
 		Ray r{ glm::vec3(0, 0, 3), glm::vec3(.162, .162, -.97) };
 		//std::cout << "inter: " << to_string(plane.getIntersecPoint(r)) << std::endl;
 		glm::vec3 res;
-		plane.getIntersecPoint(r, res);
+		plane.getIntersecPoint(ray, res);
+		//std::cout << to_string(res) << std::endl;
 
-		//float line[] = { .75, .75, 0, res.x, res.y, 0 };
-		float line[] = { ray.orig.x, ray.orig.y, ray.orig.z - 1, ray.dir.x, ray.dir.y, ray.dir.z };
-		//std::cout << "[" << ndcX << "," << ndcY << "]" << std::endl;
-		//line[3] = ndcX; line[4] = ndcY;
+		float line[] = { .0f, .0f, .0f, res.x, res.y, res.z };
+
 		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINE_STRIP, 0, 2);
 	}
