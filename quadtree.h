@@ -47,7 +47,7 @@ class QuadtreeNode {
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
-		centerWorld = modelToWorldPos(Xmid, Ymid);
+		centerWorld = modelToWorldPos(glm::vec3(Xmid, Ymid, .0f));
 		++nodeCount;
 		culled = true;
 
@@ -118,17 +118,27 @@ private:
 		}
 	}
 
-	glm::vec3 modelToWorldPos(float x, float y, float z = .0f) {
-		float res[3];
-		res[0] = 2 * (x - boundaryX[0]) / (boundaryX[1] - boundaryX[0]) - 1;
-		res[1] = 2 * (y - boundaryY[0]) / (boundaryY[1] - boundaryY[0]) - 1;
-		res[2] = z;//0.005f
-
-		return glm::vec3(res[0], res[1], res[2]);
+	glm::vec3 modelToWorldPos(const glm::vec3& v) {
+		return glm::vec3(
+			2 * (v.x - boundaryX[0]) / (boundaryX[1] - boundaryX[0]) - 1,
+			2 * (v.y - boundaryY[0]) / (boundaryY[1] - boundaryY[0]) - 1,
+			v.z
+		);
 	}
 
-	float modelToWorldLen(float len) {
+	float modelToWorldLen(const float& len) {
 		return len * 2.0f / (boundaryX[1] - boundaryX[0]);
+	}
+	
+	float worldToModelLen(const float& len) {
+		return len * (boundaryX[1] - boundaryX[0]) / 2.0f;
+	}
+
+	glm::vec3 worldToModelPos(const glm::vec3& v) {
+		return glm::vec3(
+			(boundaryX[1] - boundaryX[0]) * (v.x + 1) / 2 + boundaryX[0],
+			(boundaryY[1] - boundaryY[0]) * (v.y + 1) / 2 + boundaryY[0],
+			v.z);
 	}
 
 	FRUSTUM_CULLING insideFrustum() {
@@ -183,7 +193,7 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 		for (auto obj : objects) {
-			auto cenW = modelToWorldPos(obj->center.x, obj->center.y, obj->center.z);
+			auto cenW = modelToWorldPos(obj->center);
 			auto radW = modelToWorldLen(obj->radius);
 			
 			if (frustum->inSphere(cenW, radW)) {

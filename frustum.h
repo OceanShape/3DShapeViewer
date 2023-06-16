@@ -15,6 +15,14 @@ struct Ray {
 	glm::vec3 dir;
 };
 
+bool isVertexInsideTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& p) {
+	auto m = cross(p - v0, v1 - v0);
+	auto n = cross(p - v1, v2 - v1);
+	auto o = cross(p - v2, v0 - v2);
+
+	return m.z > 0 && n.z > 0 && o.z > 0;
+}
+
 struct Plane {
 	//[1][2]
 	//[0][3]
