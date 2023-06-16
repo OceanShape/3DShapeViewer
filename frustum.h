@@ -15,13 +15,30 @@ struct Ray {
 	glm::vec3 dir;
 };
 
-bool isVertexInsideTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& p) {
-	auto m = cross(p - v0, v1 - v0);
-	auto n = cross(p - v1, v2 - v1);
-	auto o = cross(p - v2, v0 - v2);
+//glm::vec3 getNormal(const glm::vec3 v[]) {
+//	return glm::normalize(glm::cross(v[2] - v[0], v[1] - v[0]));
+//};
+//
+//bool isVertexInsideTriangle(const glm::vec3 tri[], const glm::vec3& p) {
+//	auto m = cross(p - tri[0], tri[1] - tri[0]);
+//	auto n = cross(p - tri[1], tri[2] - tri[1]);
+//	auto o = cross(p - tri[2], tri[0] - tri[2]);
+//
+//	return m.z > 0 && n.z > 0 && o.z > 0;
+//};
+//
+//bool isRayIntersecTriangle(const Ray& ray, const glm::vec3 tri[]) {
+//	auto normal = getNormal(tri);
+//
+//	float dotTmp = glm::dot(normal, ray.dir);
+//	if (std::abs(dotTmp) < 0.0001f) return false;
+//
+//	float d = -glm::dot(normal, tri[0]);
+//
+//	auto inter = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
+//	return isVertexInsideTriangle(tri, inter);
+//};
 
-	return m.z > 0 && n.z > 0 && o.z > 0;
-}
 
 struct Plane {
 	//[1][2]
@@ -107,7 +124,7 @@ struct Frustum {
 
 	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 viewProj) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
 		update(direction, up, right, eyePos, fov);
-	}
+	};
 
 	void setRenderOption(RenderOption option) {
 		program = option.program[2];

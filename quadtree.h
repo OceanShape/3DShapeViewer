@@ -141,6 +141,10 @@ private:
 			v.z);
 	}
 
+	glm::vec3 worldToModelVec(const glm::vec3& v) {
+		return glm::normalize(worldToModelPos(v));
+	}
+
 	FRUSTUM_CULLING insideFrustum() {
 		auto cullingState = FRUSTUM_CULLING::_OUT;
 		int count = 0;
@@ -199,6 +203,8 @@ private:
 			if (frustum->inSphere(cenW, radW)) {
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 				if (d < radW) {
+					Ray modelRay{ worldToModelPos(ray.orig), worldToModelVec(ray.dir) };
+
 					obj->render(Object::objectSelected == false);
 					Object::objectSelected = true;
 				}

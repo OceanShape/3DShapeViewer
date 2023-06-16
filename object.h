@@ -7,6 +7,7 @@
 
 #include "quadtree.h"
 #include "triangulation.h"
+#include "frustum.h"
 
 struct SHPPoint {
 	double x;
@@ -100,6 +101,12 @@ public:
 		}
 
 		setIndex();
+	}
+
+	void isRayIntersec(const Ray& ray) {
+		if (isRayIntersecTriangle(ray, vertices)) {
+			std::cout << "Intersec" << std::endl;
+		}
 	}
 
 	// Set index with triangulation
