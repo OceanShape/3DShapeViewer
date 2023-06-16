@@ -36,7 +36,7 @@ public:
 	const float objectSideColor[4] = { 1.0f, .0f, .0f, 1.0f };
 	const float selectedColor[4] = { 1.0f, 1.5f, 0.0f, 1.0f };
 	glm::vec3 center;
-	float radius = 0;
+	float radius = 0.0f;
 
 public:
 	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
@@ -88,13 +88,16 @@ public:
 			cout << endl;
 		}
 
-		center = glm::vec3((min[0] + max[0]) / 2, (min[1] + max[1]) / 2, 0);
-		
-		for (size_t i = 0; i < 3; ++i) {
-			float d = (max[i] - min[i]) / 2;
-			radius += d * d;
+		center = glm::vec3(0);
+		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
+			center += vertices[i];
 		}
-		radius = sqrt(radius);
+		center /= vertexCount; center.z = 0.005f;
+
+		radius = .0f;
+		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
+			radius = std::max(glm::length(center - vertices[i]), radius);
+		}
 
 		setIndex();
 	}
@@ -136,10 +139,9 @@ public:
 			indices[startIdx + i * 6 + 4] = vertexCount + i;
 			indices[startIdx + i * 6 + 5] = vertexCount + i + 1;
 		}
-
 	}
 
-	void render(int count, bool isSelected) {
+	void render(bool isSelected) {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 

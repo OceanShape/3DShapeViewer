@@ -118,31 +118,17 @@ private:
 		}
 	}
 
-	/* for object
-	void AABBOX(glm::vec3 vertices[]) {
-		vertices[0] = glm::vec3{ Xmin, Ymin, .0f };
-		vertices[1] = glm::vec3{ Xmin, Ymax, .0f };
-		vertices[2] = glm::vec3{ Xmax, Ymax, .0f };
-		vertices[3] = glm::vec3{ Xmax, Ymin, .0f };
-
-		vertices[4] = glm::vec3{ Xmin, Ymin, 1.0f };
-		vertices[5] = glm::vec3{ Xmin, Ymax, 1.0f };
-		vertices[6] = glm::vec3{ Xmax, Ymax, 1.0f };
-		vertices[7] = glm::vec3{ Xmax, Ymin, 1.0f };
-	}
-	*/
-
-	glm::vec3 modelToWorldPos(float x, float y) {
+	glm::vec3 modelToWorldPos(float x, float y, float z = .0f) {
 		float res[3];
 		res[0] = 2 * (x - boundaryX[0]) / (boundaryX[1] - boundaryX[0]) - 1;
 		res[1] = 2 * (y - boundaryY[0]) / (boundaryY[1] - boundaryY[0]) - 1;
-		res[2] = 0.005f;
+		res[2] = z;//0.005f
 
 		return glm::vec3(res[0], res[1], res[2]);
 	}
 
 	float modelToWorldLen(float len) {
-		return len / (boundaryX[1] - boundaryX[0]);
+		return len * 2.0f / (boundaryX[1] - boundaryX[0]);
 	}
 
 	FRUSTUM_CULLING insideFrustum() {
@@ -196,26 +182,20 @@ private:
 		glBindVertexArray(renderOption.vao[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
-		int count = 0;
-
 		for (auto obj : objects) {
-			auto cenW = modelToWorldPos(obj->center.x, obj->center.y);
+			auto cenW = modelToWorldPos(obj->center.x, obj->center.y, obj->center.z);
 			auto radW = modelToWorldLen(obj->radius);
+			
 			if (frustum->inSphere(cenW, radW)) {
-				Plane p(box);
-				glm::vec3 res;
-				p.getIntersecPoint(ray, res);
-				auto x = res.x - cenW.x;
-				auto y = res.y - cenW.y;
-				if ((x * x + y * y) < radW * radW) {
-					obj->render(count, Object::objectSelected == false);
+				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
+				if (d < radW) {
+					obj->render(Object::objectSelected == false);
 					Object::objectSelected = true;
 				}
 				else {
-					obj->render(count, false);
+					obj->render(false);
 				}
 			}
-			count++;
 		}
 
 		Object::objectSelected = false;

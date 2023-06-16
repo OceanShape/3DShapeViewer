@@ -71,7 +71,7 @@ bool ShapeViewer::isKeyPressed(char ch) {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = .1f;
+	float del = .05f;
 
 	if (isKeyPressed('A')) {
 		camera->moveRight(-del);
