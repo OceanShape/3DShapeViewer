@@ -208,12 +208,17 @@ private:
 				auto x = res.x - cenW.x;
 				auto y = res.y - cenW.y;
 				if ((x * x + y * y) < radW * radW) {
-					std::cout << level;
+					obj->render(count, Object::objectSelected == false);
+					Object::objectSelected = true;
 				}
-				obj->render(count, (x * x + y * y) < radW * radW);
+				else {
+					obj->render(count, false);
+				}
 			}
 			count++;
 		}
+
+		Object::objectSelected = false;
 	}
 
 	void makeSphere(const glm::vec3& cw, const float& rw) {
