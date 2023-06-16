@@ -71,7 +71,7 @@ bool ShapeViewer::isKeyPressed(char ch) {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = .2f;
+	float del = .1f;
 
 	if (isKeyPressed('A')) {
 		camera->moveRight(-del);
@@ -333,7 +333,7 @@ bool ShapeViewer::readShapefile() {
 			offset += sizeof(double) * numPoints;
 		}
 
-		shared_ptr<Object> obj = make_shared<Object>(points, numPoints, parts, numParts);
+		shared_ptr<Object> obj = make_shared<Object>(recordCount, points, numPoints, parts, numParts);
 		objects.push_back(obj);
 		objectData->store(obj, maxLevel);
 

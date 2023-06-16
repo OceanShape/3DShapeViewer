@@ -19,6 +19,8 @@ struct VertexFLT {
 
 class Object {
 public:
+	const int ID;
+
 	Triangulation::Vertex* verticesDBL = nullptr;
 	VertexFLT* vertices = nullptr;
 	GLuint* indices = nullptr;
@@ -42,7 +44,7 @@ public:
 	double min[3]{ DBL_MAX, DBL_MAX, DBL_MAX };
 	double max[3]{ DBL_MIN, DBL_MIN, DBL_MIN };
 
-	Object(SHPPoint* _vertices, int _vertexCount, int32_t* _parts, int _partCount) : vertexCount(_vertexCount), partCount(_partCount) {
+	Object(int _id, SHPPoint* _vertices, int _vertexCount, int32_t* _parts, int _partCount) : ID(_id), vertexCount(_vertexCount), partCount(_partCount) {
 		verticesDBL = new Triangulation::Vertex[vertexCount];
 		vertices = new VertexFLT[vertexCount * 2];
 		partVertexCounts = new int32_t[partCount];

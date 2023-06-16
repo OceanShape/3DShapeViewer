@@ -49,7 +49,7 @@ public:
 
 	FILE* SHPFile;
 	bool isShapeLoaded = false;
-	int32_t recordCount = 0;
+	int recordCount = 0;
 	float aspectRatio = 1.0f;
 
 	shared_ptr<Camera> camera;
