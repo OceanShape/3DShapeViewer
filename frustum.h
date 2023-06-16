@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#include "utility.h"
+
 // Frustum culling option
 enum class FRUSTUM_CULLING {
 	_OUT,
@@ -38,7 +40,6 @@ bool isRayIntersecTriangle(const Ray& ray, const glm::vec3 tri[]) {
 	auto inter = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
 	return isVertexInsideTriangle(tri, inter);
 };
-
 
 struct Plane {
 	//[1][2]
@@ -140,15 +141,6 @@ struct Frustum {
 		t4 = planes[4].getDistance(v) < 0;
 		t5 = planes[5].getDistance(v) < 0;
 		return t2 && t3 && t4 && t5;
-	}
-
-	bool inside(const std::shared_ptr<Object> obj) {
-		// sphere check
-
-		// each point
-
-
-		return true;
 	}
 
 	// Is this sphere inside the frustum?
