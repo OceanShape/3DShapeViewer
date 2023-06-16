@@ -126,6 +126,7 @@ struct Frustum {
 		return true;
 	}
 
+	// Is this sphere inside the frustum?
 	bool inSphere(glm::vec3 center, float radius) {
 		for (size_t i = 2; i < 6; ++i) {
 			if (planes[i].getDistance(center, false) > radius) return false;

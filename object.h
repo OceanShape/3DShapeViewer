@@ -13,16 +13,14 @@ struct SHPPoint {
 	double y;
 };
 
-struct VertexFLT {
-	float x, y, z;
-};
+typedef glm::vec3 Vertex;
 
 class Object {
 public:
 	const int ID;
 
 	Triangulation::Vertex* verticesDBL = nullptr;
-	VertexFLT* vertices = nullptr;
+	Vertex* vertices = nullptr;
 	GLuint* indices = nullptr;
 	int indexCount = 0;
 	int32_t* partVertexCounts = nullptr;
@@ -46,7 +44,7 @@ public:
 
 	Object(int _id, SHPPoint* _vertices, int _vertexCount, int32_t* _parts, int _partCount) : ID(_id), vertexCount(_vertexCount), partCount(_partCount) {
 		verticesDBL = new Triangulation::Vertex[vertexCount];
-		vertices = new VertexFLT[vertexCount * 2];
+		vertices = new Vertex[vertexCount * 2];
 		partVertexCounts = new int32_t[partCount];
 		partStartIndex = new int32_t[partCount];
 
@@ -67,7 +65,7 @@ public:
 		}
 		min[2] = .0f; max[2] = .01f;
 
-		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(VertexFLT));
+		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(Vertex));
 
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
 			vertices[i].z = .0f;
