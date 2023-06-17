@@ -429,7 +429,8 @@ bool ShapeViewer::openShapefile() {
 
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	int wDel, mouseX, mouseY;
+	int mouseX, mouseY;
+	float wDel;
 	RECT rt;
 	switch (message)
 	{
@@ -465,7 +466,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
-		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		wDel = 0.8 * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
 		break;
 	case WM_KEYDOWN:

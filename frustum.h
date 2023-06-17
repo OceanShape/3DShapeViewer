@@ -29,7 +29,7 @@ bool isVertexInsideTriangle(const glm::vec3 tri[], const glm::vec3& p) {
 	return m.z > 0 && n.z > 0 && o.z > 0;
 };
 
-bool isRayIntersecTriangle(const Ray& ray, const glm::vec3 tri[]) {
+bool isRayIntersecTriangle(const Ray& ray, glm::vec3& inter, const glm::vec3 tri[]) {
 	auto normal = getNormal(tri);
 
 	float dotTmp = glm::dot(normal, ray.dir);
@@ -37,7 +37,7 @@ bool isRayIntersecTriangle(const Ray& ray, const glm::vec3 tri[]) {
 
 	float d = -glm::dot(normal, tri[0]);
 
-	auto inter = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
+	inter = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
 	return isVertexInsideTriangle(tri, inter);
 };
 
@@ -171,6 +171,9 @@ struct Frustum {
 
 		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINE_STRIP, 0, 2);
+
+		//float lineFromCam[] = {}
+
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {

@@ -104,8 +104,9 @@ public:
 	}
 
 	void isRayIntersec(const Ray& ray) {
-		if (isRayIntersecTriangle(ray, vertices)) {
-			std::cout << "Intersec" << std::endl;
+		glm::vec3 inter;
+		if (isRayIntersecTriangle(ray, inter, vertices)) {
+			std::cout << to_string(inter) << std::endl;
 		}
 	}
 
@@ -152,13 +153,17 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
+		if (false){//isSelected == true) {
+			std::cout << min[0] << "," << max[0] << "|" << min[1] << "," << max[1] << std::endl;
+		}
+
 		glUniform4fv(glGetUniformLocation(program, "color"), 1, isSelected ? selectedColor : objectColor);
 
-		if (true) {
+		if (false) {
 			glDrawElements(GL_TRIANGLES, indexCount - (vertexCount - 1) * 6, GL_UNSIGNED_INT, 0);
 		}
 		else {
-			for (size_t pos = 0; pos < indexCount; pos += 3) {
+			for (size_t pos = 0; pos < indexCount - (vertexCount - 1) * 6; pos += 3) {
 				glDrawElements(GL_LINE_LOOP, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 			}
 		}

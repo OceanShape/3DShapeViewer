@@ -142,7 +142,10 @@ private:
 	}
 
 	glm::vec3 worldToModelVec(const glm::vec3& v) {
-		return glm::normalize(worldToModelPos(v));
+		return glm::normalize(glm::vec3(
+			(boundaryX[1] - boundaryX[0]) * v.x / 2.0f,
+			(boundaryX[1] - boundaryX[0]) * v.y / 2.0f,
+			(boundaryX[1] - boundaryX[0]) * v.z / 2.0f));
 	}
 
 	FRUSTUM_CULLING insideFrustum() {
@@ -204,6 +207,15 @@ private:
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 				if (d < radW) {
 					Ray modelRay{ worldToModelPos(ray.orig), worldToModelVec(ray.dir) };
+
+					/*Plane p(box);
+					glm::vec3 res;
+					p.getIntersecPoint(ray, res);
+					glm::vec3 resMod = worldToModelPos(res);
+					std::cout << resMod.x << "," << resMod.y << "\t";*/
+
+					obj->isRayIntersec(modelRay);
+					
 
 					obj->render(Object::objectSelected == false);
 					Object::objectSelected = true;
