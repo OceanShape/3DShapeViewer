@@ -214,7 +214,7 @@ private:
 					glm::vec3 resMod = worldToModelPos(res);
 					std::cout << resMod.x << "," << resMod.y << "\t";*/
 
-					obj->isRayIntersec(modelRay);
+					obj->isRayIntersec(modelRay, boundaryX, boundaryY);
 					
 
 					obj->render(Object::objectSelected == false);

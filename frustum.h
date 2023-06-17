@@ -160,14 +160,15 @@ struct Frustum {
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
 
-		glm::vec3 v[4] = { {-1, -1, 0}, {-1, 1, 0}, {1, 1, 0}, {1, -1, 0} };
+		float z = .01f;
+		glm::vec3 v[4] = { {-1, -1,z }, {-1, 1, z}, {1, 1, z}, {1, -1, z} };
 		Plane plane(v);
 		//std::cout << "inter: " << to_string(plane.getIntersecPoint(r)) << std::endl;
 		glm::vec3 res;
 		if (plane.getIntersecPoint(ray, res) == false) return;
 		//std::cout << to_string(res) << std::endl;
 
-		float line[] = { .0f, .0f, .0f, res.x, res.y, res.z };
+		float line[] = { .0f, .0f, .02f, res.x, res.y, res.z };
 
 		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINE_STRIP, 0, 2);

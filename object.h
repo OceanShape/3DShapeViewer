@@ -28,6 +28,7 @@ public:
 	int32_t* partStartIndex = nullptr;
 	int vertexCount = 0;
 	int partCount = 0;
+	int triangleCount = 0;
 
 	static int type;
 	static GLuint program;
@@ -103,10 +104,30 @@ public:
 		setIndex();
 	}
 
-	void isRayIntersec(const Ray& ray) {
+	void isRayIntersec(const Ray& ray, float boundaryX[], float boundaryY[]) {
+
+		float z = .01f;
+		glm::vec3 v[4] = { {0, 0, z }, {boundaryX[1], 0, z}, {boundaryX[1], boundaryY[1], z}, {0, boundaryY[1], z} };
+		Plane plane(v);
+		glm::vec3 res;
+		plane.getIntersecPoint(ray, res);
+
+		float line[] = { (boundaryX[0] + boundaryX[1]) / 2, (boundaryY[0] + boundaryY[1]) / 2, .02f, res.x, res.y, res.z };
+
+		std::cout << res.x << "," << res.y << std::endl;
+
+		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
+		glDrawArrays(GL_LINE_STRIP, 0, 2);
+
 		glm::vec3 inter;
-		if (isRayIntersecTriangle(ray, inter, vertices)) {
-			std::cout << to_string(inter) << std::endl;
+		for (size_t i = 0; i < triangleCount; ++i) {
+			glm::vec3 triangleVertices[] = { 
+				vertices[indices[i * 3]], 
+				vertices[indices[i * 3 + 1]] , 
+				vertices[indices[i * 3 + 2]] };
+			if (isRayIntersecTriangle(ray, inter, triangleVertices)) {
+				std::cout << to_string(inter) << std::endl;
+			}
 		}
 	}
 
@@ -117,6 +138,7 @@ public:
 
 		indexCount = triangulation.size() * 3 + (vertexCount - 1) * 6 + (vertexCount - 1) * 2 * 3;
 		indices = new GLuint[indexCount];
+		triangleCount = triangulation.size();
 
 		for (int i = 0; i < triangulation.size(); i++) {
 			indices[i * 3] = triangulation[i].a;
@@ -159,7 +181,7 @@ public:
 
 		glUniform4fv(glGetUniformLocation(program, "color"), 1, isSelected ? selectedColor : objectColor);
 
-		if (false) {
+		if (true) {
 			glDrawElements(GL_TRIANGLES, indexCount - (vertexCount - 1) * 6, GL_UNSIGNED_INT, 0);
 		}
 		else {
