@@ -104,33 +104,6 @@ public:
 		setIndex();
 	}
 
-	void isRayIntersec(const Ray& ray, float boundaryX[], float boundaryY[]) {
-
-		float z = .01f;
-		glm::vec3 v[4] = { {0, 0, z }, {boundaryX[1], 0, z}, {boundaryX[1], boundaryY[1], z}, {0, boundaryY[1], z} };
-		Plane plane(v);
-		glm::vec3 res;
-		plane.getIntersecPoint(ray, res);
-
-		float line[] = { (boundaryX[0] + boundaryX[1]) / 2, (boundaryY[0] + boundaryY[1]) / 2, .02f, res.x, res.y, res.z };
-
-		std::cout << res.x << "," << res.y << std::endl;
-
-		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_STRIP, 0, 2);
-
-		glm::vec3 inter;
-		for (size_t i = 0; i < triangleCount; ++i) {
-			glm::vec3 triangleVertices[] = { 
-				vertices[indices[i * 3]], 
-				vertices[indices[i * 3 + 1]] , 
-				vertices[indices[i * 3 + 2]] };
-			if (isRayIntersecTriangle(ray, inter, triangleVertices)) {
-				std::cout << to_string(inter) << std::endl;
-			}
-		}
-	}
-
 	// Set index with triangulation
 	void setIndex() {
 		std::vector<Triangulation::Triangle> triangulation;
@@ -174,10 +147,6 @@ public:
 	void render(bool isSelected) {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
-
-		if (false){//isSelected == true) {
-			std::cout << min[0] << "," << max[0] << "|" << min[1] << "," << max[1] << std::endl;
-		}
 
 		glUniform4fv(glGetUniformLocation(program, "color"), 1, isSelected ? selectedColor : objectColor);
 

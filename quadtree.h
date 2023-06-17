@@ -130,24 +130,6 @@ private:
 		return len * 2.0f / (boundaryX[1] - boundaryX[0]);
 	}
 	
-	float worldToModelLen(const float& len) {
-		return len * (boundaryX[1] - boundaryX[0]) / 2.0f;
-	}
-
-	glm::vec3 worldToModelPos(const glm::vec3& v) {
-		return glm::vec3(
-			(boundaryX[1] - boundaryX[0]) * (v.x + 1) / 2 + boundaryX[0],
-			(boundaryY[1] - boundaryY[0]) * (v.y + 1) / 2 + boundaryY[0],
-			v.z);
-	}
-
-	glm::vec3 worldToModelVec(const glm::vec3& v) {
-		return glm::normalize(glm::vec3(
-			(boundaryX[1] - boundaryX[0]) * v.x / 2.0f,
-			(boundaryX[1] - boundaryX[0]) * v.y / 2.0f,
-			(boundaryX[1] - boundaryX[0]) * v.z / 2.0f));
-	}
-
 	FRUSTUM_CULLING insideFrustum() {
 		auto cullingState = FRUSTUM_CULLING::_OUT;
 		int count = 0;
@@ -204,19 +186,10 @@ private:
 			auto radW = modelToWorldLen(obj->radius);
 			
 			if (frustum->inSphere(cenW, radW)) {
+
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
-				if (d < radW) {
-					Ray modelRay{ worldToModelPos(ray.orig), worldToModelVec(ray.dir) };
 
-					/*Plane p(box);
-					glm::vec3 res;
-					p.getIntersecPoint(ray, res);
-					glm::vec3 resMod = worldToModelPos(res);
-					std::cout << resMod.x << "," << resMod.y << "\t";*/
-
-					obj->isRayIntersec(modelRay, boundaryX, boundaryY);
-					
-
+				if (d < radW && isDetected(obj)) {
 					obj->render(Object::objectSelected == false);
 					Object::objectSelected = true;
 				}
@@ -227,6 +200,40 @@ private:
 		}
 
 		Object::objectSelected = false;
+	}
+
+	bool isDetected(const shared_ptr<Object> obj) {
+		glm::vec3 inter;
+		glm::vec3 triVertices[3];
+		auto v = obj->vertices;
+		auto idx = obj->indices;
+		for (size_t i = 0; i < obj->triangleCount; ++i) {
+			triVertices[0] = modelToWorldPos(v[idx[i * 3]]);
+			triVertices[1] = modelToWorldPos(v[idx[i * 3 + 1]]);
+			triVertices[2] = modelToWorldPos(v[idx[i * 3 + 2]]);
+			if (isRayIntersecTriangle(ray, inter, triVertices)) {
+				return true;
+			}
+		}
+
+		int startIdx = obj->triangleCount * 3;
+		for (int i = 0; i < obj->vertexCount - 1; ++i) {
+			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6]]);
+			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 1]]);
+			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 2]]);
+			if (isRayIntersecTriangle(ray, inter, triVertices)) {
+				return true;
+			}
+
+			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6 + 3]]);
+			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 4]]);
+			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 5]]);
+			if (isRayIntersecTriangle(ray, inter, triVertices)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	void makeSphere(const glm::vec3& cw, const float& rw) {
