@@ -36,7 +36,18 @@ public:
 
 	const float objectColor[4] = { 1.0f, 0.5f, 0.2f, 1.0f };
 	const float objectSideColor[4] = { 1.0f, .0f, .0f, 1.0f };
-	const float selectedColor[4] = { 1.0f, 1.5f, 0.0f, 1.0f };
+	const float tmp[8][4] = {
+		{255.f / 256, 89.f / 255, 116.f / 255, 1.0f},
+		{35.f / 255, 145.f / 255, 256.f / 256, 1.0f},
+		{60.f / 256, 179.f / 256, 113.f / 256, 1.0f},
+		{238.f / 256, 130.f / 256, 238.f / 256, 1.0f},
+		{255.f / 256, 166.f / 256, 0.f / 256, 1.0f},
+		{106.f / 256, 90.f / 256, 205.f / 256, 1.0f},
+		{ 1.0f, 0.5f, 0.2f, 1.0f } ,
+		{0.f, 134.f / 256, 68.f / 256},
+	};
+
+	const float selectedColor[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
 	glm::vec3 center;
 	float radius = 0.0f;
 
@@ -144,11 +155,11 @@ public:
 		}
 	}
 
-	void render(bool isSelected) {
+	void render(bool isSelected, int level) {
 		glBufferData(GL_ARRAY_BUFFER, vertexCount * 2 * 3 * sizeof(float), vertices, GL_STATIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
-		glUniform4fv(glGetUniformLocation(program, "color"), 1, isSelected ? selectedColor : objectColor);
+		glUniform4fv(glGetUniformLocation(program, "color"), 1, isSelected ? selectedColor : &(tmp[level][0]));
 
 		if (true) {
 			glDrawElements(GL_TRIANGLES, indexCount - (vertexCount - 1) * 6, GL_UNSIGNED_INT, 0);

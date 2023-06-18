@@ -22,6 +22,7 @@ class QuadtreeNode {
 	static shared_ptr<Frustum> frustum;
 	static vector<shared_ptr<QuadtreeNode>> nodeList;
 	static vector<shared_ptr<Object>> selectedObject;
+	static vector<int> selectedObjectLevel;
 	static Ray ray;
 
 	bool culled;
@@ -166,11 +167,11 @@ private:
 		}
 	}
 
-	void render(int level) {
+	void render() {
 		if (culled) return;
 
 		for (auto n : nodes) {
-			if (n != nullptr) n->render(level + 1);
+			if (n != nullptr) n->render();
 		}
 
 		drawBorder();
@@ -187,8 +188,8 @@ private:
 				}
 			}
 
-			for (auto obj : selectedObject) {
-				obj->render(pickedObj == obj);
+			for (size_t i = 0; i < selectedObject.size(); ++i) {
+				selectedObject[i]->render(pickedObj == selectedObject[i], selectedObjectLevel[i]);
 			}
 		}
 	}
@@ -207,8 +208,11 @@ private:
 
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 
-				if (d < radW && isDetected(obj)) selectedObject.push_back(obj);
-				else obj->render(false);
+				if (d < radW && isDetected(obj)) {
+					selectedObject.push_back(obj);
+					selectedObjectLevel.push_back(level);
+				}
+				else obj->render(false, level);
 			}
 		}
 	}
@@ -314,6 +318,7 @@ RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
 vector<shared_ptr<Object>> qtNode::selectedObject;
+vector<int> qtNode::selectedObjectLevel;
 Ray qtNode::ray;
 
 
@@ -348,8 +353,9 @@ public:
 
 	void render(int selectLevel) {
 		qtNode::selectLevel = selectLevel;
-		root->render(0);
+		root->render();
 		qtNode::selectedObject.clear();
+		qtNode::selectedObjectLevel.clear();
 	}
 };
 
