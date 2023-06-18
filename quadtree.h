@@ -211,9 +211,7 @@ private:
 			triVertices[0] = modelToWorldPos(v[idx[i * 3]]);
 			triVertices[1] = modelToWorldPos(v[idx[i * 3 + 1]]);
 			triVertices[2] = modelToWorldPos(v[idx[i * 3 + 2]]);
-			if (isRayIntersecTriangle(ray, inter, triVertices)) {
-				return true;
-			}
+			if (isRayIntersecTriangle(ray, inter, triVertices)) return true;
 		}
 
 		int startIdx = obj->triangleCount * 3;
@@ -221,16 +219,12 @@ private:
 			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6]]);
 			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 1]]);
 			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 2]]);
-			if (isRayIntersecTriangle(ray, inter, triVertices)) {
-				return true;
-			}
+			if (isRayIntersecTriangle(ray, inter, triVertices)) return true;
 
 			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6 + 3]]);
 			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 4]]);
 			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 5]]);
-			if (isRayIntersecTriangle(ray, inter, triVertices)) {
-				return true;
-			}
+			if (isRayIntersecTriangle(ray, inter, triVertices)) return true;
 		}
 
 		return false;

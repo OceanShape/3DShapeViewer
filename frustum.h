@@ -22,11 +22,12 @@ glm::vec3 getNormal(const glm::vec3 v[]) {
 };
 
 bool isVertexInsideTriangle(const glm::vec3 tri[], const glm::vec3& p) {
+	auto normal = getNormal(tri);
 	auto m = cross(p - tri[0], tri[1] - tri[0]);
 	auto n = cross(p - tri[1], tri[2] - tri[1]);
 	auto o = cross(p - tri[2], tri[0] - tri[2]);
 
-	return m.z > 0 && n.z > 0 && o.z > 0;
+	return glm::dot(m, normal) > 0 && glm::dot(n, normal) > 0 && glm::dot(o, normal) > 0;
 };
 
 bool isRayIntersecTriangle(const Ray& ray, glm::vec3& inter, const glm::vec3 tri[]) {
@@ -71,7 +72,7 @@ struct Plane {
 		auto n = cross(p - v1, v2 - v1);
 		auto o = cross(p - v2, v0 - v2);
 
-		return m.z > 0 && n.z > 0 && o.z > 0;
+		return glm::dot(m, normal) > 0 && glm::dot(n, normal) > 0 && glm::dot(n, normal);
 	}
 
 	bool isVertexInsidePlane(const glm::vec3& p) {
@@ -161,20 +162,16 @@ struct Frustum {
 		}
 
 		float z = .01f;
-		glm::vec3 v[4] = { {-1, -1,z }, {-1, 1, z}, {1, 1, z}, {1, -1, z} };
-		Plane plane(v);
-		//std::cout << "inter: " << to_string(plane.getIntersecPoint(r)) << std::endl;
+		Plane plane({ {-1, -1,z }, {-1, 1, z}, {1, 1, z}, {1, -1, z} });
 		glm::vec3 res;
 		if (plane.getIntersecPoint(ray, res) == false) return;
-		//std::cout << to_string(res) << std::endl;
 
+		/*
 		float line[] = { .0f, .0f, .02f, res.x, res.y, res.z };
 
 		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINE_STRIP, 0, 2);
-
-		//float lineFromCam[] = {}
-
+		*/
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float fov) {

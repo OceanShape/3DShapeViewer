@@ -119,16 +119,16 @@ public:
 			indices[i * 3 + 2] = triangulation[i].c;
 		}
 
-
+		// reverse vertex order for picking
 		int startIdx = triangulation.size() * 3;
 		for (int i = 0; i < vertexCount - 1; ++i) {
-			indices[startIdx + i * 6] = i;
+			indices[startIdx + i * 6] = vertexCount + i;
 			indices[startIdx + i * 6 + 1] = i + 1;
-			indices[startIdx + i * 6 + 2] = vertexCount + i;
+			indices[startIdx + i * 6 + 2] = i;
 
-			indices[startIdx + i * 6 + 3] = i + 1;
+			indices[startIdx + i * 6 + 3] = vertexCount + i;
 			indices[startIdx + i * 6 + 4] = vertexCount + i + 1;
-			indices[startIdx + i * 6 + 5] = vertexCount + i;
+			indices[startIdx + i * 6 + 5] = i + 1;
 		}
 
 		startIdx = triangulation.size() * 3 + (vertexCount - 1) * 6;
