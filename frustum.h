@@ -161,7 +161,7 @@ struct Frustum {
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
 
-		float z = .01f;
+		float z = .005f;
 		Plane plane({ {-1, -1,z }, {-1, 1, z}, {1, 1, z}, {1, -1, z} });
 		glm::vec3 res;
 		if (plane.getIntersecPoint(ray, res) == false) return;

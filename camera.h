@@ -107,8 +107,14 @@ private:
 void Camera::update() {
 	// update level
 	if (0.0f < position.z && position.z <= startZ) {
+		glm::vec3 res;
+		Plane p({ {1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {-1, 1, 0} });
+		p.getIntersecPoint(ray, res);
+		float len = glm::length(res - ray.orig);
+		len = (len > 3.0f) ? 3.0f : (len < .0f) ? .0f : len;
+
 		float deltaLevel = startZ / (maxLevel + 1.0f);
-		setLevel((3.0f - position.z) / deltaLevel);
+		setLevel((3.0f - len) / deltaLevel);
 		std::cout << "current level: [" << currentLevel << "]" << endl;
 	}
 

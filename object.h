@@ -53,7 +53,7 @@ public:
 		for (size_t i = 0; i < vertexCount; ++i) {
 			double x = _vertices[i].x;
 			double y = _vertices[i].y;
-			double z = 0.01f;
+			double z = 0.005f;
 
 			min[0] = std::min(min[0], x);
 			max[0] = std::max(max[0], x);
@@ -65,7 +65,7 @@ public:
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
 		}
-		min[2] = .0f; max[2] = .01f;
+		min[2] = .0f; max[2] = .005f;
 
 		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(Vertex));
 
@@ -94,7 +94,7 @@ public:
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
 			center += vertices[i];
 		}
-		center /= vertexCount; center.z = 0.005f;
+		center /= vertexCount; center.z = 0.0025f;
 
 		radius = .0f;
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
