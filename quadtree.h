@@ -21,6 +21,7 @@ class QuadtreeNode {
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
 	static vector<shared_ptr<QuadtreeNode>> nodeList;
+	static vector<shared_ptr<Object>> selectedObject;
 	static Ray ray;
 
 	bool culled;
@@ -174,12 +175,29 @@ private:
 
 		drawBorder();
 		drawObject();
+
+		// draw selected objects
+		if (level == 0) {
+			float min = FLT_MAX;
+			shared_ptr<Object> pickedObj;
+			for (auto obj : selectedObject) {
+				float tmp = glm::length(ray.orig - modelToWorldPos(obj->center));
+				if (min > tmp) {
+					min = tmp; pickedObj = obj;
+				}
+			}
+
+			for (auto obj : selectedObject) {
+				obj->render(pickedObj == obj);
+			}
+		}
 	}
 
 	void drawObject() {
 		glUseProgram(renderOption.program[0]);
 		glBindVertexArray(renderOption.vao[0]);
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
+
 
 		for (auto obj : objects) {
 			auto cenW = modelToWorldPos(obj->center);
@@ -189,17 +207,10 @@ private:
 
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 
-				if (d < radW && isDetected(obj)) {
-					obj->render(Object::objectSelected == false);
-					Object::objectSelected = true;
-				}
-				else {
-					obj->render(false);
-				}
+				if (d < radW && isDetected(obj)) selectedObject.push_back(obj);
+				else obj->render(false);
 			}
 		}
-
-		Object::objectSelected = false;
 	}
 
 	bool isDetected(const shared_ptr<Object> obj) {
@@ -302,6 +313,7 @@ const float qtNode::halfRadiusRatio = 1.414213562f;
 RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
+vector<shared_ptr<Object>> qtNode::selectedObject;
 Ray qtNode::ray;
 
 
@@ -337,6 +349,7 @@ public:
 	void render(int selectLevel) {
 		qtNode::selectLevel = selectLevel;
 		root->render(0);
+		qtNode::selectedObject.clear();
 	}
 };
 
