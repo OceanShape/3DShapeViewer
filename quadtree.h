@@ -26,6 +26,7 @@ class QuadtreeNode {
 	static Ray ray;
 	static shared_ptr<Object> selectedObject;
 	static vector<int> objectCount;
+	static int renderObjectCount;
 
 	bool culled;
 
@@ -210,6 +211,7 @@ private:
 			auto radW = modelToWorldLen(obj->radius);
 			
 			if (frustum->inSphere(cenW, radW)) {
+				renderObjectCount++;
 
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 
@@ -326,6 +328,7 @@ vector<shared_ptr<Object>> qtNode::selectedObjectList;
 vector<int> qtNode::selectedObjectListLevel;
 shared_ptr<Object> qtNode::selectedObject;
 vector<int> qtNode::objectCount(10);
+int qtNode::renderObjectCount = 0;
 Ray qtNode::ray;
 
 
@@ -365,9 +368,14 @@ public:
 	void render(int selectLevel) {
 		qtNode::selectLevel = selectLevel;
 		qtNode::selectedObject = nullptr;
+		qtNode::renderObjectCount = 0;
 		root->render();
 		qtNode::selectedObjectList.clear();
 		qtNode::selectedObjectListLevel.clear();
+	}
+
+	int getRenderedObject() {
+		return qtNode::renderObjectCount;
 	}
 
 	shared_ptr<Object> getSelectedObject() {

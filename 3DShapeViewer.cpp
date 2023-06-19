@@ -71,10 +71,11 @@ bool ShapeViewer::isKeyPressed(char ch) {
 void ShapeViewer::status() {
 	if (getStatus == false) return;
 	system("cls");
-	std::cout << "current level: [" << camera->currentLevel << "]" << endl;
 	for (size_t i = 0; i <= camera->maxLevel; ++i) {
 		std::cout << "level[" << i << "]: " << objectData->getObjectCount(i) << std::endl;
 	}
+	std::cout << "current level: [" << camera->currentLevel << "]" << endl;
+	std::cout << "rendered object count: " << objectData->getRenderedObject() << std::endl;
 	getStatus = false;
 }
 
