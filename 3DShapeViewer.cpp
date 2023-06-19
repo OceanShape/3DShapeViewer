@@ -68,6 +68,16 @@ bool ShapeViewer::isKeyPressed(char ch) {
 	return (65 <= ch && ch <= 90) ? keyPressed[ch] : (97 <= ch && ch <= 122) ? keyPressed[ch - 32] : keyPressed[ch];
 }
 
+void ShapeViewer::status() {
+	if (getStatus == false) return;
+	system("cls");
+	std::cout << "current level: [" << camera->currentLevel << "]" << endl;
+	for (size_t i = 0; i <= camera->maxLevel; ++i) {
+		std::cout << "level[" << i << "]: " << objectData->getObjectCount(i) << std::endl;
+	}
+	getStatus = false;
+}
+
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
@@ -92,7 +102,7 @@ void ShapeViewer::update() {
 	//	camera->moveForward(del);
 	//}
 	else if (isKeyPressed('G')) {
-		drawGrid = !drawGrid;
+		status();
 	}
 	else if (isKeyPressed('C')) {
 		camera->capture();
@@ -105,6 +115,13 @@ void ShapeViewer::update() {
 			camera->setLevel(i);
 			break;
 		}
+	}
+
+	if (objectPicked && (objectData->getSelectedObject() != nullptr)) {
+		system("cls");
+		auto obj = objectData->getSelectedObject();
+		std::cout << "ID: " << obj->ID << ", vertex count: " << obj->vertexCount << ", part count: " << obj->partCount << std::endl;
+		objectPicked = false;
 	}
 
 	objectData->update(camera->currentLevel, camera->frustum, camera->ray);
@@ -259,7 +276,7 @@ bool ShapeViewer::readShapefile() {
 	camera->minTotal[0] = xMin; camera->minTotal[1] = yMin; camera->minTotal[2] = zMin;
 	camera->maxTotal[0] = xMax; camera->maxTotal[1] = yMax; camera->maxTotal[2] = zMax;
 
-	std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
+	//std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
 	delTotal[0] = (xMax - xMin) / 2.0f;
 	delTotal[1] = (yMax - yMin) / 2.0f;
@@ -381,8 +398,8 @@ bool ShapeViewer::openShapefile() {
 	if (readShapefile() == false) {
 		return false;
 	}
-	printf("del: %.10f\n", delTotal[2]);
-	printf("z position: 0/%f\n", (maxTotal[2] - minTotal[2]) / delTotal[2]);
+	/*printf("del: %.10f\n", delTotal[2]);
+	printf("z position: 0/%f\n", (maxTotal[2] - minTotal[2]) / delTotal[2]);*/
 	
 
 	for (int i = 0; i < 2; ++i) {
@@ -450,6 +467,9 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 	break;
 	case WM_LBUTTONDOWN:
+		if (objectData->getSelectedObject() != nullptr) {
+			objectPicked = true;
+		}
 	break;
 	case WM_LBUTTONUP:
 	break;
@@ -470,9 +490,11 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_KEYDOWN:
 		keyPressed[wParam] = true;
+		getStatus = true;
 		break;
 	case WM_KEYUP:
 		keyPressed[wParam] = false;
+		getStatus = false;
 		break;
 	case WM_DESTROY:
 		closeShapefile();

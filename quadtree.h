@@ -21,9 +21,11 @@ class QuadtreeNode {
 	static RenderOption renderOption;
 	static shared_ptr<Frustum> frustum;
 	static vector<shared_ptr<QuadtreeNode>> nodeList;
-	static vector<shared_ptr<Object>> selectedObject;
-	static vector<int> selectedObjectLevel;
+	static vector<shared_ptr<Object>> selectedObjectList;
+	static vector<int> selectedObjectListLevel;
 	static Ray ray;
+	static shared_ptr<Object> selectedObject;
+	static vector<int> objectCount;
 
 	bool culled;
 
@@ -81,6 +83,7 @@ private:
 	void store(const shared_ptr<Object> obj, int level, int& maxLevel) {
 		if (Xmax - Xmin < 120) {
 			objects.push_back(obj);
+			objectCount[level]++;
 			maxLevel = max(maxLevel, level);
 			return;
 		}
@@ -116,6 +119,7 @@ private:
 		}
 		else {
 			objects.push_back(obj);
+			objectCount[level]++;
 			maxLevel = max(maxLevel, level);
 		}
 	}
@@ -181,15 +185,16 @@ private:
 		if (level == 0) {
 			float min = FLT_MAX;
 			shared_ptr<Object> pickedObj;
-			for (auto obj : selectedObject) {
+			for (auto obj : selectedObjectList) {
 				float tmp = glm::length(ray.orig - modelToWorldPos(obj->center));
 				if (min > tmp) {
 					min = tmp; pickedObj = obj;
 				}
 			}
 
-			for (size_t i = 0; i < selectedObject.size(); ++i) {
-				selectedObject[i]->render(pickedObj == selectedObject[i], selectedObjectLevel[i]);
+			for (size_t i = 0; i < selectedObjectList.size(); ++i) {
+				if (pickedObj == selectedObjectList[i]) selectedObject = selectedObjectList[i];
+				selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
 			}
 		}
 	}
@@ -209,8 +214,8 @@ private:
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 
 				if (d < radW && isDetected(obj)) {
-					selectedObject.push_back(obj);
-					selectedObjectLevel.push_back(level);
+					selectedObjectList.push_back(obj);
+					selectedObjectListLevel.push_back(level);
 				}
 				else obj->render(false, level);
 			}
@@ -317,8 +322,10 @@ const float qtNode::halfRadiusRatio = 1.414213562f;
 RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
 vector<shared_ptr<QuadtreeNode>> qtNode::nodeList;
-vector<shared_ptr<Object>> qtNode::selectedObject;
-vector<int> qtNode::selectedObjectLevel;
+vector<shared_ptr<Object>> qtNode::selectedObjectList;
+vector<int> qtNode::selectedObjectListLevel;
+shared_ptr<Object> qtNode::selectedObject;
+vector<int> qtNode::objectCount(10);
 Ray qtNode::ray;
 
 
@@ -351,11 +358,20 @@ public:
 		root->update(0);
 	}
 
+	int getObjectCount(int i) {
+		return qtNode::objectCount[i];
+	}
+
 	void render(int selectLevel) {
 		qtNode::selectLevel = selectLevel;
+		qtNode::selectedObject = nullptr;
 		root->render();
-		qtNode::selectedObject.clear();
-		qtNode::selectedObjectLevel.clear();
+		qtNode::selectedObjectList.clear();
+		qtNode::selectedObjectListLevel.clear();
+	}
+
+	shared_ptr<Object> getSelectedObject() {
+		return qtNode::selectedObject;
 	}
 };
 

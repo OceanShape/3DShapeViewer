@@ -94,12 +94,14 @@ public:
 
 		std::memcpy(partStartIndex, _parts, sizeof(int32_t) * partCount);
 
+		/*
 		if (partCount > 1) {
 			for (int i = 0; i < partCount; ++i) {
 				cout << _parts[i] << " ";
 			}
 			cout << endl;
 		}
+		*/
 
 		center = glm::vec3(0);
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {

@@ -66,9 +66,14 @@ public:
 	shared_ptr<ObjectData> objectData;
 	std::vector<shared_ptr<Object>> objects;
 
+	bool objectPicked = false;
+	bool getStatus = false;
+
 	ShapeViewer();
 
 	LRESULT msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	void status();
 
 	bool initialize(HINSTANCE hInstance, int nCmdShow);
 	void render();

@@ -115,7 +115,7 @@ void Camera::update() {
 
 		float deltaLevel = startZ / (maxLevel + 1.0f);
 		setLevel((3.0f - len) / deltaLevel);
-		std::cout << "current level: [" << currentLevel << "]" << endl;
+		//std::cout << "current level: [" << currentLevel << "]" << endl;
 	}
 
 	// update frustum
