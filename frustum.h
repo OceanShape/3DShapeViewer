@@ -124,7 +124,7 @@ struct Frustum {
 
 	Frustum() {};
 
-	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 viewProj) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
+	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
 		update(direction, up, right, eyePos, fov);
 	};
 

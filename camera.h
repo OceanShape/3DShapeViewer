@@ -27,7 +27,7 @@ public:
 
 	Camera(float posX, float posY, float posZ) : startZ(posZ) {
 		position = glm::vec3(posX, posY, posZ);
-		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, getProj() * getView());
+		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov);
 	}
 
 	glm::mat4 getView() { return glm::lookAt(position, position + direction, up); };
@@ -80,7 +80,7 @@ public:
 	}
 
 private:
-	glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 position = glm::vec3(0.0f, 3.0f, 3.0f);
 	glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 right = glm::vec3(1.0f, .0f, .0f);
