@@ -52,6 +52,8 @@ public:
 	int recordCount = 0;
 	float aspectRatio = 1.0f;
 
+	glm::mat4 modelMat = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
 	shared_ptr<Camera> camera;
 
 	GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };

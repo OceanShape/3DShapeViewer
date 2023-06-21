@@ -1,7 +1,7 @@
 #include "3DShapeViewer.h"
 
 ShapeViewer::ShapeViewer() {
-	camera = make_shared<Camera>(0.0f, 1.5f, 3.0f);
+	camera = make_shared<Camera>(0.0f, 1.0f, 1.5f, modelMat);
 	g_shapeViewer = this;
 }
 
@@ -137,7 +137,7 @@ void ShapeViewer::render()
 		glm::mat4 projection = camera->getProj();
 
 		for (int i = 0; i < 3; ++i) {
-			glm::mat4 model = (i == 2)? glm::mat4(1.0f) : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			glm::mat4 model = (i == 2)? glm::mat4(1.0f) : modelMat;
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));

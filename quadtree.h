@@ -207,9 +207,6 @@ private:
 
 
 		for (auto obj : objects) {
-			obj->render(false, level);
-			continue;
-
 			auto cenW = modelToWorldPos(obj->center);
 			auto radW = modelToWorldLen(obj->radius);
 			

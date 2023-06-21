@@ -122,9 +122,12 @@ struct Frustum {
 
 	static GLuint program;
 
+	static glm::mat4 invModelMat;
+
 	Frustum() {};
 
-	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
+	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 _invModelMat) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
+		invModelMat = _invModelMat;
 		update(direction, up, right, eyePos, fov);
 	};
 
@@ -161,12 +164,12 @@ struct Frustum {
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
 
+		/*
 		float z = .005f;
 		Plane plane({ {-1, -1,z }, {-1, 1, z}, {1, 1, z}, {1, -1, z} });
 		glm::vec3 res;
 		if (plane.getIntersecPoint(ray, res) == false) return;
 
-		/*
 		float line[] = { .0f, .0f, .02f, res.x, res.y, res.z };
 
 		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
@@ -193,6 +196,7 @@ struct Frustum {
 			vertexFLT[i * 3] = vertices[i].x;
 			vertexFLT[i * 3 + 1] = vertices[i].y;
 			vertexFLT[i * 3 + 2] = vertices[i].z;
+			vertices[i] = invModelMat * glm::vec4{ vertices[i], .0f };
 		}
 
 		auto v = vertices;
@@ -219,3 +223,4 @@ GLuint Frustum::indices[8 * 3] = {
 	0, 7, 4,
 };
 float Frustum::frustumColor[][4] = { {1, 0, 1, 1}, {0, 1, 1, 1} };
+glm::mat4 Frustum::invModelMat(1.0f);

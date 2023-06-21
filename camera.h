@@ -23,11 +23,14 @@ public:
 	shared_ptr<Frustum> frustum;
 	bool frustumCaptured = false;
 
+	glm::mat4 invModelMat;
+
 	Ray ray{};
 
-	Camera(float posX, float posY, float posZ) : startZ(posZ) {
+	Camera(float posX, float posY, float posZ, glm::mat4 _modelMat) : startZ(posZ) {
+		invModelMat = glm::inverse(_modelMat);
 		position = glm::vec3(posX, posY, posZ);
-		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov);
+		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, invModelMat);
 	}
 
 	glm::mat4 getView() { return glm::lookAt(position, position + direction, up); };
@@ -60,8 +63,10 @@ public:
 	}
 
 	void updateRay(float _ndcX, float _ndcY) {
-		ray.orig = position;
-		ray.dir = glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ);
+		auto inv = glm::inverse(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+		ray.orig = inv * glm::vec4{ position, .0f };
+		ray.dir = inv * glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
+
 		ndcX = _ndcX; ndcY = _ndcY;
 		//std::cout << "RAY: " << to_string(ray.dir) << std::endl;
 	}
