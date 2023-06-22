@@ -82,7 +82,7 @@ private:
 	}
 
 	void store(const shared_ptr<Object> obj, int level, int& maxLevel) {
-		if (Xmax - Xmin < 120) {
+		if (Xmax - Xmin < 128) {
 			objects.push_back(obj);
 			objectCount[level]++;
 			maxLevel = max(maxLevel, level);
