@@ -446,7 +446,7 @@ bool ShapeViewer::openShapefile() {
 
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	int mouseX, mouseY;
+	float delX, delY;
 	float wDel;
 	RECT rt;
 	switch (message)
@@ -468,22 +468,38 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 	break;
 	case WM_LBUTTONDOWN:
+		mouseClicked = true;
+		break;
+	case WM_LBUTTONUP:
+		if ((startMouseX == mouseX) && (startMouseY == mouseY)) {
+			objectPicked = (objectData->getSelectedObject() == nullptr);
+		}
 		if (objectData->getSelectedObject() != nullptr) {
 			objectPicked = true;
 		}
-	break;
-	case WM_LBUTTONUP:
-	break;
+		mouseClicked = false;
+		break;
 	case WM_MOUSEMOVE:
+		if (mouseClicked == false) {
+			mouseX = LOWORD(lParam);
+			mouseY = HIWORD(lParam);
+			break;
+		} 
 		GetClientRect(hWnd, &rt);
+		delX = -(LOWORD(lParam) - mouseX) * .001f;
+		delY = (HIWORD(lParam) - mouseY) * .001f;
+		std::cout << "del: " << delX << "," << delY << std::endl;
+		camera->updateMouseDelta(delX, delY);
 		mouseX = LOWORD(lParam);
 		mouseY = HIWORD(lParam);
-		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-		//std::cout << "{" << ndcX << ", " << ndcY << "}" << std::endl;
-
-		camera->updateMouse(ndcX, ndcY);
-	break;
+		std::cout << "mouse: " << mouseX << "," << mouseY << std::endl;
+		//GetClientRect(hWnd, &rt);
+		//mouseX = LOWORD(lParam);
+		//mouseY = HIWORD(lParam);
+		//ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		//ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		//camera->updateMouse(ndcX, ndcY);
+		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
 		wDel = 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;

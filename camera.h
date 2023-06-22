@@ -65,10 +65,7 @@ public:
 	void updateRay(float _ndcX, float _ndcY) {
 		auto inv = glm::inverse(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 		ray.orig = inv * glm::vec4{ position, .0f };
-		ray.dir = inv * glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
-
-		ndcX = _ndcX; ndcY = _ndcY;
-		//std::cout << "RAY: " << to_string(ray.dir) << std::endl;
+		ray.dir = inv * glm::vec4{ glm::normalize(_ndcX * .01f * right + _ndcY * .01f * up + direction * nearZ), 1.0f };
 	}
 
 	void renderFrustum() {
@@ -83,6 +80,8 @@ public:
 
 		frustum->render(ndcX, ndcY, ray);
 	}
+
+	void updateMouseDelta(float delX, float delY);
 
 private:
 	glm::vec3 position = glm::vec3(0.0f, 3.0f, 3.0f);
@@ -129,8 +128,28 @@ void Camera::update() {
 	}
 }
 
+void Camera::updateMouseDelta(float _delX, float _delY) {
+	ndcX += _delX;
+	ndcY += _delY;
+	yaw = ndcX * glm::pi<float>() * 2;
+	pitch = ndcY * glm::pi<float>() / 2;
+
+	glm::quat qX = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
+	glm::quat qY = glm::angleAxis(yaw, glm::vec3(0, -1, 0));
+	qX = glm::normalize(qX);
+	qY = glm::normalize(qY);
+
+	direction = glm::normalize(qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
+	up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
+	right = glm::normalize(glm::cross(direction, up));
+
+	if (frustumCaptured == false) {
+		frustum->update(direction, up, right, position, fov);
+		updateRay(ndcX, ndcY);
+	}
+}
+
 void Camera::updateMouse(float _ndcX, float _ndcY) {
-	
 	yaw = _ndcX * glm::pi<float>() * 2;
 	pitch = _ndcY * glm::pi<float>() / 2;
 
