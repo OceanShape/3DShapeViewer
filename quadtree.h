@@ -147,7 +147,7 @@ private:
 		return cullingState;
 	}
 
-	void update(int level) {
+	void update() {
 		if (level > selectLevel) {
 			culled = true;
 		}
@@ -165,20 +165,22 @@ private:
 			case FRUSTUM_CULLING::_OUT:
 				culled = true; break;
 			}
+
+			if (glm::length(centerWorld - ray.orig) > .6f) culled = true;
 		}
 
 		for (auto n : nodes) {
-			if (n != nullptr) n->update(level + 1);
+			if (n != nullptr) n->update();
 		}
 	}
 
 	void render() {
-		if (culled) return;
 
 		for (auto n : nodes) {
 			if (n != nullptr) n->render();
 		}
 
+		if (culled) return;
 		drawBorder();
 		drawObject();
 
@@ -210,7 +212,9 @@ private:
 			auto cenW = modelToWorldPos(obj->center);
 			auto radW = modelToWorldLen(obj->radius);
 			
-			if (frustum->inSphere(cenW, radW)) {
+			if (frustum->inSphere(cenW, radW)
+				&& glm::length(ray.orig - cenW) < .6f) {
+
 				renderObjectCount++;
 
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
@@ -358,7 +362,8 @@ public:
 		qtNode::frustum = frustum;
 		qtNode::selectLevel = selectLevel;
 		qtNode::ray = ray;
-		root->update(0);
+		root->update();
+		root->culled = false;
 	}
 
 	int getObjectCount(int i) {
