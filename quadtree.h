@@ -68,17 +68,17 @@ public:
 	}
 
 private:
-	bool isLeft() {
-		return Xmin <= _min[0] && Xmin <= _max[0] && _min[0] <= Xmid && _max[0] <= Xmid;
+	bool isLeft(float x) {
+		return Xmin <= x && x <= Xmid;
 	}
-	bool isRight() {
-		return Xmid <= _min[0] && Xmid <= _max[0] && _min[0] <= Xmax && _max[0] <= Xmax;
+	bool isRight(float x) {
+		return Xmid <= x && x <= Xmax;
 	}
-	bool isUp() {
-		return Ymid <= _min[1] && Ymid <= _max[1] && _min[1] <= Ymax && _max[1] <= Ymax;
+	bool isUp(float y) {
+		return Ymid <= y && y <= Ymax;
 	}
-	bool isDown() {
-		return Ymin <= _min[1] && Ymin <= _max[1] && _min[1] <= Ymid && _max[1] <= Ymid;
+	bool isDown(float y) {
+		return Ymin <= y && y <= Ymid;
 	}
 
 	void store(const shared_ptr<Object> obj, int level, int& maxLevel) {
@@ -89,29 +89,29 @@ private:
 			return;
 		}
 
-		_min[0] = obj->min[0], _min[1] = obj->min[1], _max[0] = obj->max[0], _max[1] = obj->max[1];
-		if (isLeft() && isUp()) {
+		float x = obj->center.x, y = obj->center.y;
+		if (isLeft(x) && isUp(y)) {
 			if (nodes[0] == nullptr) {
 				nodes[0] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymid, Ymax);
 				qtNode::nodeList.push_back(nodes[0]);
 			}
 			nodes[0]->store(obj, level + 1, maxLevel);
 		}
-		else if (isRight() && isUp()) {
+		else if (isRight(x) && isUp(y)) {
 			if (nodes[1] == nullptr) {
 				nodes[1] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymid, Ymax);
 				qtNode::nodeList.push_back(nodes[1]);
 			}
 			nodes[1]->store(obj, level + 1, maxLevel);
 		}
-		else if (isLeft() && isDown()) {
+		else if (isLeft(x) && isDown(y)) {
 			if (nodes[2] == nullptr) {
 				nodes[2] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymin, Ymid);
 				qtNode::nodeList.push_back(nodes[2]);
 			}
 			nodes[2]->store(obj, level + 1, maxLevel);
 		}
-		else if (isRight() && isDown()) {
+		else if (isRight(x) && isDown(y)) {
 			if (nodes[3] == nullptr) {
 				nodes[3] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymin, Ymid);
 				qtNode::nodeList.push_back(nodes[3]);
