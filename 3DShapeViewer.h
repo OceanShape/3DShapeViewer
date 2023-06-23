@@ -71,6 +71,7 @@ public:
 
 	bool objectPicked = false;
 	bool getStatus = false;
+	bool isFPS = true;
 
 	ShapeViewer();
 
