@@ -13,6 +13,10 @@ bool ShapeViewer::initialize(HINSTANCE hInstance, int nCmdShow)
 
 	hInst = hInstance;
 
+	RECT rt;
+	GetClientRect(hWnd, &rt);
+	camera->setRect(rt);
+
 	ShowWindow(hWnd, nCmdShow);
 
 	EGLint numConfigs, majorVersion, minorVersion;
@@ -447,8 +451,10 @@ bool ShapeViewer::openShapefile() {
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	float delX, delY;
+	float ndcX, ndcY;
 	float wDel;
-	RECT rt;
+	float preMouseX = mouseX;
+	float preMouseY = mouseY;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -471,6 +477,17 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mouseClicked = true;
 		break;
 	case WM_LBUTTONUP:
+		// 주의) 화면을 회전시키는 것과 별개로 피킹 광선이 제대로 동작하도록 만들자
+		// 피킹 광선과 카메라 direction을 쪼개는 건 이번이 처음!
+		// 피킹 광선 처리를 위한 ndc 변환은 여기에서
+		// 실시간으로 계
+
+		if (isFPS) {
+			if (objectData->getSelectedObject() != nullptr) objectPicked = true;
+
+			break;
+		}
+
 		if ((startMouseX == mouseX) && (startMouseY == mouseY)) {
 			objectPicked = (objectData->getSelectedObject() == nullptr);
 		}
@@ -480,25 +497,62 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mouseClicked = false;
 		break;
 	case WM_MOUSEMOVE:
-		if (mouseClicked == false) {
-			mouseX = LOWORD(lParam);
-			mouseY = HIWORD(lParam);
+		// 기존 방식: 화면 회전과 피킹 광선 발사가 동시에 이루어짐(FPS)
+		//	// 커서가 있는 위치의 NDC좌표로 화면을 회전하고, 광선도 커서 위치의 ndc로 발사
+		// 화면 회전 + 피킹 광선 발사 동시에(기존 방식) => FPS
+		// 화면 회전과 피킹 광선 발사(별도의 클릭 이벤트로 오브젝트 선택) 별개 => TPS
+		// 
+		// 할 일
+		// 1. FPS 제대로 적용되게 만들기
+		// 2. TPS 적용(일단은 모드 구별만)
+		// 3. 윈도우 메뉴바에 시점 변경 메뉴 추가
+		// 3. 패닝
+		// 4. 로테이팅
+		// 주의) 화면을 회전시키는 것과 별개로 피킹 광선이 제대로 동작하도록 만들자
+		// 일단은 화면 회전 여부에 관계없이 
+
+		// del값을 camera에 넘겨주면, 미리 넘겨준 RECT를 기반으로 알아서 ndc를 계산하고
+
+		mouseX = LOWORD(lParam);
+		mouseY = HIWORD(lParam);
+
+		delX = -(preMouseX - mouseX) * .001f;
+		delY = (preMouseY - mouseY) * .001f;
+
+		if (isFPS) {
+
+			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+			ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+
+
+
+
 			break;
-		} 
+		}
+
+		
+		/* TPS
+
+		GetClientRect(hWnd, &rt);
+		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+
+		if (mouseClicked == false) {
+			camera->update();
+			break;
+		}
+
+		camera->updateMouseDelta(ndcX, ndcY);
+
 		GetClientRect(hWnd, &rt);
 		delX = -(LOWORD(lParam) - mouseX) * .001f;
 		delY = (HIWORD(lParam) - mouseY) * .001f;
-		std::cout << "del: " << delX << "," << delY << std::endl;
+		std::cout << "del: " << delX << "," << delY << std::end l;
 		camera->updateMouseDelta(delX, delY);
 		mouseX = LOWORD(lParam);
 		mouseY = HIWORD(lParam);
 		std::cout << "mouse: " << mouseX << "," << mouseY << std::endl;
-		//GetClientRect(hWnd, &rt);
-		//mouseX = LOWORD(lParam);
-		//mouseY = HIWORD(lParam);
-		//ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		//ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-		//camera->updateMouse(ndcX, ndcY);
+		*/
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
