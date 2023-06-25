@@ -197,7 +197,7 @@ private:
 
 			for (size_t i = 0; i < selectedObjectList.size(); ++i) {
 				if (pickedObj == selectedObjectList[i]) selectedObject = selectedObjectList[i];
-				selectedObject->render(pickedObj == selectedObject, selectedObjectListLevel[i]);
+				selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
 			}
 		}
 	}
