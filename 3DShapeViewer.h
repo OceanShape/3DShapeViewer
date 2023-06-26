@@ -60,7 +60,6 @@ public:
 	GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
 	GLfloat delTotal[3];
 
-	bool mouseClicked = false;
 	float lastX = 450.0f;
 	float lastY = 450.0f;
 	int startMouseX = 0, startMouseY = 0;
@@ -71,7 +70,8 @@ public:
 
 	bool objectPicked = false;
 	bool getStatus = false;
-	bool isFPS = true;
+	bool isFPS = false;
+	bool mouseClicked = false;
 
 	ShapeViewer();
 

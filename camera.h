@@ -126,6 +126,11 @@ public:
 		ray.dir = inv * glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
 	}
 
+	void getNdc(float& _ndcX, float& _ndcY) {
+		_ndcX = ndcX;
+		_ndcY = ndcY;
+	}
+
 	void updateRotate(float _ndcX, float _ndcY) {
 		ndcX = _ndcX; ndcY = _ndcY;
 

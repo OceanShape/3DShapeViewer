@@ -129,7 +129,7 @@ void ShapeViewer::update() {
 		objectPicked = false;
 	}
 
-	objectData->update(camera->currentLevel, camera->frustum, camera->ray);
+	objectData->update(camera->currentLevel, camera->frustum, camera->ray, isFPS);
 }
 
 void ShapeViewer::render()
@@ -517,6 +517,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mouseX = LOWORD(lParam);
 		mouseY = HIWORD(lParam);
 
+		// FPS
 		if (isFPS) {
 
 			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
@@ -527,9 +528,14 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			break;
 		}
 
-		delX = -(preMouseX - mouseX) * .001f;
-		delY = (preMouseY - mouseY) * .001f;
+		// TPS
+		if (mouseClicked == false) break;
+		delX = (preMouseX - mouseX) * .001f;
+		delY = -(preMouseY - mouseY) * .001f;
 
+		camera->getNdc(ndcX, ndcY);
+		ndcX += delX; ndcY += delY;
+		camera->updateRotate(ndcX, ndcY);
 		
 		/* TPS
 

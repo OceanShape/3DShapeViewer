@@ -27,6 +27,7 @@ class QuadtreeNode {
 	static shared_ptr<Object> selectedObject;
 	static vector<int> objectCount;
 	static int renderObjectCount;
+	static bool isFPS;
 
 	bool culled;
 
@@ -217,6 +218,11 @@ private:
 
 				renderObjectCount++;
 
+				if (isFPS == false) {
+					obj->render(false, level);
+					continue;
+				}
+
 				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
 
 				if (d < radW && isDetected(obj)) {
@@ -334,6 +340,7 @@ shared_ptr<Object> qtNode::selectedObject;
 vector<int> qtNode::objectCount(10);
 int qtNode::renderObjectCount = 0;
 Ray qtNode::ray;
+bool qtNode::isFPS = true;
 
 
 class ObjectData {
@@ -358,10 +365,11 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void update(int selectLevel, shared_ptr<Frustum> frustum, Ray ray) {
+	void update(int selectLevel, shared_ptr<Frustum> frustum, Ray ray, bool isFPS) {
 		qtNode::frustum = frustum;
 		qtNode::selectLevel = selectLevel;
 		qtNode::ray = ray;
+		qtNode::isFPS = isFPS;
 		root->update();
 		root->culled = false;
 	}
