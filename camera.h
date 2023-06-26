@@ -132,10 +132,11 @@ public:
 	}
 
 	void updateRotate(float _ndcX, float _ndcY) {
-		ndcX = _ndcX; ndcY = _ndcY;
+		ndcX = _ndcX; ndcY = (_ndcY > .89f) ? .89f : (_ndcY < -.89f) ? -.89f : _ndcY;
 
-		yaw = ndcX * glm::pi<float>();
-		pitch = ndcY * glm::pi<float>() / 2;
+		float h_pi = glm::half_pi<float>();
+		yaw = ndcX * h_pi;
+		pitch = ndcY * h_pi;
 
 		glm::quat qX = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
 		glm::quat qY = glm::angleAxis(yaw, glm::vec3(0, -1, 0));

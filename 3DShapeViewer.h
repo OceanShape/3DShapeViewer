@@ -70,7 +70,7 @@ public:
 
 	bool objectPicked = false;
 	bool getStatus = false;
-	bool isFPS = false;
+	bool isFPS = true;
 	bool mouseClicked = false;
 
 	ShapeViewer();
