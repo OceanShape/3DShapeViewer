@@ -126,13 +126,23 @@ public:
 		ray.dir = inv * glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
 	}
 
+	Ray getPickingRay(bool isFPS, float currentNdcX, float currentNdcY) {
+		if (isFPS) return ray;
+
+		auto inv = glm::inverse(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+		Ray pr{};
+		pr.orig = inv * glm::vec4{ position, .0f };
+		pr.dir = inv * glm::vec4{ glm::normalize((currentNdcX) * .01f * right + (currentNdcY) * .01f * up + direction * nearZ), 1.0f };
+		return pr;
+	}
+
 	void getNdc(float& _ndcX, float& _ndcY) {
 		_ndcX = ndcX;
 		_ndcY = ndcY;
 	}
 
 	void updateRotate(float _ndcX, float _ndcY) {
-		ndcX = _ndcX; ndcY = (_ndcY > .89f) ? .89f : (_ndcY < -.89f) ? -.89f : _ndcY;
+		ndcX = _ndcX; ndcY = (_ndcY > .899f) ? .899f : (_ndcY < -.899f) ? -.899f : _ndcY;
 
 		float h_pi = glm::half_pi<float>();
 		yaw = ndcX * h_pi;
@@ -152,13 +162,5 @@ public:
 			updateRay();
 		}
 	}
-
-	//void updateDelta(float _delX, float _delY) {
-	//	ndcX += _delX;
-	//	ndcY += _delY;
-	//	ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-	//	ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-	//	updateRotate(ndcX, ndcY);
-	//}
 };
 

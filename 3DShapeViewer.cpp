@@ -79,7 +79,7 @@ void ShapeViewer::status() {
 		std::cout << "level[" << i << "]: " << objectData->getObjectCount(i) << std::endl;
 	}
 	std::cout << "current level: [" << camera->currentLevel << "]" << endl;
-	std::cout << "rendered object count: " << objectData->getRenderedObject() << std::endl;
+	std::cout << "rendered object count: " << objectData->getRenderedObjectCount() << std::endl;
 	getStatus = false;
 }
 
@@ -87,6 +87,7 @@ void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
 	float del = .1f;
+	bool isKeyDown = true;
 
 	if (isKeyPressed('A')) {
 		camera->moveRight(-del);
@@ -115,6 +116,7 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('U')) {
 		camera->uncapture();
 	}
+
 	for (int i = 9; i >= 0; i--) {
 		if (isKeyPressed('0' + i)) {
 			camera->setLevel(i);
@@ -122,14 +124,14 @@ void ShapeViewer::update() {
 		}
 	}
 
-	if (objectPicked && (objectData->getSelectedObject() != nullptr)) {
+	if (pickedObjectPrint && objectData->getSelectedObject() != nullptr) {
 		system("cls");
 		auto obj = objectData->getSelectedObject();
 		std::cout << "ID: " << obj->ID << ", vertex count: " << obj->vertexCount << ", part count: " << obj->partCount << std::endl;
-		objectPicked = false;
+		pickedObjectPrint = false;
 	}
 
-	objectData->update(camera->currentLevel, camera->frustum, camera->ray, isFPS);
+	objectData->update(camera->currentLevel, camera->frustum, camera->ray, pickingRay, isFPS, pickedObjectColor);
 }
 
 void ShapeViewer::render()
@@ -451,10 +453,9 @@ bool ShapeViewer::openShapefile() {
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	float delX, delY;
-	float ndcX, ndcY;
+	float ndcX, ndcY, _ndcX, _ndcY;
 	float wDel;
-	float preMouseX = mouseX;
-	float preMouseY = mouseY;
+	float preMouseX = mouseX; float preMouseY = mouseY;
 	RECT rt;
 	GetClientRect(hWnd, &rt);
 	switch (message)
@@ -471,7 +472,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			DestroyWindow(hWnd);
 			break;
 		case ID_32773:
-			isFPS = true;
+			//isFPS = true;
 			break;
 		case ID_32774:
 			isFPS = false;
@@ -482,57 +483,41 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	}
 	break;
 	case WM_LBUTTONDOWN:
-		mouseClicked = true;
+		isLButtonDown = true;
+		if (objectData->getSelectedObject() != nullptr) {
+			isObjectPicked = true;
+			pickedObjectPrint = true;
+			pickedObjectColor = true;
+		}
 		break;
 	case WM_LBUTTONUP:
-		mouseClicked = false;
-		// 주의) 화면을 회전시키는 것과 별개로 피킹 광선이 제대로 동작하도록 만들자
-		// 피킹 광선과 카메라 direction을 쪼개는 건 이번이 처음!
-		// 피킹 광선 처리를 위한 ndc 변환은 여기에서
-		// 실시간으로 계
-
-		if (isFPS) {
-			if (objectData->getSelectedObject() != nullptr) objectPicked = true;
-			break;
-		}
-
-		if ((startMouseX == mouseX) && (startMouseY == mouseY)) {
-			objectPicked = (objectData->getSelectedObject() == nullptr);
-		}
-		if (objectData->getSelectedObject() != nullptr) {
-			objectPicked = true;
-		}
+		isLButtonDown = false;
+		pickedObjectColor = false;
+		if (isFPS) break;
 		break;
 	case WM_MOUSEMOVE:
-		// 기존 방식: 화면 회전과 피킹 광선 발사가 동시에 이루어짐(FPS)
-		//	// 커서가 있는 위치의 NDC좌표로 화면을 회전하고, 광선도 커서 위치의 ndc로 발사
-		// 화면 회전 + 피킹 광선 발사 동시에(기존 방식) => FPS
-		// 화면 회전과 피킹 광선 발사(별도의 클릭 이벤트로 오브젝트 선택) 별개 => TPS
-		// 
-		// 할 일
-		// 1. FPS 제대로 적용되게 만들기
-		// 2. TPS 적용(일단은 모드 구별만)
-		// 3. 윈도우 메뉴바에 시점 변경 메뉴 추가
-		// 3. 패닝
-		// 4. 로테이팅
-		// 주의) 화면을 회전시키는 것과 별개로 피킹 광선이 제대로 동작하도록 만들자
-		// 일단은 화면 회전 여부에 관계없이 
-
-		// del값을 camera에 넘겨주면, 미리 넘겨준 RECT를 기반으로 알아서 ndc를 계산하고
-
-		mouseX = LOWORD(lParam);
-		mouseY = HIWORD(lParam);
+		mouseX = LOWORD(lParam); mouseY = HIWORD(lParam);
 
 		// FPS
 		if (isFPS) {
 			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 			ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
 			camera->updateRotate(ndcX, ndcY);
+			pickingRay = camera->getPickingRay(isFPS, 0, 0);
 			break;
 		}
 
 		// TPS
-		if (mouseClicked == false) break;
+		isObjectPicked = false;
+		pickedObjectColor = false;
+
+		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
+
+
+		if (isLButtonDown == false) break;
+
 		delX = (preMouseX - mouseX) * .001f;
 		delY = -(preMouseY - mouseY) * .001f;
 
@@ -545,10 +530,18 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
 		wDel = 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
+		pickedObjectColor = false;
+		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
 		break;
 	case WM_KEYDOWN:
 		keyPressed[wParam] = true;
 		getStatus = true;
+		pickedObjectColor = false;
+		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
 		break;
 	case WM_KEYUP:
 		keyPressed[wParam] = false;

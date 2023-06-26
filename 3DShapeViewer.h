@@ -68,10 +68,15 @@ public:
 	shared_ptr<ObjectData> objectData;
 	std::vector<shared_ptr<Object>> objects;
 
-	bool objectPicked = false;
 	bool getStatus = false;
-	bool isFPS = true;
-	bool mouseClicked = false;
+	bool isFPS = false;
+	bool isLButtonDown = false;
+	bool isRButtonDown = false;
+	bool isObjectPicked = false;
+	bool pickedObjectColor = false;
+	bool pickedObjectPrint = false;
+
+	Ray pickingRay{};
 
 	ShapeViewer();
 

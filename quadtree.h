@@ -23,11 +23,13 @@ class QuadtreeNode {
 	static vector<shared_ptr<QuadtreeNode>> nodeList;
 	static vector<shared_ptr<Object>> selectedObjectList;
 	static vector<int> selectedObjectListLevel;
-	static Ray ray;
+	static Ray cameraRay;
+	static Ray pickingRay;
 	static shared_ptr<Object> selectedObject;
 	static vector<int> objectCount;
 	static int renderObjectCount;
 	static bool isFPS;
+	static bool pickedObjectColor;
 
 	bool culled;
 
@@ -167,7 +169,7 @@ private:
 				culled = true; break;
 			}
 
-			if (glm::length(centerWorld - ray.orig) > .6f) culled = true;
+			if (glm::length(centerWorld - cameraRay.orig) > .6f) culled = true;
 		}
 
 		for (auto n : nodes) {
@@ -190,7 +192,7 @@ private:
 			float min = FLT_MAX;
 			shared_ptr<Object> pickedObj;
 			for (auto obj : selectedObjectList) {
-				float tmp = glm::length(ray.orig - modelToWorldPos(obj->center));
+				float tmp = glm::length(pickingRay.orig - modelToWorldPos(obj->center));
 				if (min > tmp) {
 					min = tmp; pickedObj = obj;
 				}
@@ -198,6 +200,10 @@ private:
 
 			for (size_t i = 0; i < selectedObjectList.size(); ++i) {
 				if (pickedObj == selectedObjectList[i]) selectedObject = selectedObjectList[i];
+				if (pickedObjectColor == false) {
+					selectedObjectList[i]->render(false, selectedObjectListLevel[i]);
+					continue;
+				}
 				selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
 			}
 		}
@@ -214,16 +220,11 @@ private:
 			auto radW = modelToWorldLen(obj->radius);
 			
 			if (frustum->inSphere(cenW, radW)
-				&& glm::length(ray.orig - cenW) < .6f) {
+				&& glm::length(cameraRay.orig - cenW) < .6f) {
 
 				renderObjectCount++;
 
-				if (isFPS == false) {
-					obj->render(false, level);
-					continue;
-				}
-
-				auto d = glm::length(glm::cross(ray.dir, ray.orig - cenW)) / glm::length(ray.dir);
+				auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - cenW)) / glm::length(pickingRay.dir);
 
 				if (d < radW && isDetected(obj)) {
 					selectedObjectList.push_back(obj);
@@ -243,7 +244,7 @@ private:
 			triVertices[0] = modelToWorldPos(v[idx[i * 3]]);
 			triVertices[1] = modelToWorldPos(v[idx[i * 3 + 1]]);
 			triVertices[2] = modelToWorldPos(v[idx[i * 3 + 2]]);
-			if (isRayIntersecTriangle(ray, inter, triVertices)) return true;
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) return true;
 		}
 
 		int startIdx = obj->triangleCount * 3;
@@ -251,12 +252,12 @@ private:
 			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6]]);
 			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 1]]);
 			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 2]]);
-			if (isRayIntersecTriangle(ray, inter, triVertices)) return true;
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) return true;
 
 			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6 + 3]]);
 			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 4]]);
 			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 5]]);
-			if (isRayIntersecTriangle(ray, inter, triVertices)) return true;
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) return true;
 		}
 
 		return false;
@@ -339,8 +340,10 @@ vector<int> qtNode::selectedObjectListLevel;
 shared_ptr<Object> qtNode::selectedObject;
 vector<int> qtNode::objectCount(10);
 int qtNode::renderObjectCount = 0;
-Ray qtNode::ray;
+Ray qtNode::cameraRay;
+Ray qtNode::pickingRay;
 bool qtNode::isFPS = true;
+bool qtNode::pickedObjectColor = false;
 
 
 class ObjectData {
@@ -365,11 +368,13 @@ public:
 		root->store(obj, 0, maxLevel);
 	}
 
-	void update(int selectLevel, shared_ptr<Frustum> frustum, Ray ray, bool isFPS) {
+	void update(int selectLevel, shared_ptr<Frustum> frustum, Ray cameraRay, Ray pickingRay, bool isFPS, bool pickedObjectColor) {
 		qtNode::frustum = frustum;
 		qtNode::selectLevel = selectLevel;
-		qtNode::ray = ray;
+		qtNode::cameraRay = cameraRay;
+		qtNode::pickingRay = pickingRay;
 		qtNode::isFPS = isFPS;
+		qtNode::pickedObjectColor = pickedObjectColor;
 		root->update();
 		root->culled = false;
 	}
@@ -387,7 +392,7 @@ public:
 		qtNode::selectedObjectListLevel.clear();
 	}
 
-	int getRenderedObject() {
+	int getRenderedObjectCount() {
 		return qtNode::renderObjectCount;
 	}
 
