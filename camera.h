@@ -147,12 +147,12 @@ public:
 		}
 	}
 
-	void updateDelta(const RECT& rt, float _delX, float _delY) {
-		ndcX += _delX;
-		ndcY += _delY;
-		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-		updateRotate(ndcX, ndcY);
-	}
+	//void updateDelta(float _delX, float _delY) {
+	//	ndcX += _delX;
+	//	ndcY += _delY;
+	//	ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+	//	ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+	//	updateRotate(ndcX, ndcY);
+	//}
 };
 

@@ -455,6 +455,8 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	float wDel;
 	float preMouseX = mouseX;
 	float preMouseY = mouseY;
+	RECT rt;
+	GetClientRect(hWnd, &rt);
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -477,6 +479,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mouseClicked = true;
 		break;
 	case WM_LBUTTONUP:
+		mouseClicked = false;
 		// 주의) 화면을 회전시키는 것과 별개로 피킹 광선이 제대로 동작하도록 만들자
 		// 피킹 광선과 카메라 direction을 쪼개는 건 이번이 처음!
 		// 피킹 광선 처리를 위한 ndc 변환은 여기에서
@@ -484,7 +487,6 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		if (isFPS) {
 			if (objectData->getSelectedObject() != nullptr) objectPicked = true;
-
 			break;
 		}
 
@@ -494,7 +496,6 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		if (objectData->getSelectedObject() != nullptr) {
 			objectPicked = true;
 		}
-		mouseClicked = false;
 		break;
 	case WM_MOUSEMOVE:
 		// 기존 방식: 화면 회전과 피킹 광선 발사가 동시에 이루어짐(FPS)
@@ -516,19 +517,18 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		mouseX = LOWORD(lParam);
 		mouseY = HIWORD(lParam);
 
-		delX = -(preMouseX - mouseX) * .001f;
-		delY = (preMouseY - mouseY) * .001f;
-
 		if (isFPS) {
 
 			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 			ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
 
-
-
+			camera->updateRotate(ndcX, ndcY);
 
 			break;
 		}
+
+		delX = -(preMouseX - mouseX) * .001f;
+		delY = (preMouseY - mouseY) * .001f;
 
 		
 		/* TPS
