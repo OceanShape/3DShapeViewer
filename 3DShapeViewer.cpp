@@ -470,6 +470,12 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
+		case ID_32773:
+			isFPS = true;
+			break;
+		case ID_32774:
+			isFPS = false;
+			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
@@ -519,12 +525,9 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		// FPS
 		if (isFPS) {
-
 			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 			ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-
 			camera->updateRotate(ndcX, ndcY);
-
 			break;
 		}
 
@@ -537,28 +540,6 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		ndcX += delX; ndcY += delY;
 		camera->updateRotate(ndcX, ndcY);
 		
-		/* TPS
-
-		GetClientRect(hWnd, &rt);
-		ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-
-		if (mouseClicked == false) {
-			camera->update();
-			break;
-		}
-
-		camera->updateMouseDelta(ndcX, ndcY);
-
-		GetClientRect(hWnd, &rt);
-		delX = -(LOWORD(lParam) - mouseX) * .001f;
-		delY = (HIWORD(lParam) - mouseY) * .001f;
-		std::cout << "del: " << delX << "," << delY << std::end l;
-		camera->updateMouseDelta(delX, delY);
-		mouseX = LOWORD(lParam);
-		mouseY = HIWORD(lParam);
-		std::cout << "mouse: " << mouseX << "," << mouseY << std::endl;
-		*/
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
