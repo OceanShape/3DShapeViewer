@@ -100,12 +100,12 @@ void ShapeViewer::update() {
 	else if (isKeyPressed('S')) {
 		camera->moveUp(-del);
 	}
-	//else if (isKeyPressed('Q')) {
-	//	camera->moveForward(-del);
-	//}
-	//else if (isKeyPressed('E')) {
-	//	camera->moveForward(del);
-	//}
+	else if (isKeyPressed('F')) {
+		isFPS = true;
+	}
+	else if (isKeyPressed('T')) {
+		isFPS = false;
+	}
 	else if (isKeyPressed('G')) {
 		status();
 	}
