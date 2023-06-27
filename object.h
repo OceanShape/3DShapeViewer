@@ -29,6 +29,7 @@ public:
 	int vertexCount = 0;
 	int partCount = 0;
 	int triangleCount = 0;
+	glm::vec3 pickedPoint{};
 
 	static int type;
 	static GLuint program;

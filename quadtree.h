@@ -22,10 +22,11 @@ class QuadtreeNode {
 	static shared_ptr<Frustum> frustum;
 	static vector<shared_ptr<QuadtreeNode>> nodeList;
 	static vector<shared_ptr<Object>> selectedObjectList;
+	static shared_ptr<Object> selectedObject;
 	static vector<int> selectedObjectListLevel;
 	static Ray cameraRay;
 	static Ray pickingRay;
-	static shared_ptr<Object> selectedObject;
+	static glm::vec3 pickingPoint;
 	static vector<int> objectCount;
 	static int renderObjectCount;
 	static bool isFPS;
@@ -244,7 +245,7 @@ private:
 			triVertices[0] = modelToWorldPos(v[idx[i * 3]]);
 			triVertices[1] = modelToWorldPos(v[idx[i * 3 + 1]]);
 			triVertices[2] = modelToWorldPos(v[idx[i * 3 + 2]]);
-			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) return true;
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
 		}
 
 		int startIdx = obj->triangleCount * 3;
@@ -252,12 +253,12 @@ private:
 			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6]]);
 			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 1]]);
 			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 2]]);
-			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) return true;
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
 
 			triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6 + 3]]);
 			triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 4]]);
 			triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 5]]);
-			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) return true;
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
 		}
 
 		return false;

@@ -128,7 +128,6 @@ void ShapeViewer::update() {
 		system("cls");
 		auto obj = objectData->getSelectedObject();
 		std::cout << "ID: " << obj->ID << ", vertex count: " << obj->vertexCount << ", part count: " << obj->partCount << std::endl;
-		pickedObjectPrint = false;
 	}
 
 	objectData->update(camera->currentLevel, camera->frustum, camera->ray, pickingRay, isFPS, pickedObjectColor);
@@ -153,6 +152,48 @@ void ShapeViewer::render()
 		objectData->render(camera->currentLevel);
 		glUseProgram(renderOption.program[2]);
 		camera->renderFrustum();
+	}
+
+	auto obj = objectData->getSelectedObject();
+	if (pickedObjectPrint && obj != nullptr) {
+		auto p = obj->pickedPoint;
+		glm::vec3 v[8];
+		float a = 0.0005f;
+		v[0] = glm::vec3(p.x - a, p.y - a, p.z - a);
+		v[1] = glm::vec3(p.x + a, p.y - a, p.z - a);
+		v[2] = glm::vec3(p.x + a, p.y + a, p.z - a);
+		v[3] = glm::vec3(p.x - a, p.y + a, p.z - a);
+
+		v[4] = glm::vec3(p.x - a, p.y - a, p.z + a);
+		v[5] = glm::vec3(p.x + a, p.y - a, p.z + a);
+		v[6] = glm::vec3(p.x + a, p.y + a, p.z + a);
+		v[7] = glm::vec3(p.x - a, p.y + a, p.z + a);
+
+		float vFLT[24];
+		for (int i = 0; i < 8; ++i) {
+			glm::vec3 tmp = modelMat * glm::vec4{ v[i], .0f };
+			vFLT[i * 3] = tmp.x;
+			vFLT[i * 3 + 1] = tmp.y;
+			vFLT[i * 3 + 2] = tmp.z;
+		}
+
+		GLuint indices[] = {
+			0, 1, 2, 0, 2, 3,
+			0, 3, 4, 3, 7, 4,
+			3, 2, 7, 2, 6, 7,
+			1, 0, 5, 0, 4, 5,
+			2, 1, 6, 1, 5, 6,
+			4, 5, 7, 7, 5, 6 };
+		
+		
+		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vFLT, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+
+		for (size_t pos = 0; pos < 12 * 3; pos += 3) {
+			float color[] = { 1, 0, 0, 1 };
+			glUniform4fv(glGetUniformLocation(renderOption.program[2], "color"), 1, color);
+			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+		}
 	}
 
 	eglSwapBuffers(eglOptions.eglDisplay, eglOptions.eglSurface);
@@ -493,6 +534,8 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_LBUTTONUP:
 		isLButtonDown = false;
 		pickedObjectColor = false;
+		if (pickedObjectPrint) pickedObjectPrint = false;
+
 		if (isFPS) break;
 		break;
 	case WM_MOUSEMOVE:
