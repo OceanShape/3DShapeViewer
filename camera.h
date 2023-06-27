@@ -14,7 +14,7 @@ public:
 	int currentLevel = 0;
 	int maxLevel = 0;
 
-	float startZ = .0f;
+	float startHeight = .0f;
 
 	GLfloat minTotal[3]{ FLT_MIN, FLT_MIN, FLT_MIN };
 	GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
@@ -53,7 +53,7 @@ private:
 	float ndcY = .0f;
 
 public:
-	Camera(float posX, float posY, float posZ, glm::mat4 _modelMat) : startZ(posZ) {
+	Camera(float posX, float posY, float posZ, glm::mat4 _modelMat) : startHeight(posZ) {
 		invModelMat = glm::inverse(_modelMat);
 		position = glm::vec3(posX, posY, posZ);
 		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, invModelMat);
@@ -101,15 +101,17 @@ public:
 	}
 
 	void updateMove() {
+		position.y = (position.y < .05f) ? .05f : position.y;
+
 		// update level
-		if (0.0f < position.z && position.z <= startZ) {
+		if (0.0f < position.z && position.z <= startHeight) {
 			glm::vec3 res;
 			Plane p({ {1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {-1, 1, 0} });
 			p.getIntersecPoint(ray, res);
 			float len = glm::length(res - ray.orig);
 			len = (len > 3.0f) ? 3.0f : (len < .0f) ? .0f : len;
 
-			float deltaLevel = startZ / (maxLevel + 1.0f);
+			float deltaLevel = startHeight / (maxLevel + 1.0f);
 			setLevel((3.0f - len) / deltaLevel);
 		}
 
