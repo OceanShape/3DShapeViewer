@@ -164,18 +164,6 @@ struct Frustum {
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
-
-		/*
-		float z = .005f;
-		Plane plane({ {-1, -1,z }, {-1, 1, z}, {1, 1, z}, {1, -1, z} });
-		glm::vec3 res;
-		if (plane.getIntersecPoint(ray, res) == false) return;
-
-		float line[] = { .0f, .0f, .02f, res.x, res.y, res.z };
-
-		glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), line, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_STRIP, 0, 2);
-		*/
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float fov) {
