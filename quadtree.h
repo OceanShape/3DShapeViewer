@@ -58,7 +58,8 @@ public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		centerWorld = modelToWorldPos(glm::vec3(Xmid, Ymid, .0f));
 		++nodeCount;
-		culled = true;
+		//culled = true;
+		culled = false;
 
 		float half = 1 / (1 << level);
 		float x = centerWorld.x;
@@ -152,6 +153,7 @@ private:
 	}
 
 	void update() {
+		return;
 		if (level > selectLevel) {
 			culled = true;
 		}
@@ -217,6 +219,9 @@ private:
 
 
 		for (auto obj : objects) {
+			obj->render(false, level);
+			continue;
+
 			auto cenW = modelToWorldPos(obj->center);
 			auto radW = modelToWorldLen(obj->radius);
 			

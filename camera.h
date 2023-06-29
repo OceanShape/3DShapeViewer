@@ -46,16 +46,22 @@ private:
 	// projection option
 	float fov = 90.0f;
 	float nearZ = 0.01f;
-	float farZ = 50.0f;
+	float farZ = 1000.0f;
 	float aspect = 1.0f;
-
+	 
 	float ndcX = .0f;
 	float ndcY = .0f;
 
 public:
 	Camera(float posX, float posY, float posZ, glm::mat4 _modelMat) : startHeight(posZ) {
-		invModelMat = glm::inverse(_modelMat);
+		position = glm::vec3(1144064.31195f, 1688191.9375f, 900.0f);
+		//position = glm::vec3(1141070.844500f, 1685198.500000f, 999.0f);
+		up = glm::vec3(0, 0, -1);
+		right = glm::vec3(1, 0, 0);
+
+		/*invModelMat = glm::inverse(_modelMat);
 		position = glm::vec3(posX, posY, posZ);
+		*/
 		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, invModelMat);
 	}
 

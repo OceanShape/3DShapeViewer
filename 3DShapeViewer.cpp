@@ -142,7 +142,7 @@ void ShapeViewer::render()
 		glm::mat4 projection = camera->getProj();
 
 		for (int i = 0; i < 3; ++i) {
-			glm::mat4 model = (i == 2)? glm::mat4(1.0f) : modelMat;
+			glm::mat4 model(1.0f);
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -151,7 +151,7 @@ void ShapeViewer::render()
 		
 		objectData->render(camera->currentLevel);
 		glUseProgram(renderOption.program[2]);
-		camera->renderFrustum();
+		//camera->renderFrustum();
 	}
 
 	auto obj = objectData->getSelectedObject();
@@ -338,6 +338,8 @@ bool ShapeViewer::readShapefile() {
 
 		float min[2] = { shpHeaderData.Xmin, yBot };
 		float max[2] = { shpHeaderData.Xmax , yBot + delTotal[0] * 2 };
+		printf("%lf, %lf\n", shpHeaderData.Xmin, yBot);
+		printf("%lf, %lf\n", shpHeaderData.Xmax, yBot + delTotal[0] * 2);
 		
 		objectData = make_shared<ObjectData>(min, max);
 	}

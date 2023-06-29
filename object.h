@@ -65,7 +65,7 @@ public:
 		for (size_t i = 0; i < vertexCount; ++i) {
 			double x = _vertices[i].x;
 			double y = _vertices[i].y;
-			double z = 0.005f;
+			double z = 10.0f;
 
 			min[0] = std::min(min[0], x);
 			max[0] = std::max(max[0], x);
@@ -77,7 +77,7 @@ public:
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
 		}
-		min[2] = .0f; max[2] = .005f;
+		min[2] = .0f; max[2] = 10.0f;
 
 		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(Vertex));
 
@@ -94,15 +94,6 @@ public:
 		}
 
 		std::memcpy(partStartIndex, _parts, sizeof(int32_t) * partCount);
-
-		/*
-		if (partCount > 1) {
-			for (int i = 0; i < partCount; ++i) {
-				cout << _parts[i] << " ";
-			}
-			cout << endl;
-		}
-		*/
 
 		center = glm::vec3(0);
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
