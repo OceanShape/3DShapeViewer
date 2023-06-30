@@ -142,7 +142,14 @@ void ShapeViewer::render()
 		glm::mat4 projection = camera->getProj();
 
 		for (int i = 0; i < 3; ++i) {
-			glm::mat4 model(1.0f);
+			glm::mat4 model;
+			if (i == 2) {
+				model = glm::mat4(1.0f);
+			}
+			else {
+				auto t = glm::translate(glm::mat4(1.0f), glm::vec3(-1144064.250000f, -1688192.000000f, .0f));
+				model = glm::rotate(t, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+			}
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));

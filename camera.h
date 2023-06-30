@@ -54,10 +54,17 @@ private:
 
 public:
 	Camera(float posX, float posY, float posZ, glm::mat4 _modelMat) : startHeight(posZ) {
-		position = glm::vec3(1144064.31195f, 1688191.9375f, 900.0f);
-		//position = glm::vec3(1141070.844500f, 1685198.500000f, 999.0f);
+		//position = glm::vec3(1144064.31195f, 1688191.9375f, 900.0f);
+		
+		/*position = glm::vec3(0, 200.0f, 0);
 		up = glm::vec3(0, 0, -1);
 		right = glm::vec3(1, 0, 0);
+		direction = glm::vec3(0, -1, 0);*/
+		
+		up = glm::vec3(0, 1, 0);
+		right = glm::vec3(1, 0, 0);
+		direction = glm::vec3(0, 0, -1);
+		position = glm::vec3(0, 0, 1);
 
 		/*invModelMat = glm::inverse(_modelMat);
 		position = glm::vec3(posX, posY, posZ);
@@ -150,6 +157,8 @@ public:
 	}
 
 	void updateRotate(float _ndcX, float _ndcY) {
+		std::cout << to_string(direction) << std::endl;
+
 		ndcX = _ndcX; ndcY = (_ndcY > .899f) ? .899f : (_ndcY < -.899f) ? -.899f : _ndcY;
 
 		float h_pi = glm::half_pi<float>();
