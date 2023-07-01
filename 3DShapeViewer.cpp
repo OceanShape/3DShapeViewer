@@ -143,7 +143,7 @@ void ShapeViewer::render()
 
 		for (int i = 0; i < 3; ++i) {
 			glm::mat4 model;
-			if (i == 2) {
+			if (i < 3) {
 				model = glm::mat4(1.0f);
 			}
 			else {
