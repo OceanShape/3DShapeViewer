@@ -83,10 +83,12 @@ void ShapeViewer::status() {
 	getStatus = false;
 }
 
+float rotDegree = 0.0f;
+
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = .1f;
+	float del = 100.0f;
 	bool isKeyDown = true;
 
 	if (isKeyPressed('A')) {
@@ -115,6 +117,14 @@ void ShapeViewer::update() {
 	}
 	else if (isKeyPressed('U')) {
 		camera->uncapture();
+	}
+	else if (isKeyPressed('Z')) {
+		rotDegree += .01f;
+		std::cout << rotDegree << std::endl;
+	}
+	else if (isKeyPressed('X')) {
+		rotDegree -= .01f;
+		std::cout << rotDegree << std::endl;
 	}
 
 	for (int i = 9; i >= 0; i--) {
@@ -147,8 +157,9 @@ void ShapeViewer::render()
 				model = glm::mat4(1.0f);
 			}
 			else {
-				auto t = glm::translate(glm::mat4(1.0f), glm::vec3(-1144064.250000f, -1688192.000000f, .0f));
-				model = glm::rotate(t, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+				auto t1 = glm::mat4(1.0f);// = glm::translate(glm::mat4(1.0f), glm::vec3(-1144064.250000f, -1688192.000000f, 0.0f));
+				auto t2 = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, .0f, .0f));
+				model = t1 * glm::mat4(1.0f);
 			}
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -348,6 +359,7 @@ bool ShapeViewer::readShapefile() {
 		printf("%lf, %lf\n", shpHeaderData.Xmin, yBot);
 		printf("%lf, %lf\n", shpHeaderData.Xmax, yBot + delTotal[0] * 2);
 		
+		// ObjectData 내부에서 y를 z방향으로 받아들임
 		objectData = make_shared<ObjectData>(min, max);
 	}
 
@@ -580,7 +592,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
-		wDel = 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		wDel = 100.0f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
 		pickedObjectColor = false;
 		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;

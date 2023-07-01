@@ -30,10 +30,24 @@ public:
 private:
 	RECT rt;
 
-	glm::vec3 position = glm::vec3(0.0f, 3.0f, 3.0f);
-	glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
-	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 right = glm::vec3(1.0f, .0f, .0f);
+
+	/*glm::vec3 upF = glm::vec3(0, 1, 0);
+	glm::vec3 rightF = glm::vec3(1, 0, 0);
+	glm::vec3 directionF = glm::vec3(0, 0, -1);*/
+	glm::vec3 upF = glm::vec3(0, 0, -1);
+	glm::vec3 rightF = glm::vec3(1, 0, 0);
+	glm::vec3 directionF = glm::vec3(0, -1, 0);
+	glm::vec3 positionF = glm::vec3(1144064.250000f, 3000.0f, 1688192.000000f);
+
+	//glm::vec3 upF = glm::vec3(0, 0, -1);
+	//glm::vec3 rightF = glm::vec3(1, 0, 0);
+	//glm::vec3 directionF = glm::vec3(0, -1, 0);
+	//glm::vec3 positionF = glm::vec3(0, 3000.0f, 0);
+
+	glm::vec3 up = upF;
+	glm::vec3 right = rightF;
+	glm::vec3 direction = directionF;
+	glm::vec3 position = positionF;
 
 	float pitch = .0f;	// x-axis
 	float yaw = .0f;	// y-axis
@@ -46,7 +60,7 @@ private:
 	// projection option
 	float fov = 90.0f;
 	float nearZ = 0.01f;
-	float farZ = 1000.0f;
+	float farZ = 5000.0f;
 	float aspect = 1.0f;
 	 
 	float ndcX = .0f;
@@ -55,16 +69,6 @@ private:
 public:
 	Camera(float posX, float posY, float posZ, glm::mat4 _modelMat) : startHeight(posZ) {
 		//position = glm::vec3(1144064.31195f, 1688191.9375f, 900.0f);
-		
-		/*position = glm::vec3(0, 200.0f, 0);
-		up = glm::vec3(0, 0, -1);
-		right = glm::vec3(1, 0, 0);
-		direction = glm::vec3(0, -1, 0);*/
-		
-		up = glm::vec3(0, 1, 0);
-		right = glm::vec3(1, 0, 0);
-		direction = glm::vec3(0, 0, -1);
-		position = glm::vec3(0, 0, 1);
 
 		/*invModelMat = glm::inverse(_modelMat);
 		position = glm::vec3(posX, posY, posZ);
@@ -170,8 +174,8 @@ public:
 		qX = glm::normalize(qX);
 		qY = glm::normalize(qY);
 
-		direction = glm::normalize(qY * qX * glm::vec3(0.0f, 0.0f, -1.0f));
-		up = glm::normalize(qY * qX * glm::vec3(0.0f, 1.0f, 0.0f));
+		direction = glm::normalize(qY * qX * directionF);
+		up = glm::normalize(qY * qX * upF);
 		right = glm::normalize(glm::cross(direction, up));
 
 		if (frustumCaptured == false) {

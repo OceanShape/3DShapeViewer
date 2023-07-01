@@ -37,39 +37,36 @@ class QuadtreeNode {
 	const int level;
 	static const float halfRadiusRatio;
 	const float radiusWorld;
-	static float boundaryX[2];
-	static float boundaryY[2];
 
 	vector<shared_ptr<Object>> objects;
 
 	vector<float> sphereVertices;
 	vector<GLuint> sphereIndices;
 
-	float Xmin, Xmax, Ymin, Ymax;
-	float Xmid, Ymid;
-	glm::vec3 centerWorld;
+	float Xmin, Xmax, Zmin, Zmax;
+	float Xmid, Zmid;
+	//glm::vec3 centerWorld;
 	// min max buffer for objects
 	float _min[2] = { FLT_MAX, FLT_MAX };
 	float _max[2] = { FLT_MIN, FLT_MIN };
-	glm::vec3 box[4];
+	glm::vec3 box[4]; // for frustum culling
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
-	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
-		centerWorld = modelToWorldPos(glm::vec3(Xmid, Ymid, .0f));
+	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Zmin, const float& _Zmax) : level(_level), radiusWorld(halfRadiusRatio / (1 << _level)), Xmin(_Xmin), Xmax(_Xmax), Zmin(_Zmin), Zmax(_Zmax), Xmid((_Xmin + _Xmax) / 2), Zmid((_Zmin + _Zmax) / 2) {
+		//centerWorld = modelToWorldPos(glm::vec3(Xmid, Ymid, .0f));
 		++nodeCount;
 		//culled = true;
 		culled = false;
 
 		float half = 1 / (1 << level);
-		float x = centerWorld.x;
+		/*float x = centerWorld.x;
 		float y = centerWorld.y;
 		box[0] = glm::vec3{ x - half, y - half, .0f };
 		box[1] = glm::vec3{ x - half, y + half, .0f };
 		box[2] = glm::vec3{ x + half, y + half, .0f };
 		box[3] = glm::vec3{ x + half, y - half, .0f };
-
-		if (level <= 0) makeSphere(centerWorld, radiusWorld);
+		*/
 	}
 
 private:
@@ -79,11 +76,11 @@ private:
 	bool isRight(float x) {
 		return Xmid <= x && x <= Xmax;
 	}
-	bool isUp(float y) {
-		return Ymid <= y && y <= Ymax;
+	bool isUp(float z) {
+		return Zmid <= z && z <= Zmax;
 	}
-	bool isDown(float y) {
-		return Ymin <= y && y <= Ymid;
+	bool isDown(float z) {
+		return Zmin <= z && z <= Zmid;
 	}
 
 	void store(const shared_ptr<Object> obj, int level, int& maxLevel) {
@@ -94,31 +91,31 @@ private:
 			return;
 		}
 
-		float x = obj->center.x, y = obj->center.y;
-		if (isLeft(x) && isUp(y)) {
+		float x = obj->center.x, z = obj->center.y;
+		if (isLeft(x) && isUp(z)) {
 			if (nodes[0] == nullptr) {
-				nodes[0] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymid, Ymax);
+				nodes[0] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Zmid, Zmax);
 				qtNode::nodeList.push_back(nodes[0]);
 			}
 			nodes[0]->store(obj, level + 1, maxLevel);
 		}
-		else if (isRight(x) && isUp(y)) {
+		else if (isRight(x) && isUp(z)) {
 			if (nodes[1] == nullptr) {
-				nodes[1] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymid, Ymax);
+				nodes[1] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Zmid, Zmax);
 				qtNode::nodeList.push_back(nodes[1]);
 			}
 			nodes[1]->store(obj, level + 1, maxLevel);
 		}
-		else if (isLeft(x) && isDown(y)) {
+		else if (isLeft(x) && isDown(z)) {
 			if (nodes[2] == nullptr) {
-				nodes[2] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Ymin, Ymid);
+				nodes[2] = make_shared<QuadtreeNode>(level + 1, Xmin, Xmid, Zmin, Zmid);
 				qtNode::nodeList.push_back(nodes[2]);
 			}
 			nodes[2]->store(obj, level + 1, maxLevel);
 		}
-		else if (isRight(x) && isDown(y)) {
+		else if (isRight(x) && isDown(z)) {
 			if (nodes[3] == nullptr) {
-				nodes[3] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Ymin, Ymid);
+				nodes[3] = make_shared<QuadtreeNode>(level + 1, Xmid, Xmax, Zmin, Zmid);
 				qtNode::nodeList.push_back(nodes[3]);
 			}
 			nodes[3]->store(obj, level + 1, maxLevel);
@@ -130,24 +127,12 @@ private:
 		}
 	}
 
-	glm::vec3 modelToWorldPos(const glm::vec3& v) {
-		return glm::vec3(
-			2 * (v.x - boundaryX[0]) / (boundaryX[1] - boundaryX[0]) - 1,
-			2 * (v.y - boundaryY[0]) / (boundaryY[1] - boundaryY[0]) - 1,
-			v.z
-		);
-	}
-
-	float modelToWorldLen(const float& len) {
-		return len * 2.0f / (boundaryX[1] - boundaryX[0]);
-	}
-	
 	FRUSTUM_CULLING insideFrustum() {
 		auto cullingState = FRUSTUM_CULLING::_OUT;
 		int count = 0;
-		for (size_t i = 0; i < 4; ++i) if (frustum->inside(box[i])) count++;
+		//for (size_t i = 0; i < 4; ++i) if (frustum->inside(box[i])) count++;
 
-		cullingState = (count == 4) ? FRUSTUM_CULLING::_COMPLETE : (count > 0) ? FRUSTUM_CULLING::_PARTIAL : frustum->inSphere(centerWorld, radiusWorld) ? FRUSTUM_CULLING::_PARTIAL : FRUSTUM_CULLING::_OUT;
+		//cullingState = (count == 4) ? FRUSTUM_CULLING::_COMPLETE : (count > 0) ? FRUSTUM_CULLING::_PARTIAL : frustum->inSphere(centerWorld, radiusWorld) ? FRUSTUM_CULLING::_PARTIAL : FRUSTUM_CULLING::_OUT;
 
 		return cullingState;
 	}
@@ -172,7 +157,7 @@ private:
 				culled = true; break;
 			}
 
-			if (glm::length(centerWorld - cameraRay.orig) > .6f) culled = true;
+			//if (glm::length(centerWorld - cameraRay.orig) > .6f) culled = true;
 		}
 
 		for (auto n : nodes) {
@@ -190,7 +175,11 @@ private:
 		drawBorder();
 		drawObject();
 
+
+		//
+		return;
 		// draw selected objects
+		/*
 		if (level == 0) {
 			float min = FLT_MAX;
 			shared_ptr<Object> pickedObj;
@@ -210,6 +199,7 @@ private:
 				selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
 			}
 		}
+		*/
 	}
 
 	void drawObject() {
@@ -222,6 +212,7 @@ private:
 			obj->render(false, level);
 			continue;
 
+			/*
 			auto cenW = modelToWorldPos(obj->center);
 			auto radW = modelToWorldLen(obj->radius);
 			
@@ -238,9 +229,11 @@ private:
 				}
 				else obj->render(false, level);
 			}
+			*/
 		}
 	}
 
+	/*
 	bool isDetected(const shared_ptr<Object> obj) {
 		glm::vec3 inter;
 		glm::vec3 triVertices[3];
@@ -268,6 +261,7 @@ private:
 
 		return false;
 	}
+	*/
 
 	void makeSphere(const glm::vec3& cw, const float& rw) {
 		/*sphereVertices.reserve(1323);
@@ -327,7 +321,7 @@ private:
 		glBindVertexArray(renderOption.vao[1]);
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
 
-		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+		float border[] = { Xmin, Zmin, 0.0f, Xmin, Zmax, 0.0f, Xmax, Zmax, 0.0f, Xmax, Zmin, 0.0f };
 		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINE_LOOP, 0, 4);
 	}
@@ -335,8 +329,6 @@ private:
 
 int qtNode::nodeCount = 0;
 int qtNode::selectLevel = 0;
-float qtNode::boundaryX[]{};
-float qtNode::boundaryY[]{};
 const float qtNode::halfRadiusRatio = 1.414213562f;
 RenderOption qtNode::renderOption = { 0, };
 shared_ptr<Frustum> qtNode::frustum = nullptr;
@@ -359,8 +351,6 @@ class ObjectData {
 
 public:
 	ObjectData(float min[], float max[]) {
-		qtNode::boundaryX[0] = min[0], qtNode::boundaryX[1] = max[0];
-		qtNode::boundaryY[0] = min[1], qtNode::boundaryY[1] = max[1];
 		root = make_shared<qtNode>(0, min[0], max[0], min[1], max[1]);
 		qtNode::nodeList.push_back(root);
 	}

@@ -64,25 +64,25 @@ public:
 
 		for (size_t i = 0; i < vertexCount; ++i) {
 			double x = _vertices[i].x;
-			double y = _vertices[i].y;
-			double z = 10.0f;
+			double y = 10.0f;
+			double z = 1688192.000000 * 2 - _vertices[i].y;
 
 			min[0] = std::min(min[0], x);
 			max[0] = std::max(max[0], x);
-			min[1] = std::min(min[1], y);
-			max[1] = std::max(max[1], y);
-			//min[2] = std::min(min[2], z);
-			//max[2] = std::max(max[2], z);
+			/*min[1] = std::min(min[1], y);
+			max[1] = std::max(max[1], y);*/
+			min[2] = std::min(min[2], z);
+			max[2] = std::max(max[2], z);
 
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
 		}
-		min[2] = .0f; max[2] = 10.0f;
+		min[1] = .0f; max[1] = 10.0f;
 
 		std::memcpy(vertices + vertexCount, vertices, vertexCount * sizeof(Vertex));
 
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
-			vertices[i].z = .0f;
+			vertices[i].y = .0f;
 		}
 
 		for (size_t i = 0; i < partCount; ++i) {
@@ -99,7 +99,7 @@ public:
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
 			center += vertices[i];
 		}
-		center /= vertexCount; center.z = 0.0025f;
+		center /= vertexCount; center.y = 0.0025f;
 
 		radius = .0f;
 		for (size_t i = vertexCount; i < vertexCount * 2; ++i) {
