@@ -22,26 +22,21 @@ public:
 
 	shared_ptr<Frustum> frustum;
 	bool frustumCaptured = false;
-
-	glm::mat4 invModelMat;
-
+	
 	Ray ray{};
 
 private:
 	RECT rt;
 
-	/*glm::vec3 upF = glm::vec3(0, 1, 0);
-	glm::vec3 rightF = glm::vec3(1, 0, 0);
-	glm::vec3 directionF = glm::vec3(0, 0, -1);*/
 	glm::vec3 upF = glm::vec3(0, 0, 1);
 	glm::vec3 rightF = glm::vec3(1, 0, 0);
 	glm::vec3 directionF = glm::vec3(0, 1, 0);
 	glm::vec3 positionF = glm::vec3(1144064.250000f, 1685198.500000f, 500.0f);
 
-	//glm::vec3 upF = glm::vec3(0, 0, -1);
-	//glm::vec3 rightF = glm::vec3(1, 0, 0);
-	//glm::vec3 directionF = glm::vec3(0, -1, 0);
-	//glm::vec3 positionF = glm::vec3(0, 3000.0f, 0);
+	/*glm::vec3 upF = glm::vec3(0, 1, 0);
+	glm::vec3 rightF = glm::vec3(1, 0, 0);
+	glm::vec3 directionF = glm::vec3(0, 0, -1);
+	glm::vec3 positionF = glm::vec3(1144064.250000f, 1688192.000000f, 3000.0f);*/
 
 	glm::vec3 up = upF;
 	glm::vec3 right = rightF;
@@ -70,7 +65,7 @@ public:
 		/*invModelMat = glm::inverse(_modelMat);
 		position = glm::vec3(posX, posY, posZ);
 		*/
-		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, invModelMat);
+		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, glm::inverse(getProj() * getView()));
 	}
 
 	void setRect(RECT _rt) {

@@ -86,7 +86,7 @@ void ShapeViewer::status() {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = .1f;
+	float del = 1000.0f;
 	bool isKeyDown = true;
 
 	if (isKeyPressed('A')) {
@@ -142,14 +142,7 @@ void ShapeViewer::render()
 		glm::mat4 projection = camera->getProj();
 
 		for (int i = 0; i < 3; ++i) {
-			glm::mat4 model;
-			if (i < 3) {
-				model = glm::mat4(1.0f);
-			}
-			else {
-				auto t = glm::translate(glm::mat4(1.0f), glm::vec3(-1144064.250000f, -1688192.000000f, .0f));
-				model = glm::rotate(t, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-			}
+			glm::mat4 model(1.0f);
 			glUseProgram(renderOption.program[i]);
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(renderOption.program[i], "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -580,7 +573,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
-		wDel = 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		wDel = 240 * 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
 		pickedObjectColor = false;
 		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;

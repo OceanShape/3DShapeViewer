@@ -123,12 +123,11 @@ struct Frustum {
 
 	static GLuint program;
 
-	static glm::mat4 invModelMat;
+	static glm::mat4 invViewProj;
 
 	Frustum() {};
 
-	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 _invModelMat) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
-		invModelMat = _invModelMat;
+	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 _invViewProj) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
 		update(direction, up, right, _eyePos, fov);
 	};
 
@@ -168,26 +167,28 @@ struct Frustum {
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float fov) {
 
-		float t = tan(glm::radians(fov / 2)); // fov default: 90.0f
-		float val = nearZ * t;
-		vertices[0] = _eyePos + (-up - right) * val + direction * nearZ;
-		vertices[1] = _eyePos + (+up - right) * val + direction * nearZ;
-		vertices[2] = _eyePos + (+up + right) * val + direction * nearZ;
-		vertices[3] = _eyePos + (-up + right) * val + direction * nearZ;
+		//float t = tan(glm::radians(fov / 2)); // fov default: 90.0f
+		//float val = nearZ * t;
+		//vertices[0] = _eyePos + (-up - right) * val + direction * nearZ;
+		//vertices[1] = _eyePos + (+up - right) * val + direction * nearZ;
+		//vertices[2] = _eyePos + (+up + right) * val + direction * nearZ;
+		//vertices[3] = _eyePos + (-up + right) * val + direction * nearZ;
 
-		val = farZ * t;
-		vertices[4] = _eyePos + (-up - right) * val + direction * farZ;
-		vertices[5] = _eyePos + (+up - right) * val + direction * farZ;
-		vertices[6] = _eyePos + (+up + right) * val + direction * farZ;
-		vertices[7] = _eyePos + (-up + right) * val + direction * farZ;
+		//val = farZ * t;
+		//vertices[4] = _eyePos + (-up - right) * val + direction * farZ;
+		//vertices[5] = _eyePos + (+up - right) * val + direction * farZ;
+		//vertices[6] = _eyePos + (+up + right) * val + direction * farZ;
+		//vertices[7] = _eyePos + (-up + right) * val + direction * farZ;
 
-		for (int i = 0; i < 8; ++i) {
-			vertexFLT[i * 3] = vertices[i].x;
-			vertexFLT[i * 3 + 1] = vertices[i].y;
-			vertexFLT[i * 3 + 2] = vertices[i].z;
-			vertices[i] = invModelMat * glm::vec4{ vertices[i], .0f };
-		}
-		eyePos = invModelMat * glm::vec4{ _eyePos , .0f };
+		//for (int i = 0; i < 8; ++i) {
+		//	vertexFLT[i * 3] = vertices[i].x;
+		//	vertexFLT[i * 3 + 1] = vertices[i].y;
+		//	vertexFLT[i * 3 + 2] = vertices[i].z;
+		//	vertices[i] = invModelMat * glm::vec4{ vertices[i], .0f };
+		//}
+		//eyePos = invModelMat * glm::vec4{ _eyePos , .0f };
+
+		//vertices[0] = 
 
 		auto v = vertices;
 
@@ -213,4 +214,3 @@ GLuint Frustum::indices[8 * 3] = {
 	0, 7, 4,
 };
 float Frustum::frustumColor[][4] = { {1, 0, 1, 1}, {0, 1, 1, 1} };
-glm::mat4 Frustum::invModelMat(1.0f);
