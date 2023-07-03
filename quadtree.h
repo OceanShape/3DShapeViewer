@@ -169,7 +169,7 @@ private:
 
 		if (culled) return;
 		drawBorder();
-		//drawObject();
+		drawObject();
 
 		// draw selected objects
 		//if (level == 0) {
@@ -193,34 +193,34 @@ private:
 		//}
 	}
 
-	//void drawObject() {
-	//	glUseProgram(renderOption.program[0]);
-	//	glBindVertexArray(renderOption.vao[0]);
-	//	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
+	void drawObject() {
+		glUseProgram(renderOption.program[0]);
+		glBindVertexArray(renderOption.vao[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 
-	//	for (auto obj : objects) {
-	//		obj->render(false, level);
-	//		continue;
+		for (auto obj : objects) {
+			obj->render(false, level);
+			continue;
 
-	//		auto cenW = modelToWorldPos(obj->center);
-	//		auto radW = modelToWorldLen(obj->radius);
-	//		
-	//		if (frustum->inSphere(cenW, radW)
-	//			&& glm::length(cameraRay.orig - cenW) < .6f) {
+			//auto cenW = modelToWorldPos(obj->center);
+			//auto radW = modelToWorldLen(obj->radius);
+			//
+			//if (frustum->inSphere(cenW, radW)
+			//	&& glm::length(cameraRay.orig - cenW) < .6f) {
 
-	//			renderObjectCount++;
+			//	renderObjectCount++;
 
-	//			auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - cenW)) / glm::length(pickingRay.dir);
+			//	auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - cenW)) / glm::length(pickingRay.dir);
 
-	//			if (d < radW && isDetected(obj)) {
-	//				selectedObjectList.push_back(obj);
-	//				selectedObjectListLevel.push_back(level);
-	//			}
-	//			else obj->render(false, level);
-	//		}
-	//	}
-	//}
+			//	if (d < radW && isDetected(obj)) {
+			//		selectedObjectList.push_back(obj);
+			//		selectedObjectListLevel.push_back(level);
+			//	}
+			//	else obj->render(false, level);
+			//}
+		}
+	}
 
 	//bool isDetected(const shared_ptr<Object> obj) {
 	//	glm::vec3 inter;

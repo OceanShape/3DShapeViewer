@@ -188,8 +188,6 @@ struct Frustum {
 		//}
 		//eyePos = invModelMat * glm::vec4{ _eyePos , .0f };
 
-		//vertices[0] = 
-
 		auto v = vertices;
 
 		planes[0].update(v[0], v[1], v[2], v[3]);

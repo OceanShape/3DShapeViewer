@@ -171,8 +171,8 @@ public:
 		right = glm::normalize(glm::cross(direction, up));
 
 		if (frustumCaptured == false) {
-			frustum->update(direction, up, right, position, fov);
-			updateRay();
+			//frustum->update(direction, up, right, position, fov);
+			//updateRay();
 		}
 	}
 };
