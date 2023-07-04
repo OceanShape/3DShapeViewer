@@ -31,12 +31,7 @@ private:
 	glm::vec3 upF = glm::vec3(0, 0, 1);
 	glm::vec3 rightF = glm::vec3(1, 0, 0);
 	glm::vec3 directionF = glm::vec3(0, 1, 0);
-	glm::vec3 positionF = glm::vec3(1144064.250000f, 1685198.500000f, 500.0f);
-
-	/*glm::vec3 upF = glm::vec3(0, 1, 0);
-	glm::vec3 rightF = glm::vec3(1, 0, 0);
-	glm::vec3 directionF = glm::vec3(0, 0, -1);
-	glm::vec3 positionF = glm::vec3(1144064.250000f, 1688192.000000f, 3000.0f);*/
+	glm::vec3 positionF = glm::vec3(1144064.250000f, 1685198.500000f, 0);
 
 	glm::vec3 up = upF;
 	glm::vec3 right = rightF;
@@ -53,7 +48,7 @@ private:
 
 	// projection option
 	float fov = 90.0f;
-	float nearZ = 0.01f;
+	float nearZ = 1.0f;
 	float farZ = 5000.0f;
 	float aspect = 1.0f;
 	 

@@ -65,7 +65,7 @@ public:
 		for (size_t i = 0; i < vertexCount; ++i) {
 			double x = _vertices[i].x;
 			double y = _vertices[i].y;
-			double z = 10.0f;
+			double z = 30.0f;
 
 			min[0] = std::min(min[0], x);
 			max[0] = std::max(max[0], x);
@@ -73,7 +73,7 @@ public:
 			max[1] = std::max(max[1], y);
 			//min[2] = std::min(min[2], z);
 			//max[2] = std::max(max[2], z);
-
+			
 			verticesDBL[i] = { x, y, z };
 			vertices[i] = { (float)x, (float)y, (float)z };
 		}
@@ -170,7 +170,7 @@ public:
 			glDrawElements(GL_LINE_LOOP, 2, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
 	}
-
+	
 	~Object() {
 		delete[] verticesDBL;
 		delete[] vertices;
