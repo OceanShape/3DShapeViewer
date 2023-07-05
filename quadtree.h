@@ -37,6 +37,7 @@ class QuadtreeNode {
 	const int level;
 
 	vector<shared_ptr<Object>> objects;
+	glm::vec3 center;
 
 	vector<float> sphereVertices;
 	vector<GLuint> sphereIndices;
@@ -51,8 +52,8 @@ class QuadtreeNode {
 public:
 	QuadtreeNode(const int& _level, const float& _Xmin, const float& _Xmax, const float& _Ymin, const float& _Ymax) : level(_level), Xmin(_Xmin), Xmax(_Xmax), Ymin(_Ymin), Ymax(_Ymax), Xmid((_Xmin + _Xmax) / 2), Ymid((_Ymin + _Ymax) / 2) {
 		++nodeCount;
-		//culled = true;
-		culled = false;
+		center = glm::vec3(Xmid, Ymid, .0f);
+		culled = true;
 	}
 
 private:
@@ -143,7 +144,7 @@ private:
 				culled = true; break;
 			}
 
-			//if (glm::length(centerWorld - cameraRay.orig) > .6f) culled = true;
+			//if (glm::length(center - cameraRay.orig) > .6f) culled = true;
 		}
 
 		for (auto n : nodes) {
@@ -176,7 +177,7 @@ private:
 		//	float min = FLT_MAX;
 		//	shared_ptr<Object> pickedObj;
 		//	for (auto obj : selectedObjectList) {
-		//		float tmp = glm::length(pickingRay.orig - modelToWorldPos(obj->center));
+		//		float tmp = glm::length(pickingRay.orig - obj->center));
 		//		if (min > tmp) {
 		//			min = tmp; pickedObj = obj;
 		//		}
@@ -203,52 +204,49 @@ private:
 			obj->render(false, level);
 			continue;
 
-			//auto cenW = modelToWorldPos(obj->center);
-			//auto radW = modelToWorldLen(obj->radius);
-			//
-			//if (frustum->inSphere(cenW, radW)
-			//	&& glm::length(cameraRay.orig - cenW) < .6f) {
+			if (frustum->inSphere(obj->center, obj->radius)
+				&& glm::length(cameraRay.orig - obj->center) < .6f) {
 
-			//	renderObjectCount++;
+				renderObjectCount++;
 
-			//	auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - cenW)) / glm::length(pickingRay.dir);
+				auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - obj->center)) / glm::length(pickingRay.dir);
 
-			//	if (d < radW && isDetected(obj)) {
-			//		selectedObjectList.push_back(obj);
-			//		selectedObjectListLevel.push_back(level);
-			//	}
-			//	else obj->render(false, level);
-			//}
+				if (d < obj->radius && isDetected(obj)) {
+					selectedObjectList.push_back(obj);
+					selectedObjectListLevel.push_back(level);
+				}
+				else obj->render(false, level);
+			}
 		}
 	}
 
-	//bool isDetected(const shared_ptr<Object> obj) {
-	//	glm::vec3 inter;
-	//	glm::vec3 triVertices[3];
-	//	auto v = obj->vertices;
-	//	auto idx = obj->indices;
-	//	for (size_t i = 0; i < obj->triangleCount; ++i) {
-	//		triVertices[0] = modelToWorldPos(v[idx[i * 3]]);
-	//		triVertices[1] = modelToWorldPos(v[idx[i * 3 + 1]]);
-	//		triVertices[2] = modelToWorldPos(v[idx[i * 3 + 2]]);
-	//		if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
-	//	}
+	bool isDetected(const shared_ptr<Object> obj) {
+		glm::vec3 inter;
+		glm::vec3 triVertices[3];
+		auto v = obj->vertices;
+		auto idx = obj->indices;
+		for (size_t i = 0; i < obj->triangleCount; ++i) {
+			triVertices[0] = v[idx[i * 3]];
+			triVertices[1] = v[idx[i * 3 + 1]];
+			triVertices[2] = v[idx[i * 3 + 2]];
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
+		}
 
-	//	int startIdx = obj->triangleCount * 3;
-	//	for (int i = 0; i < obj->vertexCount - 1; ++i) {
-	//		triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6]]);
-	//		triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 1]]);
-	//		triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 2]]);
-	//		if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
+		int startIdx = obj->triangleCount * 3;
+		for (int i = 0; i < obj->vertexCount - 1; ++i) {
+			triVertices[0] = v[idx[startIdx + i * 6]];
+			triVertices[1] = v[idx[startIdx + i * 6 + 1]];
+			triVertices[2] = v[idx[startIdx + i * 6 + 2]];
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
 
-	//		triVertices[0] = modelToWorldPos(v[idx[startIdx + i * 6 + 3]]);
-	//		triVertices[1] = modelToWorldPos(v[idx[startIdx + i * 6 + 4]]);
-	//		triVertices[2] = modelToWorldPos(v[idx[startIdx + i * 6 + 5]]);
-	//		if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
-	//	}
+			triVertices[0] = v[idx[startIdx + i * 6 + 3]];
+			triVertices[1] = v[idx[startIdx + i * 6 + 4]];
+			triVertices[2] = v[idx[startIdx + i * 6 + 5]];
+			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
+		}
 
-	//	return false;
-	//}
+		return false;
+	}
 
 
 } typedef qtNode;

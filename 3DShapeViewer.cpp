@@ -556,6 +556,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		isObjectPicked = false;
 		pickedObjectColor = false;
 
+		std::cout << mouseX * 2.0f / (rt.right - rt.left) << std::endl;
 		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
 		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
@@ -573,7 +574,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
-		wDel = 240 * 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		wDel = 180 * 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
 		pickedObjectColor = false;
 		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
