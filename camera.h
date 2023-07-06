@@ -154,8 +154,8 @@ public:
 		yaw = ndcX * h_pi;
 		pitch = ndcY * h_pi;
 
-		glm::quat qX = glm::angleAxis(yaw, glm::vec3(0, 0, -1));
-		glm::quat qY = glm::angleAxis(pitch, glm::vec3(1, 0, 0));
+		glm::quat qX = glm::angleAxis(yaw, glm::vec3(0, 0, -1.0f));
+		glm::quat qY = glm::angleAxis(pitch, glm::vec3(1.0f, 0, 0));
 		qX = glm::normalize(qX);
 		qY = glm::normalize(qY);
 

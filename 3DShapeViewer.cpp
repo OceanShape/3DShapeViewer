@@ -556,7 +556,6 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		isObjectPicked = false;
 		pickedObjectColor = false;
 
-		std::cout << mouseX * 2.0f / (rt.right - rt.left) << std::endl;
 		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
 		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
