@@ -115,7 +115,9 @@ private:
 	}
 
 	FRUSTUM_CULLING insideFrustum() {
-		auto cullingState = FRUSTUM_CULLING::_OUT;
+		// 나중에 걸러내는 로직 추가
+		//auto cullingState = FRUSTUM_CULLING::_OUT;
+		auto cullingState = FRUSTUM_CULLING::_COMPLETE;
 		int count = 0;
 		//for (size_t i = 0; i < 4; ++i) if (frustum->inside(box[i])) count++;
 
@@ -125,27 +127,21 @@ private:
 	}
 
 	void update() {
-		return;
-		if (level > selectLevel) {
-			culled = true;
-		}
-		else {
-			// Frustum culling
-			// 피킹할 경우, 해당 오브젝트 색상을 변경해야 하기 때문
-			// 노드의 오브젝트를 확인할 때에도, 나중에 확인
-			auto cullingState = insideFrustum();
+		// Frustum culling
+		// 피킹할 경우, 해당 오브젝트 색상을 변경해야 하기 때문
+		// 노드의 오브젝트를 확인할 때에도, 나중에 확인
+		auto cullingState = insideFrustum();
 
-			switch (cullingState) {
-			case FRUSTUM_CULLING::_COMPLETE:
-				culled = false; break;
-			case FRUSTUM_CULLING::_PARTIAL:
-				culled = false; break;
-			case FRUSTUM_CULLING::_OUT:
-				culled = true; break;
-			}
-
-			//if (glm::length(center - cameraRay.orig) > .6f) culled = true;
+		switch (cullingState) {
+		case FRUSTUM_CULLING::_COMPLETE:
+			culled = false; break;
+		case FRUSTUM_CULLING::_PARTIAL:
+			culled = false; break;
+		case FRUSTUM_CULLING::_OUT:
+			culled = true; break;
 		}
+
+		if (glm::length(center - cameraRay.orig) > 2000.0f) culled = true;
 
 		for (auto n : nodes) {
 			if (n != nullptr) n->update();
@@ -201,6 +197,7 @@ private:
 
 
 		for (auto obj : objects) {
+			//전부 출력
 			obj->render(false, level);
 			continue;
 

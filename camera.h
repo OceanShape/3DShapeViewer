@@ -43,8 +43,7 @@ private:
 	float roll = .0f;	// z-axis
 	float rotDel = 1.0f;
 
-	float delta = 0.05f;
-	float deltaZ = 0.1f;
+	float delta = 200.0f;
 
 	// projection option
 	float fov = 90.0f;
@@ -72,7 +71,7 @@ public:
 	glm::vec3 getEyePos() { return position; };
 
 	void moveUp(float dt) { position += up * delta * dt; updateMove(); };
-	void moveForward(float dt) { position += direction * deltaZ * dt; updateMove(); };
+	void moveForward(float dt) { position += direction * delta * dt; updateMove(); };
 	void moveRight(float dt) { position += right * delta * dt; updateMove(); };
 
 	void setAspectRatio(float _aspect) { aspect = _aspect; };
@@ -121,15 +120,14 @@ public:
 
 		// update frustum
 		if (frustumCaptured == false) {
-			frustum->update(direction, up, right, position, fov);
+			//frustum->update(direction, up, right, position, fov);
 			updateRay();
 		}
 	}
 
 	void updateRay() {
-		auto inv = glm::inverse(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-		ray.orig = inv * glm::vec4{ position, .0f };
-		ray.dir = inv * glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
+		ray.orig = glm::vec4{ position, .0f };
+		//ray.dir = glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
 	}
 
 	Ray getPickingRay(bool isFPS, float currentNdcX, float currentNdcY) {
@@ -165,7 +163,7 @@ public:
 
 		if (frustumCaptured == false) {
 			//frustum->update(direction, up, right, position, fov);
-			//updateRay();
+			updateRay();
 		}
 	}
 };

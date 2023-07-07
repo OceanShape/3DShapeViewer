@@ -86,7 +86,7 @@ void ShapeViewer::status() {
 void ShapeViewer::update() {
 	if (isShapeLoaded == false) return;
 
-	float del = 1000.0f;
+	float del = 1.0f;
 	bool isKeyDown = true;
 
 	if (isKeyPressed('A')) {
@@ -573,7 +573,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
-		wDel = 180 * 0.5f * GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
 		pickedObjectColor = false;
 		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
