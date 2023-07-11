@@ -128,7 +128,7 @@ struct Frustum {
 	Frustum() {};
 
 	Frustum(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float _nearZ, float _farZ, float _fov, glm::mat4 _invViewProj) : nearZ(_nearZ), farZ(_farZ), fov(_fov) {
-		update(direction, up, right, _eyePos, fov);
+		update(direction, up, right, _eyePos, fov, _invViewProj);
 	};
 
 	void setRenderOption(RenderOption option) {
@@ -163,30 +163,78 @@ struct Frustum {
 			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
 		}
+
+		//vector<float> v;
+		//v.push_back(1144064.250000f - 1000.0f); v.push_back(1688191.9375f - 1000.0f); v.push_back(0.0f);
+		//v.push_back(1144064.250000f - 1000.0f); v.push_back(1688191.9375f + 1000.0f); v.push_back(0.0f);
+		//v.push_back(1144064.250000f + 1000.0f); v.push_back(1688191.9375f + 1000.0f); v.push_back(0.0f);
+		//v.push_back(1144064.250000f + 1000.0f); v.push_back(1688191.9375f - 1000.0f); v.push_back(0.0f);
+
+		//GLuint ind[] = { 0, 1, 2, 3 };
+
+		//glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), v.data(), GL_STATIC_DRAW);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), ind, GL_STATIC_DRAW);
+
+		//glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[0]);
+		//glDrawElements(GL_LINE_LOOP, 4, GL_UNSIGNED_INT, 0);
 	}
 
-	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float fov) {
+	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float fov, glm::mat4 viewProj) {
 
-		//float t = tan(glm::radians(fov / 2)); // fov default: 90.0f
-		//float val = nearZ * t;
-		//vertices[0] = _eyePos + (-up - right) * val + direction * nearZ;
-		//vertices[1] = _eyePos + (+up - right) * val + direction * nearZ;
-		//vertices[2] = _eyePos + (+up + right) * val + direction * nearZ;
-		//vertices[3] = _eyePos + (-up + right) * val + direction * nearZ;
+		//vertices[0] = glm::vec3(-1.0f, -1.0f, .0f);
+		//vertices[1] = glm::vec3(-1.0f, 1.0f, .0f);
+		//vertices[2] = glm::vec3(1.0f, 1.0f, .0f);
+		//vertices[3] = glm::vec3(1.0f, -1.0f, .0f);
 
-		//val = farZ * t;
-		//vertices[4] = _eyePos + (-up - right) * val + direction * farZ;
-		//vertices[5] = _eyePos + (+up - right) * val + direction * farZ;
-		//vertices[6] = _eyePos + (+up + right) * val + direction * farZ;
-		//vertices[7] = _eyePos + (-up + right) * val + direction * farZ;
+		//vertices[4] = glm::vec3(-1.0f, -1.0f, 1.0f);
+		//vertices[5] = glm::vec3(-1.0f, 1.0f, 1.0f);
+		//vertices[6] = glm::vec3(1.0f, 1.0f, 1.0f);
+		//vertices[7] = glm::vec3(1.0f, -1.0f, 1.0f);
+
+		//for (int i = 0; i < 8; ++i) {
+		//	vertices[i] = glm::inverse(viewProj) * glm::vec4{ vertices[i], 1.0f };
+		//}
+
+		//vertices[0] = glm::vec3(1144064.250000f - 1000.0f, 1688191.9375f - 1000.0f, .0f);
+		////vertices[1] = glm::vec3(1144064.250000f - 1000.0f, 1688191.9375f + 1000.0f, .0f);
+		//vertices[2] = glm::vec3(1144064.250000f + 1000.0f, 1688191.9375f + 1000.0f, .0f);
+		////vertices[3] = glm::vec3(1144064.250000f + 1000.0f, 1688191.9375f - 1000.0f, .0f);
+
+		//vertices[4] = glm::vec3(1144064.250000f - 1000.0f, 1688191.9375f - 1000.0f, 100.0f);
+		////vertices[5] = glm::vec3(1144064.250000f - 1000.0f, 1688191.9375f + 1000.0f, 100.0f);
+		//vertices[6] = glm::vec3(1144064.250000f + 1000.0f, 1688191.9375f + 1000.0f, 100.0f);
+		////vertices[7] = glm::vec3(1144064.250000f + 1000.0f, 1688191.9375f - 1000.0f, 100.0f);
+
+		//std::cout << to_string(vertices[1]);
+		//std::cout << to_string(vertices[3]);
+		//std::cout << to_string(vertices[5]);
+		//std::cout << to_string(vertices[7]) << std::endl;
 
 		//for (int i = 0; i < 8; ++i) {
 		//	vertexFLT[i * 3] = vertices[i].x;
 		//	vertexFLT[i * 3 + 1] = vertices[i].y;
 		//	vertexFLT[i * 3 + 2] = vertices[i].z;
-		//	vertices[i] = invModelMat * glm::vec4{ vertices[i], .0f };
 		//}
-		//eyePos = invModelMat * glm::vec4{ _eyePos , .0f };
+
+
+		float t = tan(glm::radians(fov / 2)); // fov default: 90.0f
+		float val = nearZ * t;
+		vertices[0] = _eyePos + (-up - right) * val + direction * nearZ;
+		vertices[1] = _eyePos + (+up - right) * val + direction * nearZ;
+		vertices[2] = _eyePos + (+up + right) * val + direction * nearZ;
+		vertices[3] = _eyePos + (-up + right) * val + direction * nearZ;
+
+		val = farZ * t;
+		vertices[4] = _eyePos + (-up - right) * val + direction * farZ;
+		vertices[5] = _eyePos + (+up - right) * val + direction * farZ;
+		vertices[6] = _eyePos + (+up + right) * val + direction * farZ;
+		vertices[7] = _eyePos + (-up + right) * val + direction * farZ;
+
+		for (int i = 0; i < 8; ++i) {
+			vertexFLT[i * 3] = vertices[i].x;
+			vertexFLT[i * 3 + 1] = vertices[i].y;
+			vertexFLT[i * 3 + 2] = vertices[i].z;
+		}
 
 		auto v = vertices;
 

@@ -120,13 +120,14 @@ public:
 
 		// update frustum
 		if (frustumCaptured == false) {
-			//frustum->update(direction, up, right, position, fov);
+			frustum->update(direction, up, right, position, fov, getProj() * getView());
 			updateRay();
 		}
 	}
 
 	void updateRay() {
 		ray.orig = glm::vec4{ position, .0f };
+		ray.dir = glm::vec4{ direction, .0f };
 		//ray.dir = glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
 	}
 
@@ -162,7 +163,7 @@ public:
 		right = glm::normalize(glm::cross(direction, up));
 
 		if (frustumCaptured == false) {
-			//frustum->update(direction, up, right, position, fov);
+			frustum->update(direction, up, right, position, fov, getProj() * getView());
 			updateRay();
 		}
 	}

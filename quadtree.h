@@ -197,12 +197,8 @@ private:
 
 
 		for (auto obj : objects) {
-			//전부 출력
-			obj->render(false, level);
-			continue;
-
 			if (frustum->inSphere(obj->center, obj->radius)
-				&& glm::length(cameraRay.orig - obj->center) < .6f) {
+				&& glm::length(cameraRay.orig - obj->center) < 2000.0f) {
 
 				renderObjectCount++;
 
