@@ -547,46 +547,27 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		if (isFPS) {
 			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
 			ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-			camera->updateRotate(ndcX, ndcY);
-			pickingRay = camera->getPickingRay(isFPS, 0, 0);
+			camera->updateNdc(ndcX, ndcY);
+			camera->updateRotate();
+			pickingRay = camera->ray;
 			break;
 		}
 
 		// TPS
-		isObjectPicked = false;
-		pickedObjectColor = false;
 
-		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
-
-
-		if (isLButtonDown == false) break;
-
-		delX = (preMouseX - mouseX) * .001f;
-		delY = -(preMouseY - mouseY) * .001f;
-
-		camera->getNdc(ndcX, ndcY);
-		ndcX += delX; ndcY += delY;
-		camera->updateRotate(ndcX, ndcY);
-		
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
 		wDel = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		camera->moveForward(wDel);
 		pickedObjectColor = false;
-		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
+		pickingRay = camera->ray;
 		break;
 	case WM_KEYDOWN:
 		keyPressed[wParam] = true;
 		getStatus = true;
 		pickedObjectColor = false;
-		_ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		_ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-		pickingRay = camera->getPickingRay(isFPS, _ndcX, _ndcY);
+		pickingRay = camera->ray;
 		break;
 	case WM_KEYUP:
 		keyPressed[wParam] = false;

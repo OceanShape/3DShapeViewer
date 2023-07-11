@@ -121,33 +121,33 @@ public:
 		// update frustum
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay();
+			updateRay(false);
 		}
 	}
 
-	void updateRay() {
+	void updateNdc(const float& _ndcX, const float& _ndcY) {
+		ndcX = _ndcX;
+		ndcY = _ndcY;
+	}
+
+	// rotate, move 둘 다 ndc는 변하지 않음
+	void updateRay(bool isRotate) {
 		ray.orig = glm::vec4{ position, .0f };
-		ray.dir = glm::vec4{ direction, .0f };
-		//ray.dir = glm::vec4{ glm::normalize(ndcX * .01f * right + ndcY * .01f * up + direction * nearZ), 1.0f };
+		//ray.dir = glm::vec4{ direction, .0f };
+		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
 	}
 
-	Ray getPickingRay(bool isFPS, float currentNdcX, float currentNdcY) {
-		if (isFPS) return ray;
-
-		auto inv = glm::inverse(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-		Ray pr{};
-		pr.orig = inv * glm::vec4{ position, .0f };
-		pr.dir = inv * glm::vec4{ glm::normalize((currentNdcX) * .01f * right + (currentNdcY) * .01f * up + direction * nearZ), 1.0f };
-		return pr;
-	}
+	//Ray getPickingRay(bool isFPS, float currentNdcX, float currentNdcY) {
+	//	return ray;
+	//}
 
 	void getNdc(float& _ndcX, float& _ndcY) {
 		_ndcX = ndcX;
 		_ndcY = ndcY;
 	}
 
-	void updateRotate(float _ndcX, float _ndcY) {
-		ndcX = _ndcX; ndcY = (_ndcY > .899f) ? .899f : (_ndcY < -.899f) ? -.899f : _ndcY;
+	void updateRotate() {
+		/*ndcX = _ndcX; ndcY = (_ndcY > .899f) ? .899f : (_ndcY < -.899f) ? -.899f : _ndcY;*/
 
 		float h_pi = glm::half_pi<float>();
 		yaw = ndcX * h_pi;
@@ -164,7 +164,7 @@ public:
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay();
+			updateRay(true);
 		}
 	}
 };
