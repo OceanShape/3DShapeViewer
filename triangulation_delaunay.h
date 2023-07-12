@@ -136,8 +136,8 @@ void AddPoint(std::vector<Triangle>& triangulation, idxVertex point)
     for (const Triangle& t : bad_triangles) {
         idxVertex tmp[3] = { t.a, t.b, t.c };
         for (int i = 0; i < 3; ++i) {
-            auto edge = std::make_pair(tmp[i], tmp[(i + 1) % 3]);
-            auto iter = std::find(polygon.begin(), polygon.end(), edge);
+            Line edge = std::make_pair(tmp[i], tmp[(i + 1) % 3]);
+            std::vector<Line>::iterator iter = std::find(polygon.begin(), polygon.end(), edge);
             if (iter != polygon.end()) {
                 polygon.erase(iter);
             }
@@ -165,15 +165,15 @@ bool isOutside(std::vector<Line>& lines, Triangle& t) {
     bool outsideTrigger = false;
     int sameLineCount = 0;
 
-    for (auto p : { (t.a.vertex + t.b.vertex) /= 2, (t.b.vertex + t.c.vertex) /= 2, (t.c.vertex + t.a.vertex) /= 2 }) {
+    for (glm::vec3 p : { (t.a.vertex + t.b.vertex) /= 2, (t.b.vertex + t.c.vertex) /= 2, (t.c.vertex + t.a.vertex) /= 2 }) {
         int intersectionCount = 0;
         bool isSameLine = false;
 
         for (int i = 0; i < lines.size(); i++) {
-            auto ax = lines[i].first.vertex.x;
-            auto ay = lines[i].first.vertex.y;
-            auto bx = lines[i].second.vertex.x;
-            auto by = lines[i].second.vertex.y;
+            float ax = lines[i].first.vertex.x;
+            float ay = lines[i].first.vertex.y;
+            float bx = lines[i].second.vertex.x;
+            float by = lines[i].second.vertex.y;
 
 
             if (p.x == (ax + bx) / 2 && p.y == (ay + by) / 2) {

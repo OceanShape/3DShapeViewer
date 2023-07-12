@@ -95,9 +95,9 @@ public:
 	}
 
 	void renderFrustum() {
-		//auto t1 = nearZ * 1.001f;
-		//auto t2 = nearZ * 1.001f;
-		//auto t3 = nearZ * 1.001f;
+		//float t1 = nearZ * 1.001f;
+		//float t2 = nearZ * 1.001f;
+		//float t3 = nearZ * 1.001f;
 		//test.orig = position + direction * t1;
 
 		//std::cout << ndcX << "," << ndcY << std::endl;

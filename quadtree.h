@@ -115,8 +115,8 @@ private:
 
 	FRUSTUM_CULLING insideFrustum() {
 		// 나중에 걸러내는 로직 추가
-		//auto cullingState = FRUSTUM_CULLING::_OUT;
-		auto cullingState = FRUSTUM_CULLING::_COMPLETE;
+		//FRUSTUM_CULLING cullingState = FRUSTUM_CULLING::_OUT;
+		FRUSTUM_CULLING cullingState = FRUSTUM_CULLING::_COMPLETE;
 		int count = 0;
 		//for (size_t i = 0; i < 4; ++i) if (frustum->inside(box[i])) count++;
 
@@ -129,7 +129,7 @@ private:
 		// Frustum culling
 		// 피킹할 경우, 해당 오브젝트 색상을 변경해야 하기 때문
 		// 노드의 오브젝트를 확인할 때에도, 나중에 확인
-		auto cullingState = insideFrustum();
+		FRUSTUM_CULLING cullingState = insideFrustum();
 
 		switch (cullingState) {
 		case FRUSTUM_CULLING::_COMPLETE:
@@ -142,7 +142,7 @@ private:
 
 		if (glm::length(center - cameraRay.orig) > 2000.0f) culled = true;
 
-		for (auto n : nodes) {
+		for (std::shared_ptr<qtNode> n : nodes) {
 			if (n != nullptr) n->update();
 		}
 	}
@@ -159,7 +159,7 @@ private:
 
 	void render() {
 
-		for (auto n : nodes) {
+		for (std::shared_ptr<qtNode> n : nodes) {
 			if (n != nullptr) n->render();
 		}
 
@@ -171,7 +171,7 @@ private:
 		if (level == 0) {
 			float min = FLT_MAX;
 			shared_ptr<Object> pickedObj;
-			for (auto obj : selectedObjectList) {
+			for (std::shared_ptr<Object> obj : selectedObjectList) {
 				float tmp = glm::length(pickingRay.orig - obj->center);
 				if (min > tmp) {
 					min = tmp; pickedObj = obj;
@@ -195,13 +195,13 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
 
 
-		for (auto obj : objects) {
+		for (std::shared_ptr<Object> obj : objects) {
 			if (frustum->inSphere(obj->center, obj->radius)
 				&& glm::length(cameraRay.orig - obj->center) < 2000.0f) {
 
 				renderObjectCount++;
 
-				auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - obj->center)) / glm::length(pickingRay.dir);
+				float d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - obj->center)) / glm::length(pickingRay.dir);
 
 				Plane t(glm::vec3(Xmin, Ymin, 0.0f), glm::vec3(Xmin, Ymax, 0.0f), glm::vec3(Xmax, Ymax, 0.0f), glm::vec3(Xmax, Ymin, 0.0f));
 				glm::vec3 ans;
@@ -223,8 +223,8 @@ private:
 	bool isDetected(const shared_ptr<Object> obj) {
 		glm::vec3 inter;
 		glm::vec3 triVertices[3];
-		auto v = obj->vertices;
-		auto idx = obj->indices;
+		Vertex* v = obj->vertices;
+		GLuint* idx = obj->indices;
 		for (size_t i = 0; i < obj->triangleCount; ++i) {
 			triVertices[0] = v[idx[i * 3]];
 			triVertices[1] = v[idx[i * 3 + 1]];

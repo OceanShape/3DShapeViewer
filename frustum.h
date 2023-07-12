@@ -22,16 +22,16 @@ glm::vec3 getNormal(const glm::vec3 v[]) {
 };
 
 bool isVertexInsideTriangle(const glm::vec3 tri[], const glm::vec3& p) {
-	auto normal = getNormal(tri);
-	auto m = cross(p - tri[0], tri[1] - tri[0]);
-	auto n = cross(p - tri[1], tri[2] - tri[1]);
-	auto o = cross(p - tri[2], tri[0] - tri[2]);
+	glm::vec3 normal = getNormal(tri);
+	glm::vec3 m = cross(p - tri[0], tri[1] - tri[0]);
+	glm::vec3 n = cross(p - tri[1], tri[2] - tri[1]);
+	glm::vec3 o = cross(p - tri[2], tri[0] - tri[2]);
 
 	return glm::dot(m, normal) > 0 && glm::dot(n, normal) > 0 && glm::dot(o, normal) > 0;
 };
 
 bool isRayIntersecTriangle(const Ray& ray, glm::vec3& inter, const glm::vec3 tri[]) {
-	auto normal = getNormal(tri);
+	glm::vec3 normal = getNormal(tri);
 
 	float dotTmp = glm::dot(normal, ray.dir);
 	if (std::abs(dotTmp) < 0.0001f) return false;
@@ -68,9 +68,9 @@ struct Plane {
 	}
 
 	bool isVertexInsideTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& p) {
-		auto m = cross(p - v0, v1 - v0);
-		auto n = cross(p - v1, v2 - v1);
-		auto o = cross(p - v2, v0 - v2);
+		glm::vec3 m = cross(p - v0, v1 - v0);
+		glm::vec3 n = cross(p - v1, v2 - v1);
+		glm::vec3 o = cross(p - v2, v0 - v2);
 
 		return glm::dot(m, normal) > 0 && glm::dot(n, normal) > 0 && glm::dot(n, normal);
 	}
@@ -236,7 +236,7 @@ struct Frustum {
 			vertexFLT[i * 3 + 2] = vertices[i].z;
 		}
 
-		auto v = vertices;
+		const glm::vec3 const* v = vertices;
 
 		planes[0].update(v[0], v[1], v[2], v[3]);
 		planes[1].update(v[4], v[7], v[6], v[5]);

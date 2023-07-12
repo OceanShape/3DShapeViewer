@@ -42,9 +42,9 @@ namespace Triangulation {
 
     bool isVertexInsideTriangle(const Vertex &v0, const Vertex &v1, const Vertex &v2, const Vertex &p)
     {
-        auto m = cross(minusVertex(p, v0), minusVertex(v1, v0));
-        auto n = cross(minusVertex(p, v1), minusVertex(v2, v1));
-        auto o = cross(minusVertex(p, v2), minusVertex(v0, v2));
+        Vertex m = cross(minusVertex(p, v0), minusVertex(v1, v0));
+        Vertex n = cross(minusVertex(p, v1), minusVertex(v2, v1));
+        Vertex o = cross(minusVertex(p, v2), minusVertex(v0, v2));
 
         return m.z > 0 && n.z > 0 && o.z > 0;
     }
@@ -68,8 +68,8 @@ namespace Triangulation {
 
     bool isCW(Vertex v0, Vertex v1, Vertex v2)
     {
-        auto p = minusVertex(v1, v0);
-        auto q = minusVertex(v2, v1);
+        Vertex p = minusVertex(v1, v0);
+        Vertex q = minusVertex(v2, v1);
 
         return cross(p, q).z < 0;
     }

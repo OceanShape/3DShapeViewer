@@ -127,7 +127,7 @@ void ShapeViewer::update() {
 
 	if (pickedObjectPrint && objectData->getSelectedObject() != nullptr) {
 		system("cls");
-		auto obj = objectData->getSelectedObject();
+		std::shared_ptr<Object> obj = objectData->getSelectedObject();
 		std::cout << "ID: " << obj->ID << ", vertex count: " << obj->vertexCount << ", part count: " << obj->partCount << std::endl;
 	}
 
@@ -155,9 +155,9 @@ void ShapeViewer::render()
 		camera->renderFrustum();
 	}
 
-	auto obj = objectData->getSelectedObject();
+	std::shared_ptr<Object> obj = objectData->getSelectedObject();
 	if (pickedObjectPrint && obj != nullptr) {
-		auto p = obj->pickedPoint;
+		glm::vec3 p = obj->pickedPoint;
 		glm::vec3 v[8];
 		float a = 0.0005f;
 		v[0] = glm::vec3(p.x - a, p.y - a, p.z - a);
