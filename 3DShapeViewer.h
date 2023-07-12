@@ -92,6 +92,8 @@ public:
 	bool readShapefile();
 	void closeShapefile();
 
+	void mouseMove(bool isFPSMode, const LPARAM& lParam);
+
 	bool isKeyPressed(char ch);
 	void update();
 };

@@ -103,8 +103,14 @@ public:
 		//std::cout << ndcX << "," << ndcY << std::endl;
 		//test.dir = position + (up * t2) * ndcY + (right * t3) * ndcX + direction * t1;
 		//std::cout << to_string(test.dir) << std::endl;
+		//if (frustumCaptured == true) 
+			frustum->render(ndcX, ndcY, ray);
+	}
 
-		frustum->render(ndcX, ndcY, ray);
+	void resetCamera() {
+		up = upF;
+		right = rightF;
+		direction = directionF;
 	}
 
 	void updateMove() {
@@ -129,11 +135,6 @@ public:
 		}
 	}
 
-	void updateNdc(const float& _ndcX, const float& _ndcY) {
-		ndcX = _ndcX;
-		ndcY = _ndcY;
-	}
-
 	// rotate, move 둘 다 ndc는 변하지 않음
 	void updateRay(bool isRotate) {
 		ray.orig = glm::vec4{ position, .0f };
@@ -150,7 +151,10 @@ public:
 		_ndcY = ndcY;
 	}
 
-	void updateRotate() {
+	void updateRotate(float _ndcX, float _ndcY) {
+		ndcX = _ndcX;
+		ndcY = _ndcY;
+
 		/*ndcX = _ndcX; ndcY = (_ndcY > .899f) ? .899f : (_ndcY < -.899f) ? -.899f : _ndcY;*/
 
 		float h_pi = glm::half_pi<float>();

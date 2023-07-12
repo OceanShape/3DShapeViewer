@@ -106,6 +106,7 @@ void ShapeViewer::update() {
 	}
 	else if (isKeyPressed('T')) {
 		isFPS = false;
+		camera->resetCamera();
 	}
 	else if (isKeyPressed('G')) {
 		status();
@@ -494,14 +495,24 @@ bool ShapeViewer::openShapefile() {
 	return true;
 }
 
-LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	float delX, delY;
-	float ndcX, ndcY, _ndcX, _ndcY;
-	float wDel;
-	float preMouseX = mouseX; float preMouseY = mouseY;
+void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 	RECT rt;
 	GetClientRect(hWnd, &rt);
+	mouseX = LOWORD(lParam); mouseY = HIWORD(lParam);
+	if (isFPS) {
+		float ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
+		float ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		camera->updateRotate(ndcX, ndcY);
+		pickingRay = camera->ray;
+	}
+	else {
+		
+	}
+}
+
+LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	float wDel;
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -542,20 +553,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		if (isFPS) break;
 		break;
 	case WM_MOUSEMOVE:
-		mouseX = LOWORD(lParam); mouseY = HIWORD(lParam);
-
-		// FPS
-		if (isFPS) {
-			ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-			ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
-			camera->updateNdc(ndcX, ndcY);
-			camera->updateRotate();
-			pickingRay = camera->ray;
-			break;
-		}
-
-		// TPS
-
+		mouseMove(isFPS, lParam);
 		break;
 	case WM_MOUSEWHEEL:
 		//camera->updateZoom(GET_WHEEL_DELTA_WPARAM(wParam) / 120);
