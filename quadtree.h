@@ -31,6 +31,7 @@ class QuadtreeNode {
 	static int renderObjectCount;
 	static bool isFPS;
 	static bool pickedObjectColor;
+	static bool isPickingRayIntersect;
 
 	bool culled;
 
@@ -45,8 +46,6 @@ class QuadtreeNode {
 	float Xmin, Xmax, Ymin, Ymax;
 	float Xmid, Ymid;
 	// min max buffer for objects
-	float _min[2] = { FLT_MAX, FLT_MAX };
-	float _max[2] = { FLT_MIN, FLT_MIN };
 
 	shared_ptr<QuadtreeNode> nodes[4] = { nullptr, nullptr, nullptr, nullptr };
 public:
@@ -169,25 +168,25 @@ private:
 		drawObject();
 
 		// draw selected objects
-		//if (level == 0) {
-		//	float min = FLT_MAX;
-		//	shared_ptr<Object> pickedObj;
-		//	for (auto obj : selectedObjectList) {
-		//		float tmp = glm::length(pickingRay.orig - obj->center));
-		//		if (min > tmp) {
-		//			min = tmp; pickedObj = obj;
-		//		}
-		//	}
+		if (level == 0) {
+			float min = FLT_MAX;
+			shared_ptr<Object> pickedObj;
+			for (auto obj : selectedObjectList) {
+				float tmp = glm::length(pickingRay.orig - obj->center);
+				if (min > tmp) {
+					min = tmp; pickedObj = obj;
+				}
+			}
 
-		//	for (size_t i = 0; i < selectedObjectList.size(); ++i) {
-		//		if (pickedObj == selectedObjectList[i]) selectedObject = selectedObjectList[i];
-		//		if (pickedObjectColor == false) {
-		//			selectedObjectList[i]->render(false, selectedObjectListLevel[i]);
-		//			continue;
-		//		}
-		//		selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
-		//	}
-		//}
+			for (size_t i = 0; i < selectedObjectList.size(); ++i) {
+				if (pickedObj == selectedObjectList[i]) selectedObject = selectedObjectList[i];
+				if (pickedObjectColor == false) {
+					selectedObjectList[i]->render(false, selectedObjectListLevel[i]);
+					continue;
+				}
+				selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
+			}
+		}
 	}
 
 	void drawObject() {
@@ -203,6 +202,14 @@ private:
 				renderObjectCount++;
 
 				auto d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - obj->center)) / glm::length(pickingRay.dir);
+
+				Plane t(glm::vec3(Xmin, Ymin, 0.0f), glm::vec3(Xmin, Ymax, 0.0f), glm::vec3(Xmax, Ymax, 0.0f), glm::vec3(Xmax, Ymin, 0.0f));
+				glm::vec3 ans;
+				if (t.getIntersecPoint(pickingRay, ans) == true && isPickingRayIntersect == false) {
+					std::cout << to_string(ans) << std::endl;
+					isPickingRayIntersect = true;
+				}
+
 
 				if (d < obj->radius && isDetected(obj)) {
 					selectedObjectList.push_back(obj);
@@ -258,6 +265,7 @@ Ray qtNode::cameraRay;
 Ray qtNode::pickingRay;
 bool qtNode::isFPS = true;
 bool qtNode::pickedObjectColor = false;
+bool qtNode::isPickingRayIntersect = true;
 
 
 class ObjectData {
@@ -299,6 +307,7 @@ public:
 		qtNode::selectLevel = selectLevel;
 		qtNode::selectedObject = nullptr;
 		qtNode::renderObjectCount = 0;
+		qtNode::isPickingRayIntersect = false;
 		root->render();
 		qtNode::selectedObjectList.clear();
 		qtNode::selectedObjectListLevel.clear();

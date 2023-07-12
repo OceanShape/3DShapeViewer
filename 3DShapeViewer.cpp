@@ -321,9 +321,6 @@ bool ShapeViewer::readShapefile() {
 
 	minTotal[0] = xMin; minTotal[1] = yMin; minTotal[2] = zMin;
 	maxTotal[0] = xMax; maxTotal[1] = yMax; maxTotal[2] = zMax;
-	camera->minTotal[0] = xMin; camera->minTotal[1] = yMin; camera->minTotal[2] = zMin;
-	camera->maxTotal[0] = xMax; camera->maxTotal[1] = yMax; camera->maxTotal[2] = zMax;
-
 	//std::cout << "header Z min/max: " << zMin << "/" << zMax << endl;
 
 	delTotal[0] = (xMax - xMin) / 2.0f;
@@ -340,6 +337,10 @@ bool ShapeViewer::readShapefile() {
 		float max[2] = { shpHeaderData.Xmax , yBot + delTotal[0] * 2 };
 		printf("%lf, %lf\n", shpHeaderData.Xmin, yBot);
 		printf("%lf, %lf\n", shpHeaderData.Xmax, yBot + delTotal[0] * 2);
+
+		camera->minTotal[0] = min[0]; camera->minTotal[1] = min[1]; camera->minTotal[2] = zMin;
+		camera->maxTotal[0] = max[0]; camera->maxTotal[1] = max[1]; camera->maxTotal[2] = zMax;
+		camera->setPos();
 		
 		objectData = make_shared<ObjectData>(min, max);
 	}

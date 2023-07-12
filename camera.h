@@ -28,10 +28,10 @@ public:
 private:
 	RECT rt;
 
-	glm::vec3 upF = glm::vec3(0, 0, 1);
-	glm::vec3 rightF = glm::vec3(1, 0, 0);
-	glm::vec3 directionF = glm::vec3(0, 1, 0);
-	glm::vec3 positionF = glm::vec3(1144064.250000f, 1685198.500000f, 500.0f);
+	glm::vec3 upF = glm::vec3(0, 0, 1.0f);
+	glm::vec3 rightF = glm::vec3(1.0f, 0, 0);
+	glm::vec3 directionF = glm::vec3(0, 1.0f, 0);
+	glm::vec3 positionF = glm::vec3(.0f);
 
 	glm::vec3 up = upF;
 	glm::vec3 right = rightF;
@@ -60,6 +60,10 @@ public:
 		position = glm::vec3(posX, posY, posZ);
 		*/
 		frustum = make_shared<Frustum>(direction, up, right, position, nearZ, farZ, fov, glm::inverse(getProj() * getView()));
+	}
+
+	void setPos() {
+		position = glm::vec3((minTotal[0] + maxTotal[0]) / 2.0f, minTotal[1], 500.0f);
 	}
 
 	void setRect(RECT _rt) {
