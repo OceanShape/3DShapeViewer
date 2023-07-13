@@ -69,7 +69,7 @@ public:
 	std::vector<shared_ptr<Object>> objects;
 
 	bool getStatus = false;
-	bool isFPS = true;
+	bool isFPS = false;
 	bool isLButtonDown = false;
 	bool isRButtonDown = false;
 	bool isObjectPicked = false;
