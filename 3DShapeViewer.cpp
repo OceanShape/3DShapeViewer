@@ -506,7 +506,15 @@ void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 		pickingRay = camera->ray;
 	}
 	else {
-		
+		if (isLButtonDown == true) {
+			float ndcX = (mouseX - startMouseX) * 2.0f / (rt.right - rt.left) - 1.0f;
+			float ndcY = (- mouseY + startMouseY) * 2.0f / (rt.bottom - rt.top) + 1.0f;
+			camera->updateRotate(ndcX, ndcY);
+			pickingRay = camera->ray;
+		}
+		else {
+			startMouseX = mouseX; startMouseY = mouseY;
+		}
 	}
 }
 
@@ -550,7 +558,9 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		pickedObjectColor = false;
 		if (pickedObjectPrint) pickedObjectPrint = false;
 
-		if (isFPS) break;
+		//if (isFPS == false) {
+		//	startMouseX = mouseX; startMouseY = mouseY;
+		//}
 		break;
 	case WM_MOUSEMOVE:
 		mouseMove(isFPS, lParam);
