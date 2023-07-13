@@ -151,7 +151,7 @@ void ShapeViewer::render()
 		}
 		
 		objectData->render(camera->currentLevel);
-		glUseProgram(renderOption.program[2]);
+		setRenderOption(renderOption, 2);
 		camera->renderFrustum();
 	}
 

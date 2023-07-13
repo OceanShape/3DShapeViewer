@@ -181,9 +181,7 @@ private:
 	}
 
 	void drawBorder() {
-		glUseProgram(renderOption.program[1]);
-		glBindVertexArray(renderOption.vao[1]);
-		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
+		setRenderOption(renderOption, 1);
 
 		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
 		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
@@ -191,10 +189,7 @@ private:
 	}
 
 	void drawObject() {
-		glUseProgram(renderOption.program[0]);
-		glBindVertexArray(renderOption.vao[0]);
-		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
-
+		setRenderOption(renderOption, 0);
 
 		for (std::shared_ptr<Object> obj : objects) {
 			if (frustum->inSphere(obj->center, obj->radius)
@@ -208,17 +203,14 @@ private:
 				glm::vec3 intersecPoint;
 				if (t.getIntersecPoint(pickingRay, intersecPoint) == true && isPickingRayIntersect == false) {
 					isPickingRayIntersect = true;
-					glUseProgram(renderOption.program[1]);
-					glBindVertexArray(renderOption.vao[1]);
-					glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
 
-					float rayLine[] = { cameraRay.orig.x, cameraRay.orig.y, cameraRay.orig.z, intersecPoint.x, intersecPoint.y , intersecPoint.z };
-					glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), rayLine, GL_STATIC_DRAW);
-					glDrawArrays(GL_LINE_LOOP, 0, 2);
-
-					glUseProgram(renderOption.program[0]);
-					glBindVertexArray(renderOption.vao[0]);
-					glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
+					setRenderOption(renderOption, 1);
+					{
+						float rayLine[] = { cameraRay.orig.x, cameraRay.orig.y, cameraRay.orig.z, intersecPoint.x, intersecPoint.y , intersecPoint.z };
+						glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), rayLine, GL_STATIC_DRAW);
+						glDrawArrays(GL_LINE_LOOP, 0, 2);
+					}
+					setRenderOption(renderOption, 0);
 				}
 
 				if (d < obj->radius && isDetected(obj)) {

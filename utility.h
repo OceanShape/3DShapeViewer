@@ -76,3 +76,9 @@ void memSwap(void* const data, size_t size) {
 		start++, end--;
 	}
 }
+
+void setRenderOption(RenderOption renderOption, int id) {
+	glUseProgram(renderOption.program[id]);
+	glBindVertexArray(renderOption.vao[id]);
+	glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[id]);
+}
