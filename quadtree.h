@@ -147,16 +147,6 @@ private:
 		}
 	}
 
-	void drawBorder() {
-		glUseProgram(renderOption.program[1]);
-		glBindVertexArray(renderOption.vao[1]);
-		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
-
-		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
-		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
-		glDrawArrays(GL_LINE_LOOP, 0, 4);
-	}
-
 	void render() {
 
 		for (std::shared_ptr<qtNode> n : nodes) {
@@ -184,9 +174,20 @@ private:
 					selectedObjectList[i]->render(false, selectedObjectListLevel[i]);
 					continue;
 				}
+
 				selectedObjectList[i]->render(pickedObj == selectedObjectList[i], selectedObjectListLevel[i]);
 			}
 		}
+	}
+
+	void drawBorder() {
+		glUseProgram(renderOption.program[1]);
+		glBindVertexArray(renderOption.vao[1]);
+		glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
+
+		float border[] = { Xmin, Ymin, 0.0f, Xmin, Ymax, 0.0f, Xmax, Ymax, 0.0f, Xmax, Ymin, 0.0f };
+		glBufferData(GL_ARRAY_BUFFER, 4 * 3 * sizeof(float), border, GL_STATIC_DRAW);
+		glDrawArrays(GL_LINE_LOOP, 0, 4);
 	}
 
 	void drawObject() {
@@ -204,12 +205,21 @@ private:
 				float d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - obj->center)) / glm::length(pickingRay.dir);
 
 				Plane t(glm::vec3(Xmin, Ymin, 0.0f), glm::vec3(Xmin, Ymax, 0.0f), glm::vec3(Xmax, Ymax, 0.0f), glm::vec3(Xmax, Ymin, 0.0f));
-				glm::vec3 ans;
-				if (t.getIntersecPoint(pickingRay, ans) == true && isPickingRayIntersect == false) {
-					std::cout << to_string(ans) << std::endl;
+				glm::vec3 intersecPoint;
+				if (t.getIntersecPoint(pickingRay, intersecPoint) == true && isPickingRayIntersect == false) {
 					isPickingRayIntersect = true;
-				}
+					glUseProgram(renderOption.program[1]);
+					glBindVertexArray(renderOption.vao[1]);
+					glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[1]);
 
+					float rayLine[] = { cameraRay.orig.x, cameraRay.orig.y, cameraRay.orig.z, intersecPoint.x, intersecPoint.y , intersecPoint.z };
+					glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), rayLine, GL_STATIC_DRAW);
+					glDrawArrays(GL_LINE_LOOP, 0, 2);
+
+					glUseProgram(renderOption.program[0]);
+					glBindVertexArray(renderOption.vao[0]);
+					glBindBuffer(GL_ARRAY_BUFFER, renderOption.vbo[0]);
+				}
 
 				if (d < obj->radius && isDetected(obj)) {
 					selectedObjectList.push_back(obj);
