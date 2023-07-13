@@ -527,7 +527,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			DestroyWindow(hWnd);
 			break;
 		case ID_32773:
-			//isFPS = true;
+			isFPS = true;
 			break;
 		case ID_32774:
 			isFPS = false;

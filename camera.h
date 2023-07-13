@@ -111,6 +111,8 @@ public:
 		up = upF;
 		right = rightF;
 		direction = directionF;
+		frustum->update(direction, up, right, position, fov, getProj() * getView());
+		updateRay(true);
 	}
 
 	void updateMove() {
