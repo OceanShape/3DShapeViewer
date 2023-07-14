@@ -507,16 +507,16 @@ void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 	}
 	else {
 		if (isLButtonDown == true) {
-			float dX = mouseX - startMouseX;
-			float dY = mouseY - startMouseY;
-			float ndcX = (mouseX  + dX) * 2.0f / (rt.right - rt.left) - 1.0f;
-			float ndcY = (-mouseY - dY) * 2.0f / (rt.bottom - rt.top) + 1.0f;
+			float posX = (mouseX - startMouseX) + totalMouseX;
+			float posY = (mouseY - startMouseY) + totalMouseY;
+			float ndcX = (-1.0f) * (posX * 2.0f / (rt.right - rt.left) - 1.0f);
+			float ndcY = (-1.0f) * (-posY * 2.0f / (rt.bottom - rt.top) + 1.0f);
 			camera->updateRotate(ndcX, ndcY);
 			pickingRay = camera->ray;
 		}
-		/*else {
+		else {
 			startMouseX = mouseX; startMouseY = mouseY;
-		}*/
+		}
 	}
 }
 
@@ -549,8 +549,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	break;
 	case WM_LBUTTONDOWN:
 		isLButtonDown = true;
-		startMouseX += mouseX; startMouseY += mouseY;
-		std::cout << startMouseX << ", " << startMouseY << std::endl;
+		startMouseX = LOWORD(lParam); startMouseY = HIWORD(lParam);
 		if (objectData->getSelectedObject() != nullptr) {
 			isObjectPicked = true;
 			pickedObjectPrint = true;
@@ -562,9 +561,12 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		pickedObjectColor = false;
 		if (pickedObjectPrint) pickedObjectPrint = false;
 
-		//if (isFPS == false) {
-		//	startMouseX = mouseX; startMouseY = mouseY;
-		//}
+		if (isFPS == false) {
+			float dX = LOWORD(lParam) - startMouseX;
+			float dY = HIWORD(lParam) - startMouseY;
+			totalMouseX += dX;
+			totalMouseY += dY;
+		}
 		break;
 	case WM_MOUSEMOVE:
 		mouseMove(isFPS, lParam);

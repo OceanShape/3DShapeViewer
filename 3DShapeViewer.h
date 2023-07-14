@@ -60,10 +60,10 @@ public:
 	GLfloat maxTotal[3]{ FLT_MAX, FLT_MAX, FLT_MAX };
 	GLfloat delTotal[3];
 
-	float lastX = 450.0f;
-	float lastY = 450.0f;
 	int startMouseX = 0, startMouseY = 0;
+	int totalMouseX = (895.0f / 2.0f), totalMouseY = (895.0f / 2.0f);
 	int mouseX = 0, mouseY = 0;
+
 
 	shared_ptr<ObjectData> objectData;
 	std::vector<shared_ptr<Object>> objects;
