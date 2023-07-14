@@ -511,7 +511,7 @@ void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 			float posY = (mouseY - startMouseY) + totalMouseY;
 			float ndcX = (-1.0f) * (posX * 2.0f / (rt.right - rt.left) - 1.0f);
 			float ndcY = (-1.0f) * (-posY * 2.0f / (rt.bottom - rt.top) + 1.0f);
-			camera->updateRotate(ndcX, ndcY);
+			camera->updateRotateTPS(ndcX, ndcY, mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
 			pickingRay = camera->ray;
 		}
 		else {

@@ -22,7 +22,7 @@ public:
 
 	shared_ptr<Frustum> frustum;
 	bool frustumCaptured = false;
-	
+
 	Ray ray{};
 
 private:
@@ -50,7 +50,7 @@ private:
 	float nearZ = 1.0f;
 	float farZ = 30000.0f;
 	float aspect = 1.0f;
-	 
+
 	float ndcX = .0f;
 	float ndcY = .0f;
 
@@ -104,7 +104,7 @@ public:
 		//test.dir = position + (up * t2) * ndcY + (right * t3) * ndcX + direction * t1;
 		//std::cout << to_string(test.dir) << std::endl;
 		//if (frustumCaptured == true) 
-			frustum->render(ndcX, ndcY, ray);
+		frustum->render(ndcX, ndcY, ray);
 	}
 
 	void resetCamera() {
@@ -112,35 +112,35 @@ public:
 		right = rightF;
 		direction = directionF;
 		frustum->update(direction, up, right, position, fov, getProj() * getView());
-		updateRay(true);
+		updateRay(true, ndcX, ndcY);
 	}
 
 	void updateMove() {
 		position.y = (position.y < .05f) ? .05f : position.y;
 
 		// update level
-		if (0.0f < position.z && position.z <= startHeight) {
-			glm::vec3 res;
-			Plane p({ {1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {-1, 1, 0} });
-			p.getIntersecPoint(ray, res);
-			float len = glm::length(res - ray.orig);
-			len = (len > 3.0f) ? 3.0f : (len < .0f) ? .0f : len;
+		//if (0.0f < position.z && position.z <= startHeight) {
+		//	std::cout << "T" << std::endl;
+		//	glm::vec3 res;
+		//	Plane p({ {1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {-1, 1, 0} });
+		//	p.getIntersecPoint(ray, res);
+		//	float len = glm::length(res - ray.orig);
+		//	len = (len > 3.0f) ? 3.0f : (len < .0f) ? .0f : len;
 
-			float deltaLevel = startHeight / (maxLevel + 1.0f);
-			setLevel((3.0f - len) / deltaLevel);
-		}
+		//	float deltaLevel = startHeight / (maxLevel + 1.0f);
+		//	setLevel((3.0f - len) / deltaLevel);
+		//}
 
 		// update frustum
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(false);
+			updateRay(false, ndcX, ndcY);
 		}
 	}
 
 	// rotate, move 둘 다 ndc는 변하지 않음
-	void updateRay(bool isRotate) {
+	void updateRay(bool isRotate, float ndcX, float ndcY) {
 		ray.orig = glm::vec4{ position, .0f };
-		//ray.dir = glm::vec4{ direction, .0f };
 		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
 	}
 
@@ -152,6 +152,55 @@ public:
 		_ndcX = ndcX;
 		_ndcY = ndcY;
 	}
+
+	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+		float delX = ndcX - _ndcX;
+		float delY = ndcY - _ndcY;
+
+		float h_pi = glm::half_pi<float>();
+		float theta = delX * h_pi;
+		//delY * h_pi;
+		
+		std::cout << _ndcFPSX << ", " << _ndcFPSY << std::endl;
+		updateRay(false, _ndcFPSX, _ndcFPSY);
+		//std::cout << to_string(ray.dir) << std::endl;
+		
+		Plane p({ {minTotal[0], minTotal[1], 0}, {minTotal[0], maxTotal[1], 0}, {maxTotal[0], maxTotal[1], 0}, {maxTotal[0], minTotal[1], 0}});
+		glm::vec3 interPoint;
+		bool ans = p.getIntersecPoint(ray, interPoint);
+		//std::cout << to_string(interPoint) << std::endl;
+		return;
+		if (ans == false) {
+			updateRay(false, ndcX, ndcY);
+			return;
+		} 
+
+		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), theta, glm::vec3(0.0f, 0.0f, 1.0f));
+
+		{
+			right = glm::normalize(rot * glm::vec4(right, 1.0f));
+		}
+		{
+			glm::vec3 pos = position;
+			pos.x -= interPoint.x; pos.y -= interPoint.y;
+			pos = rot * glm::vec4(pos, .0f);
+			pos.x += interPoint.x; pos.y += interPoint.y;
+			position = pos;
+		}
+		{
+			direction = glm::normalize(interPoint - position);
+			up = glm::normalize(glm::cross(right, direction));
+		}
+
+
+		if (frustumCaptured == false) {
+			frustum->update(direction, up, right, position, fov, getProj() * getView());
+			updateRay(true, ndcX, ndcY);
+		}
+
+		ndcX = _ndcX;
+		ndcY = _ndcY;
+	};
 
 	void updateRotate(float _ndcX, float _ndcY) {
 		ndcX = _ndcX;
@@ -174,7 +223,7 @@ public:
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(true);
+			updateRay(true, ndcX, ndcY);
 		}
 	}
 };
