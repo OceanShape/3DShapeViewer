@@ -138,11 +138,7 @@ public:
 		}
 	}
 
-	// rotate, move 둘 다 ndc는 변하지 않음
-	void updateRay(bool isRotate, float ndcX, float ndcY) {
-		ray.orig = glm::vec4{ position, .0f };
-		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
-	}
+
 
 	//Ray getPickingRay(bool isFPS, float currentNdcX, float currentNdcY) {
 	//	return ray;
@@ -152,55 +148,6 @@ public:
 		_ndcX = ndcX;
 		_ndcY = ndcY;
 	}
-
-	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
-		float delX = ndcX - _ndcX;
-		float delY = ndcY - _ndcY;
-
-		float h_pi = glm::half_pi<float>();
-		float theta = delX * h_pi;
-		//delY * h_pi;
-		
-		std::cout << _ndcFPSX << ", " << _ndcFPSY << std::endl;
-		updateRay(false, _ndcFPSX, _ndcFPSY);
-		//std::cout << to_string(ray.dir) << std::endl;
-		
-		Plane p({ {minTotal[0], minTotal[1], 0}, {minTotal[0], maxTotal[1], 0}, {maxTotal[0], maxTotal[1], 0}, {maxTotal[0], minTotal[1], 0}});
-		glm::vec3 interPoint;
-		bool ans = p.getIntersecPoint(ray, interPoint);
-		//std::cout << to_string(interPoint) << std::endl;
-		return;
-		if (ans == false) {
-			updateRay(false, ndcX, ndcY);
-			return;
-		} 
-
-		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), theta, glm::vec3(0.0f, 0.0f, 1.0f));
-
-		{
-			right = glm::normalize(rot * glm::vec4(right, 1.0f));
-		}
-		{
-			glm::vec3 pos = position;
-			pos.x -= interPoint.x; pos.y -= interPoint.y;
-			pos = rot * glm::vec4(pos, .0f);
-			pos.x += interPoint.x; pos.y += interPoint.y;
-			position = pos;
-		}
-		{
-			direction = glm::normalize(interPoint - position);
-			up = glm::normalize(glm::cross(right, direction));
-		}
-
-
-		if (frustumCaptured == false) {
-			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(true, ndcX, ndcY);
-		}
-
-		ndcX = _ndcX;
-		ndcY = _ndcY;
-	};
 
 	void updateRotate(float _ndcX, float _ndcY) {
 		ndcX = _ndcX;
@@ -226,5 +173,62 @@ public:
 			updateRay(true, ndcX, ndcY);
 		}
 	}
-};
 
+	// rotate, move 둘 다 ndc는 변하지 않음
+	// 현재 frustum과 ndc에서 ray 업데이트하는 함수
+	void updateRay(bool isRotate, float ndcX, float ndcY) {
+		ray.orig = glm::vec4{ position, .0f };
+		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
+	}
+
+	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+		float delX = ndcX - _ndcX;
+		float delY = ndcY - _ndcY;
+
+		float h_pi = glm::half_pi<float>();
+		float thetaX = delX * h_pi;
+		float thetaY = delY * h_pi;
+		
+		updateRay(false, _ndcFPSX, _ndcFPSY);
+		
+		Plane p({ {minTotal[0], minTotal[1], 0}, {minTotal[0], maxTotal[1], 0}, {maxTotal[0], maxTotal[1], 0}, {maxTotal[0], minTotal[1], 0}});
+		glm::vec3 interPoint;
+		bool ans = p.getIntersecPoint(ray, interPoint);
+		if (ans == false) {
+			updateRay(false, ndcX, ndcY);
+			return;
+		}
+		interPoint = glm::vec3(1144064.315f, 1688191.94f, .0f);
+
+		// rotate
+		{
+			glm::mat4 rotZ = glm::rotate(glm::mat4(1.0f), thetaX, glm::vec3(0.0f, 0.0f, -1.0f));
+
+			right = glm::normalize(rotZ * glm::vec4(right, 0.0f));
+		
+			glm::vec3 pos = position;
+			pos.x -= interPoint.x; pos.y -= interPoint.y;
+			pos = rotZ * glm::vec4(pos, 1.0f);
+		
+			direction = glm::normalize(interPoint - position);
+
+
+			glm::mat4 rotX = glm::rotate(glm::mat4(1.0f), thetaY, right);
+
+			pos = rotX * glm::vec4(pos, 1.0f);
+			pos.x += interPoint.x; pos.y += interPoint.y;
+			position = pos;
+
+			direction = glm::normalize(interPoint - position);
+			up = glm::normalize(glm::cross(right, direction));
+		}
+
+		if (frustumCaptured == false) {
+			frustum->update(direction, up, right, position, fov, getProj() * getView());
+			updateRay(true, ndcX, ndcY);
+		}
+
+		ndcX = _ndcX;
+		ndcY = _ndcY;
+	};
+};

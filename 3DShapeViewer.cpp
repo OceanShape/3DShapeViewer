@@ -507,10 +507,13 @@ void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 	}
 	else {
 		if (isLButtonDown == true) {
-			float posX = (mouseX - startMouseX) + totalMouseX;
-			float posY = (mouseY - startMouseY) + totalMouseY;
-			float ndcX = (-1.0f) * (posX * 2.0f / (rt.right - rt.left) - 1.0f);
-			float ndcY = (-1.0f) * (-posY * 2.0f / (rt.bottom - rt.top) + 1.0f);
+			float posX, posY, ndcX, ndcY;
+			posX = (mouseX - startMouseX) + totalMouseX;
+			posY = (mouseY - startMouseY) + totalMouseY;
+			ndcX = (-1.0f) * (posX * 2.0f / (rt.right - rt.left) - 1.0f);
+			ndcY = (-1.0f) * (-posY * 2.0f / (rt.bottom - rt.top) + 1.0f);
+			//std::cout << ndcX << ", " << ndcY << std::endl;
+			//camera->updateRotate(ndcX, ndcY);
 			camera->updateRotateTPS(ndcX, ndcY, mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
 			pickingRay = camera->ray;
 		}
