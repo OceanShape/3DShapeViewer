@@ -199,14 +199,18 @@ private:
 
 				float d = glm::length(glm::cross(pickingRay.dir, pickingRay.orig - obj->center)) / glm::length(pickingRay.dir);
 
-				Plane t(glm::vec3(Xmin, Ymin, 0.0f), glm::vec3(Xmin, Ymax, 0.0f), glm::vec3(Xmax, Ymax, 0.0f), glm::vec3(Xmax, Ymin, 0.0f));
+				Plane t(glm::vec3(Xmin, Ymin, 0.0f) / CONTRACT_RATE, glm::vec3(Xmin, Ymax, 0.0f) / CONTRACT_RATE,
+					glm::vec3(Xmax, Ymax, 0.0f) / CONTRACT_RATE, glm::vec3(Xmax, Ymin, 0.0f) / CONTRACT_RATE);
 				glm::vec3 intersecPoint;
-				if (t.getIntersecPoint(pickingRay, intersecPoint) == true && isPickingRayIntersect == false) {
+				Ray rayCont = pickingRay; rayCont.orig = pickingRay.orig / CONTRACT_RATE;
+				if (t.getIntersecPoint(rayCont, intersecPoint) == true && isPickingRayIntersect == false) {
 					isPickingRayIntersect = true;
+					intersecPoint *= CONTRACT_RATE;
 
 					setRenderOption(renderOption, 1);
 					{
-						float rayLine[] = { cameraRay.orig.x, cameraRay.orig.y, cameraRay.orig.z, intersecPoint.x, intersecPoint.y , intersecPoint.z };
+						/*float rayLine[] = { cameraRay.orig.x, cameraRay.orig.y, cameraRay.orig.z, intersecPoint.x, intersecPoint.y , intersecPoint.z };*/
+						float rayLine[] = { .0f, .0f, cameraRay.orig.z, intersecPoint.x, intersecPoint.y , intersecPoint.z };
 						glBufferData(GL_ARRAY_BUFFER, 2 * 3 * sizeof(float), rayLine, GL_STATIC_DRAW);
 						glDrawArrays(GL_LINE_LOOP, 0, 2);
 					}

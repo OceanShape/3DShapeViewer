@@ -146,6 +146,21 @@ public:
 		_ndcY = ndcY;
 	}
 
+
+	// rotate, move 둘 다 ndc는 변하지 않음
+	// 현재 frustum과 ndc에서 ray 업데이트하는 함수
+	void updateRay(float ndcX, float ndcY) {
+		ray.orig = glm::vec4{ position, .0f };
+		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
+	}
+
+	Ray calculateRay(float ndcX, float ndcY) {
+		Ray r;
+		r.orig = glm::vec4{ position, .0f };
+		r.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
+		return r;
+	}
+
 	void updateRotate(float _ndcX, float _ndcY) {
 		ndcX = _ndcX;
 		ndcY = _ndcY;
@@ -171,20 +186,6 @@ public:
 		}
 	}
 
-	// rotate, move 둘 다 ndc는 변하지 않음
-	// 현재 frustum과 ndc에서 ray 업데이트하는 함수
-	void updateRay(float ndcX, float ndcY) {
-		ray.orig = glm::vec4{ position, .0f };
-		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
-	}
-
-	Ray calculateRay(float ndcX, float ndcY) {
-		Ray r;
-		r.orig = glm::vec4{ position, .0f };
-		r.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
-		return r;
-	}
-
 	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
 
 		float delX = ndcX - _ndcX;
@@ -197,14 +198,14 @@ public:
 		
 		// .0f면 처음 클릭한 상태
 		if (isRButtonFirstDown == true) {
-			Plane p({ {minTotal[0] / 10.0f, minTotal[1] / 10.0f, 0}, {minTotal[0] / 10.0f, maxTotal[1] / 10.0f, 0},
-		  {maxTotal[0] / 10.0f, maxTotal[1] / 10.0f, 0}, {maxTotal[0] / 10.0f, minTotal[1] / 10.0f, 0} });
+			Plane p({ {minTotal[0] / CONTRACT_RATE, minTotal[1] / CONTRACT_RATE, 0}, {minTotal[0] / CONTRACT_RATE, maxTotal[1] / CONTRACT_RATE, 0},
+		  {maxTotal[0] / CONTRACT_RATE, maxTotal[1] / CONTRACT_RATE, 0}, {maxTotal[0] / CONTRACT_RATE, minTotal[1] / CONTRACT_RATE, 0} });
 			Ray rayCont = calculateRay(_ndcFPSX, _ndcFPSY);
-			rayCont.orig = ray.orig / 10.0f;
+			rayCont.orig = ray.orig / CONTRACT_RATE;
 
 			bool ans = p.getIntersecPoint(rayCont, interPoint);
-			interPoint *= 10.0f;
-			std::cout << to_string(interPoint * 10.0f) << std::endl;
+			interPoint *= CONTRACT_RATE;
+			std::cout << to_string(interPoint * CONTRACT_RATE) << std::endl;
 			if (ans == false) {
 				updateRay(ndcX, ndcY);
 				interPoint = glm::vec3(.0f);

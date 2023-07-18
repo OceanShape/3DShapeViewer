@@ -7,6 +7,9 @@
 #include <iostream>
 
 // options
+const float CONTRACT_RATE = 100.0f;
+
+
 struct EGLOptions {
 	EGLint EGL_OPENGL_ES3_BIT_KHR = 0x0040;
 	EGLDisplay eglDisplay;
