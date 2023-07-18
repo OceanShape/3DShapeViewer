@@ -561,6 +561,8 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_LBUTTONUP:
 		isLButtonDown = false;
+		camera->interPoint = glm::vec3(.0f);
+		camera->isLButtonFirstDown = true;
 		pickedObjectColor = false;
 		if (pickedObjectPrint) pickedObjectPrint = false;
 

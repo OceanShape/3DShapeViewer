@@ -61,15 +61,9 @@ struct Plane {
 	}
 
 	bool getIntersecPoint(Ray ray, glm::vec3& answer) {
-		Ray rayCont = ray;
-		glm::vec3 normalCont = normal / 100000.0f;
-		rayCont.dir = glm::vec3(ray.dir.x, ray.dir.y, ray.dir.z) / 100000.0f;
-		rayCont.orig = glm::vec3(ray.orig.x, ray.orig.y, ray.orig.z) / 100000.0f;
-		
-
-		float dotTmp = glm::dot(normalCont, rayCont.dir);
-		if (std::abs(dotTmp) < 0.0000000001f) return false;
-		answer = rayCont.orig - (glm::dot(normalCont, rayCont.orig) + d) * rayCont.dir / dotTmp;
+		float dotTmp = glm::dot(normal, ray.dir);
+		if (std::abs(dotTmp) < 1e-10f) return false;
+		answer = ray.orig - (glm::dot(normal, ray.orig) + d) * ray.dir / dotTmp;
 		return isVertexInsidePlane(answer);
 	}
 

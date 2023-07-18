@@ -25,6 +25,9 @@ public:
 
 	Ray ray{};
 
+	glm::vec3 interPoint = glm::vec3(.0f);
+	bool isLButtonFirstDown = true;
+
 private:
 	RECT rt;
 
@@ -112,7 +115,7 @@ public:
 		right = rightF;
 		direction = directionF;
 		frustum->update(direction, up, right, position, fov, getProj() * getView());
-		updateRay(true, ndcX, ndcY);
+		updateRay(ndcX, ndcY);
 	}
 
 	void updateMove() {
@@ -134,15 +137,9 @@ public:
 		// update frustum
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(false, ndcX, ndcY);
+			updateRay(ndcX, ndcY);
 		}
 	}
-
-
-
-	//Ray getPickingRay(bool isFPS, float currentNdcX, float currentNdcY) {
-	//	return ray;
-	//}
 
 	void getNdc(float& _ndcX, float& _ndcY) {
 		_ndcX = ndcX;
@@ -170,18 +167,26 @@ public:
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(true, ndcX, ndcY);
+			updateRay(ndcX, ndcY);
 		}
 	}
 
 	// rotate, move 둘 다 ndc는 변하지 않음
 	// 현재 frustum과 ndc에서 ray 업데이트하는 함수
-	void updateRay(bool isRotate, float ndcX, float ndcY) {
+	void updateRay(float ndcX, float ndcY) {
 		ray.orig = glm::vec4{ position, .0f };
 		ray.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
 	}
 
+	Ray calculateRay(float ndcX, float ndcY) {
+		Ray r;
+		r.orig = glm::vec4{ position, .0f };
+		r.dir = glm::vec4{ glm::normalize(ndcX * 1.0f * right + ndcY * 1.0f * up + direction * nearZ), 1.0f };
+		return r;
+	}
+
 	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+
 		float delX = ndcX - _ndcX;
 		float delY = ndcY - _ndcY;
 
@@ -189,16 +194,24 @@ public:
 		float thetaX = delX * h_pi;
 		float thetaY = delY * h_pi;
 		
-		updateRay(false, _ndcFPSX, _ndcFPSY);
 		
-		Plane p({ {minTotal[0], minTotal[1], 0}, {minTotal[0], maxTotal[1], 0}, {maxTotal[0], maxTotal[1], 0}, {maxTotal[0], minTotal[1], 0}});
-		glm::vec3 interPoint;
-		bool ans = p.getIntersecPoint(ray, interPoint);
-		if (ans == false) {
-			updateRay(false, ndcX, ndcY);
-			return;
+		// .0f면 처음 클릭한 상태
+		if (isLButtonFirstDown == true) {
+			Plane p({ {minTotal[0] / 10.0f, minTotal[1] / 10.0f, 0}, {minTotal[0] / 10.0f, maxTotal[1] / 10.0f, 0},
+		  {maxTotal[0] / 10.0f, maxTotal[1] / 10.0f, 0}, {maxTotal[0] / 10.0f, minTotal[1] / 10.0f, 0} });
+			Ray rayCont = calculateRay(_ndcFPSX, _ndcFPSY);
+			rayCont.orig = ray.orig / 10.0f;
+
+			bool ans = p.getIntersecPoint(rayCont, interPoint);
+			interPoint *= 10.0f;
+			std::cout << to_string(interPoint * 10.0f) << std::endl;
+			if (ans == false) {
+				updateRay(ndcX, ndcY);
+				interPoint = glm::vec3(.0f);
+				return;
+			}
+			isLButtonFirstDown = false;
 		}
-		interPoint = glm::vec3(1144064.315f, 1688191.94f, .0f);
 
 		// rotate
 		{
@@ -209,9 +222,6 @@ public:
 			glm::vec3 pos = position;
 			pos.x -= interPoint.x; pos.y -= interPoint.y;
 			pos = rotZ * glm::vec4(pos, 1.0f);
-		
-			direction = glm::normalize(interPoint - position);
-
 
 			glm::mat4 rotX = glm::rotate(glm::mat4(1.0f), thetaY, right);
 
@@ -219,13 +229,13 @@ public:
 			pos.x += interPoint.x; pos.y += interPoint.y;
 			position = pos;
 
-			direction = glm::normalize(interPoint - position);
+			direction = glm::normalize(rotX * rotZ * glm::vec4(direction, 0.0f));
 			up = glm::normalize(glm::cross(right, direction));
 		}
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(true, ndcX, ndcY);
+			updateRay(ndcX, ndcY);
 		}
 
 		ndcX = _ndcX;
