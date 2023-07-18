@@ -63,7 +63,7 @@ public:
 	}
 
 	void setPos() {
-		position = glm::vec3((minTotal[0] + maxTotal[0]) / 2.0f, minTotal[1], 500.0f);
+		position = glm::vec3((minTotal[0] + maxTotal[0]) / 2.0f, minTotal[1], (maxTotal[0] - minTotal[0]) / (2.0f * 10.0f));
 	}
 
 	void setRect(RECT _rt) {
