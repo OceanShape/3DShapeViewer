@@ -26,7 +26,7 @@ public:
 	Ray ray{};
 
 	glm::vec3 interPoint = glm::vec3(.0f);
-	bool isLButtonFirstDown = true;
+	bool isRButtonFirstDown = true;
 
 private:
 	RECT rt;
@@ -196,7 +196,7 @@ public:
 		
 		
 		// .0f면 처음 클릭한 상태
-		if (isLButtonFirstDown == true) {
+		if (isRButtonFirstDown == true) {
 			Plane p({ {minTotal[0] / 10.0f, minTotal[1] / 10.0f, 0}, {minTotal[0] / 10.0f, maxTotal[1] / 10.0f, 0},
 		  {maxTotal[0] / 10.0f, maxTotal[1] / 10.0f, 0}, {maxTotal[0] / 10.0f, minTotal[1] / 10.0f, 0} });
 			Ray rayCont = calculateRay(_ndcFPSX, _ndcFPSY);
@@ -210,7 +210,7 @@ public:
 				interPoint = glm::vec3(.0f);
 				return;
 			}
-			isLButtonFirstDown = false;
+			isRButtonFirstDown = false;
 		}
 
 		// rotate

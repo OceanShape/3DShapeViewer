@@ -506,7 +506,7 @@ void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 		pickingRay = camera->ray;
 	}
 	else {
-		if (isLButtonDown == true) {
+		if (isRButtonDown == true) {
 			float posX, posY, ndcX, ndcY;
 			posX = (mouseX - startMouseX) + totalMouseX;
 			posY = (mouseY - startMouseY) + totalMouseY;
@@ -550,8 +550,8 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
-	case WM_LBUTTONDOWN:
-		isLButtonDown = true;
+	case WM_RBUTTONDOWN:
+		isRButtonDown = true;
 		startMouseX = LOWORD(lParam); startMouseY = HIWORD(lParam);
 		if (objectData->getSelectedObject() != nullptr) {
 			isObjectPicked = true;
@@ -559,10 +559,10 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			pickedObjectColor = true;
 		}
 		break;
-	case WM_LBUTTONUP:
-		isLButtonDown = false;
+	case WM_RBUTTONUP:
+		isRButtonDown = false;
 		camera->interPoint = glm::vec3(.0f);
-		camera->isLButtonFirstDown = true;
+		camera->isRButtonFirstDown = true;
 		pickedObjectColor = false;
 		if (pickedObjectPrint) pickedObjectPrint = false;
 

@@ -70,7 +70,6 @@ public:
 
 	bool getStatus = false;
 	bool isFPS = false;
-	bool isLButtonDown = false;
 	bool isRButtonDown = false;
 	bool isObjectPicked = false;
 	bool pickedObjectColor = false;
