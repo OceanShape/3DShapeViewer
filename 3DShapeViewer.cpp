@@ -500,12 +500,12 @@ void ShapeViewer::getNdc(float x, float y, float& ndcX, float& ndcY) {
 
 void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 	if (isRButtonDown == true) {
-		float posX, posY, ndcX, ndcY, ndcFPSX, ndcFPSY;
+		float posX, posY, ndcX, ndcY, ndcMouseX, ndcMouseY;
 		posX = (mouseX - startMouseX) + totalMouseX;
 		posY = (mouseY - startMouseY) + totalMouseY;
 		getNdc(posX, posY, ndcX, ndcY);
-		getNdc(mouseX, mouseY, ndcFPSX, ndcFPSY);
-		(isFPS) ? camera->updateRotateFPS(-ndcX, -ndcY, ndcFPSX, ndcFPSY) : camera->updateRotateTPS(-ndcX, -ndcY, ndcFPSX, ndcFPSY);
+		getNdc(mouseX, mouseY, ndcMouseX, ndcMouseY);
+		(isFPS) ? camera->updateRotateFPS(-ndcX, -ndcY, ndcMouseX, ndcMouseY) : camera->updateRotateTPS(-ndcX, -ndcY, ndcMouseX, ndcMouseY);
 	}
 	else {
 		startMouseX = mouseX; startMouseY = mouseY;

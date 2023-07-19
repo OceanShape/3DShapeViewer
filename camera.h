@@ -143,7 +143,7 @@ public:
 		return r;
 	}
 
-	void updateRotateFPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+	void updateRotateFPS(float _ndcX, float _ndcY, float _ndcMouseX, float _ndcMouseY) {
 		
 		float delX = ndcX - _ndcX;
 		float delY = ndcY - _ndcY;
@@ -163,15 +163,14 @@ public:
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(_ndcFPSX, _ndcFPSY);
+			updateRay(_ndcMouseX, _ndcMouseY);
 		}
 
 		ndcX = _ndcX;
 		ndcY = _ndcY;
-
 	}
 
-	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcMouseX, float _ndcMouseY) {
 
 		float delX = ndcX - _ndcX;
 		float delY = ndcY - _ndcY;
@@ -185,7 +184,7 @@ public:
 		if (isRButtonFirstDown == true) {
 			Plane p({ {minTotal[0] / CONTRACT_RATE, minTotal[1] / CONTRACT_RATE, 0}, {minTotal[0] / CONTRACT_RATE, maxTotal[1] / CONTRACT_RATE, 0},
 		  {maxTotal[0] / CONTRACT_RATE, maxTotal[1] / CONTRACT_RATE, 0}, {maxTotal[0] / CONTRACT_RATE, minTotal[1] / CONTRACT_RATE, 0} });
-			Ray rayCont = calculateRay(_ndcFPSX, _ndcFPSY);
+			Ray rayCont = calculateRay(_ndcMouseX, _ndcMouseY);
 			rayCont.orig = ray.orig / CONTRACT_RATE;
 
 			bool ans = p.getIntersecPoint(rayCont, interPoint);
@@ -221,7 +220,7 @@ public:
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(_ndcFPSX, _ndcFPSY);
+			updateRay(_ndcMouseX, _ndcMouseY);
 		}
 
 		ndcX = _ndcX;
