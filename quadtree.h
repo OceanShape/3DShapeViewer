@@ -231,24 +231,26 @@ private:
 		glm::vec3 triVertices[3];
 		Vertex* v = obj->vertices;
 		GLuint* idx = obj->indices;
+		auto prTmp = pickingRay;
+		prTmp.orig /= CONTRACT_RATE;
 		for (size_t i = 0; i < obj->triangleCount; ++i) {
-			triVertices[0] = v[idx[i * 3]];
-			triVertices[1] = v[idx[i * 3 + 1]];
-			triVertices[2] = v[idx[i * 3 + 2]];
-			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
+			triVertices[0] = v[idx[i * 3]] / CONTRACT_RATE;
+			triVertices[1] = v[idx[i * 3 + 1]] / CONTRACT_RATE;
+			triVertices[2] = v[idx[i * 3 + 2]] / CONTRACT_RATE;
+			if (isRayIntersecTriangle(prTmp, inter, triVertices)) { obj->pickedPoint = inter * CONTRACT_RATE; return true; }
 		}
 
 		int startIdx = obj->triangleCount * 3;
 		for (int i = 0; i < obj->vertexCount - 1; ++i) {
-			triVertices[0] = v[idx[startIdx + i * 6]];
-			triVertices[1] = v[idx[startIdx + i * 6 + 1]];
-			triVertices[2] = v[idx[startIdx + i * 6 + 2]];
-			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
+			triVertices[0] = v[idx[startIdx + i * 6]] / CONTRACT_RATE;
+			triVertices[1] = v[idx[startIdx + i * 6 + 1]] / CONTRACT_RATE;
+			triVertices[2] = v[idx[startIdx + i * 6 + 2]] / CONTRACT_RATE;
+			if (isRayIntersecTriangle(prTmp, inter, triVertices)) { obj->pickedPoint = inter * CONTRACT_RATE; return true; }
 
-			triVertices[0] = v[idx[startIdx + i * 6 + 3]];
-			triVertices[1] = v[idx[startIdx + i * 6 + 4]];
-			triVertices[2] = v[idx[startIdx + i * 6 + 5]];
-			if (isRayIntersecTriangle(pickingRay, inter, triVertices)) { obj->pickedPoint = inter; return true; }
+			triVertices[0] = v[idx[startIdx + i * 6 + 3]] / CONTRACT_RATE;
+			triVertices[1] = v[idx[startIdx + i * 6 + 4]] / CONTRACT_RATE;
+			triVertices[2] = v[idx[startIdx + i * 6 + 5]] / CONTRACT_RATE;
+			if (isRayIntersecTriangle(prTmp, inter, triVertices)) { obj->pickedPoint = inter * CONTRACT_RATE; return true; }
 		}
 
 		return false;
