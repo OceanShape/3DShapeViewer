@@ -143,7 +143,7 @@ public:
 		return r;
 	}
 
-	void updateRotate(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+	void updateRotateFPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
 		
 		float delX = ndcX - _ndcX;
 		float delY = ndcY - _ndcY;

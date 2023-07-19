@@ -499,38 +499,19 @@ void ShapeViewer::getNdc(float x, float y, float& ndcX, float& ndcY) {
 }
 
 void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
-	if (isFPS) {
-		if (isRButtonDown == true) {
-			float posX, posY, ndcX, ndcY, ndcFPSX, ndcFPSY;
-			posX = (mouseX - startMouseX) + totalMouseX;
-			posY = (mouseY - startMouseY) + totalMouseY;
-			getNdc(posX, posY, ndcX, ndcY);
-			getNdc(mouseX, mouseY, ndcFPSX, ndcFPSY);
-			camera->updateRotate(-ndcX, -ndcY, ndcFPSX, ndcFPSY);
-			pickingRay = camera->ray;
-		}
-		else {
-			startMouseX = mouseX; startMouseY = mouseY;
-			camera->updateRay(mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
-			pickingRay = camera->ray;
-		}
+	if (isRButtonDown == true) {
+		float posX, posY, ndcX, ndcY, ndcFPSX, ndcFPSY;
+		posX = (mouseX - startMouseX) + totalMouseX;
+		posY = (mouseY - startMouseY) + totalMouseY;
+		getNdc(posX, posY, ndcX, ndcY);
+		getNdc(mouseX, mouseY, ndcFPSX, ndcFPSY);
+		(isFPS) ? camera->updateRotateFPS(-ndcX, -ndcY, ndcFPSX, ndcFPSY) : camera->updateRotateTPS(-ndcX, -ndcY, ndcFPSX, ndcFPSY);
 	}
 	else {
-		if (isRButtonDown == true) {
-			float posX, posY, ndcX, ndcY, ndcFPSX, ndcFPSY;
-			posX = (mouseX - startMouseX) + totalMouseX;
-			posY = (mouseY - startMouseY) + totalMouseY;
-			getNdc(posX, posY, ndcX, ndcY);
-			getNdc(mouseX, mouseY, ndcFPSX, ndcFPSY);
-			camera->updateRotateTPS(-ndcX, -ndcY, ndcFPSX, ndcFPSY);
-			pickingRay = camera->ray;
-		}
-		else {
-			startMouseX = mouseX; startMouseY = mouseY;
-			camera->updateRay(mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
-			pickingRay = camera->ray;
-		}
+		startMouseX = mouseX; startMouseY = mouseY;
+		camera->updateRay(mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
 	}
+	pickingRay = camera->ray;
 }
 
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
