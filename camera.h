@@ -110,14 +110,6 @@ public:
 		frustum->render(ndcX, ndcY, ray);
 	}
 
-	void resetCamera() {
-		up = upF;
-		right = rightF;
-		direction = directionF;
-		frustum->update(direction, up, right, position, fov, getProj() * getView());
-		updateRay(ndcX, ndcY);
-	}
-
 	void updateMove() {
 		position.y = (position.y < .05f) ? .05f : position.y;
 
@@ -151,29 +143,32 @@ public:
 		return r;
 	}
 
-	void updateRotate(float _ndcX, float _ndcY) {
-		ndcX = _ndcX;
-		ndcY = _ndcY;
-
-		/*ndcX = _ndcX; ndcY = (_ndcY > .899f) ? .899f : (_ndcY < -.899f) ? -.899f : _ndcY;*/
+	void updateRotate(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {
+		
+		float delX = ndcX - _ndcX;
+		float delY = ndcY - _ndcY;
 
 		float h_pi = glm::half_pi<float>();
-		yaw = ndcX * h_pi;
-		pitch = ndcY * h_pi;
+		yaw = delX * h_pi;
+		pitch = delY * h_pi;
 
 		glm::quat qX = glm::angleAxis(yaw, glm::vec3(0, 0, -1.0f));
 		qX = glm::normalize(qX);
-		glm::quat qY = glm::angleAxis(pitch, qX * glm::vec3(1.0f, 0, 0));
+		glm::quat qY = glm::angleAxis(pitch, qX * right);
 		qY = glm::normalize(qY);
 
-		direction = glm::normalize(qY * qX * directionF);
-		up = glm::normalize(qY * qX * upF);
-		right = glm::normalize(glm::cross(direction, up));
+		direction = glm::normalize(qY * qX * direction);
+		right = glm::normalize(qX * right);
+		up = glm::normalize(glm::cross(right, direction));
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(ndcX, ndcY);
+			updateRay(_ndcFPSX, _ndcFPSY);
 		}
+
+		ndcX = _ndcX;
+		ndcY = _ndcY;
+
 	}
 
 	void updateRotateTPS(float _ndcX, float _ndcY, float _ndcFPSX, float _ndcFPSY) {

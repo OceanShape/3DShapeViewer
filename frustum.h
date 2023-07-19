@@ -156,37 +156,48 @@ struct Frustum {
 	}
 
 	void render(const float& ndcX, const float& ndcY, const Ray& ray) {
-		glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 8 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+		//glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, 8 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
-		for (size_t pos = 0; pos < 8 * 3; pos += 3) {
-			glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
-		}
+		//for (size_t pos = 0; pos < 8 * 3; pos += 3) {
+		//	glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
+		//	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+		//}
+
+		//glBufferData(GL_ARRAY_BUFFER, 8 * 3 * sizeof(float), vertexFLT, GL_STATIC_DRAW);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, 8 * 3 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+
+		//for (size_t pos = 0; pos < 8 * 3; pos += 3) {
+		//	glUniform4fv(glGetUniformLocation(program, "color"), 1, frustumColor[pos % 2]);
+		//	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (const void*)(pos * sizeof(GLuint)));
+		//}
 	}
 
 	void update(glm::vec3 direction, glm::vec3 up, glm::vec3 right, glm::vec3 _eyePos, float fov, glm::mat4 viewProj) {
 		float t = tan(glm::radians(fov / 2)); // fov default: 90.0f
 		float val = nearZ * t;
-		vertices[0] = _eyePos + (-up - right) * val + direction * nearZ;
-		vertices[1] = _eyePos + (+up - right) * val + direction * nearZ;
-		vertices[2] = _eyePos + (+up + right) * val + direction * nearZ;
-		vertices[3] = _eyePos + (-up + right) * val + direction * nearZ;
+		glm::vec3 eyePos = _eyePos / CONTRACT_RATE;
+		glm::vec3* const v = vertices;
+
+		v[0] = (-up - right) * val + direction * nearZ;
+		v[1] = (+up - right) * val + direction * nearZ;
+		v[2] = (+up + right) * val + direction * nearZ;
+		v[3] = (-up + right) * val + direction * nearZ;
 
 		val = farZ * t;
-		vertices[4] = _eyePos + (-up - right) * val + direction * farZ;
-		vertices[5] = _eyePos + (+up - right) * val + direction * farZ;
-		vertices[6] = _eyePos + (+up + right) * val + direction * farZ;
-		vertices[7] = _eyePos + (-up + right) * val + direction * farZ;
+		v[4] = (-up - right) * val + direction * farZ;
+		v[5] = (+up - right) * val + direction * farZ;
+		v[6] = (+up + right) * val + direction * farZ;
+		v[7] = (-up + right) * val + direction * farZ;
 
 		for (int i = 0; i < 8; ++i) {
-			vertices[i] = vertices[i] / CONTRACT_RATE + glm::vec3(1141070.844500f, 1685198.500000f, .0f);
-			vertexFLT[i * 3] = vertices[i].x;
-			vertexFLT[i * 3 + 1] = vertices[i].y;
-			vertexFLT[i * 3 + 2] = vertices[i].z;
+			v[i] += _eyePos;
+			vertexFLT[i * 3] = v[i].x;
+			vertexFLT[i * 3 + 1] = v[i].y;
+			vertexFLT[i * 3 + 2] = v[i].z;
+			// 판정은 축소한 채 그대로이기 때문에, 오브젝트가 보이지 않음
+			// 하지만, 렌더링을 위한 버텍스는 그대로이므로 frustum이 잘 보인다
 		}
-
-		const glm::vec3 const* v = vertices;
 
 		planes[0].update(v[0], v[1], v[2], v[3]);
 		planes[1].update(v[4], v[7], v[6], v[5]);

@@ -105,7 +105,6 @@ void ShapeViewer::update() {
 	}
 	else if (isKeyPressed('T')) {
 		isFPS = false;
-		camera->resetCamera();
 	}
 	else if (isKeyPressed('G')) {
 		status();
@@ -501,10 +500,20 @@ void ShapeViewer::getNdc(float x, float y, float& ndcX, float& ndcY) {
 
 void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 	if (isFPS) {
-		float ndcX, ndcY;
-		getNdc(mouseX, mouseY, ndcX, ndcY);
-		camera->updateRotate(ndcX, ndcY);
-		pickingRay = camera->ray;
+		if (isRButtonDown == true) {
+			float posX, posY, ndcX, ndcY, ndcFPSX, ndcFPSY;
+			posX = (mouseX - startMouseX) + totalMouseX;
+			posY = (mouseY - startMouseY) + totalMouseY;
+			getNdc(posX, posY, ndcX, ndcY);
+			getNdc(mouseX, mouseY, ndcFPSX, ndcFPSY);
+			camera->updateRotate(-ndcX, -ndcY, ndcFPSX, ndcFPSY);
+			pickingRay = camera->ray;
+		}
+		else {
+			startMouseX = mouseX; startMouseY = mouseY;
+			camera->updateRay(mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
+			pickingRay = camera->ray;
+		}
 	}
 	else {
 		if (isRButtonDown == true) {
@@ -572,7 +581,7 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		camera->interPoint = glm::vec3(.0f);
 		camera->isRButtonFirstDown = true;
 
-		if (isFPS == false) totalMouseX += (mouseX - startMouseX); totalMouseY += (mouseY - startMouseY);
+		totalMouseX += (mouseX - startMouseX); totalMouseY += (mouseY - startMouseY);
 		break;
 	case WM_MOUSEMOVE:
 		mouseMove(isFPS, lParam);
