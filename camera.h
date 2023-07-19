@@ -122,17 +122,7 @@ public:
 		position.y = (position.y < .05f) ? .05f : position.y;
 
 		// update level
-		//if (0.0f < position.z && position.z <= startHeight) {
-		//	std::cout << "T" << std::endl;
-		//	glm::vec3 res;
-		//	Plane p({ {1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {-1, 1, 0} });
-		//	p.getIntersecPoint(ray, res);
-		//	float len = glm::length(res - ray.orig);
-		//	len = (len > 3.0f) ? 3.0f : (len < .0f) ? .0f : len;
-
-		//	float deltaLevel = startHeight / (maxLevel + 1.0f);
-		//	setLevel((3.0f - len) / deltaLevel);
-		//}
+		delta = position.z / 100.0f;
 
 		// update frustum
 		if (frustumCaptured == false) {
