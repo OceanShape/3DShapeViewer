@@ -226,7 +226,7 @@ public:
 
 		if (frustumCaptured == false) {
 			frustum->update(direction, up, right, position, fov, getProj() * getView());
-			updateRay(ndcX, ndcY);
+			updateRay(_ndcFPSX, _ndcFPSY);
 		}
 
 		ndcX = _ndcX;

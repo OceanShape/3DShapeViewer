@@ -77,11 +77,16 @@ public:
 
 	Ray pickingRay{};
 
+	RECT rt;
+
+
 	ShapeViewer();
 
 	LRESULT msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	void status();
+
+	void getNdc(float x, float y, float& ndcX, float& ndcY);
 
 	bool initialize(HINSTANCE hInstance, int nCmdShow);
 	void render();

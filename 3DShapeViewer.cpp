@@ -13,7 +13,6 @@ bool ShapeViewer::initialize(HINSTANCE hInstance, int nCmdShow)
 
 	hInst = hInstance;
 
-	RECT rt;
 	GetClientRect(hWnd, &rt);
 	camera->setRect(rt);
 
@@ -495,30 +494,32 @@ bool ShapeViewer::openShapefile() {
 	return true;
 }
 
+void ShapeViewer::getNdc(float x, float y, float& ndcX, float& ndcY) {
+	ndcX = x * 2.0f / (rt.right - rt.left) - 1.0f;
+	ndcY = -y * 2.0f / (rt.bottom - rt.top) + 1.0f;
+}
+
 void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
-	RECT rt;
-	GetClientRect(hWnd, &rt);
-	mouseX = LOWORD(lParam); mouseY = HIWORD(lParam);
 	if (isFPS) {
-		float ndcX = mouseX * 2.0f / (rt.right - rt.left) - 1.0f;
-		float ndcY = -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f;
+		float ndcX, ndcY;
+		getNdc(mouseX, mouseY, ndcX, ndcY);
 		camera->updateRotate(ndcX, ndcY);
 		pickingRay = camera->ray;
 	}
 	else {
 		if (isRButtonDown == true) {
-			float posX, posY, ndcX, ndcY;
+			float posX, posY, ndcX, ndcY, ndcFPSX, ndcFPSY;
 			posX = (mouseX - startMouseX) + totalMouseX;
 			posY = (mouseY - startMouseY) + totalMouseY;
-			ndcX = (-1.0f) * (posX * 2.0f / (rt.right - rt.left) - 1.0f);
-			ndcY = (-1.0f) * (-posY * 2.0f / (rt.bottom - rt.top) + 1.0f);
-			//std::cout << ndcX << ", " << ndcY << std::endl;
-			//camera->updateRotate(ndcX, ndcY);
-			camera->updateRotateTPS(ndcX, ndcY, mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
+			getNdc(posX, posY, ndcX, ndcY);
+			getNdc(mouseX, mouseY, ndcFPSX, ndcFPSY);
+			camera->updateRotateTPS(-ndcX, -ndcY, ndcFPSX, ndcFPSY);
 			pickingRay = camera->ray;
 		}
 		else {
 			startMouseX = mouseX; startMouseY = mouseY;
+			camera->updateRay(mouseX * 2.0f / (rt.right - rt.left) - 1.0f, -mouseY * 2.0f / (rt.bottom - rt.top) + 1.0f);
+			pickingRay = camera->ray;
 		}
 	}
 }
@@ -526,6 +527,7 @@ void ShapeViewer::mouseMove(bool isFPSMode, const LPARAM& lParam) {
 LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	float wDel;
+	mouseX = LOWORD(lParam); mouseY = HIWORD(lParam);
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -550,28 +552,27 @@ LRESULT ShapeViewer::msgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 	}
 	break;
-	case WM_RBUTTONDOWN:
-		isRButtonDown = true;
-		startMouseX = LOWORD(lParam); startMouseY = HIWORD(lParam);
+	case WM_LBUTTONDOWN:
 		if (objectData->getSelectedObject() != nullptr) {
 			isObjectPicked = true;
 			pickedObjectPrint = true;
 			pickedObjectColor = true;
 		}
 		break;
+	case WM_LBUTTONUP:
+		pickedObjectColor = false;
+		if (pickedObjectPrint) pickedObjectPrint = false;
+		break;
+	case WM_RBUTTONDOWN:
+		isRButtonDown = true;
+		startMouseX = mouseX; startMouseY = mouseY;
+		break;
 	case WM_RBUTTONUP:
 		isRButtonDown = false;
 		camera->interPoint = glm::vec3(.0f);
 		camera->isRButtonFirstDown = true;
-		pickedObjectColor = false;
-		if (pickedObjectPrint) pickedObjectPrint = false;
 
-		if (isFPS == false) {
-			float dX = LOWORD(lParam) - startMouseX;
-			float dY = HIWORD(lParam) - startMouseY;
-			totalMouseX += dX;
-			totalMouseY += dY;
-		}
+		if (isFPS == false) totalMouseX += (mouseX - startMouseX); totalMouseY += (mouseY - startMouseY);
 		break;
 	case WM_MOUSEMOVE:
 		mouseMove(isFPS, lParam);
